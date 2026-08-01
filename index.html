@@ -170,7 +170,7 @@
 
   <div class="hero">
     <img src="logo-badge.png" alt="Part 107 Academy" style="width:150px; height:auto; margin-bottom:14px;" />
-    <h1>Part 107 Syndicate</h1>
+    <h1>Part 107 Academy</h1>
     <p class="subtext">Live weather briefing, lesson materials, practice tests, and official FAA references — all in one place before you fly.</p>
   </div>
 
@@ -210,10 +210,35 @@
     </div>
   </div>
 
-  <!-- Lessons -->
+  <!-- TFRs -->
   <div class="section">
     <div class="section-head">
       <span class="section-num">01</span>
+      <h2 class="section-title">Active TFRs</h2>
+      <span class="section-rule"></span>
+    </div>
+
+    <div class="wx-card">
+      <div class="wx-controls">
+        <label for="tfrStateInput">State</label>
+        <input type="text" id="tfrStateInput" class="wx-input" value="NC" maxlength="2" style="width:60px;" autocomplete="off" spellcheck="false" />
+        <button class="wx-go" id="tfrFetchBtn">CHECK ▸</button>
+        <span class="wx-status" id="tfrStatus">loading…</span>
+      </div>
+
+      <div id="tfrList"></div>
+      <div class="wx-meta" id="tfrMeta"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:12px;">
+      <a class="link-btn" id="tfrFullBtn" href="https://tfr.faa.gov/tfr3/?page=tfr" target="_blank" rel="noopener">FULL TFR LIST (official)</a>
+    </div>
+  </div>
+
+  <!-- Lessons -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
       <h2 class="section-title">Lessons</h2>
       <span class="section-rule"></span>
     </div>
@@ -227,7 +252,7 @@
   <!-- Practice / resources -->
   <div class="section">
     <div class="section-head">
-      <span class="section-num">02</span>
+      <span class="section-num">03</span>
       <h2 class="section-title">Practice &amp; Review</h2>
       <span class="section-rule"></span>
     </div>
@@ -242,7 +267,7 @@
   <!-- External resources -->
   <div class="section">
     <div class="section-head">
-      <span class="section-num">03</span>
+      <span class="section-num">04</span>
       <h2 class="section-title">Official FAA References</h2>
       <span class="section-rule"></span>
     </div>
@@ -686,8 +711,89 @@
     translateBtn.textContent = translationsShown ? 'HIDE TRANSLATION ▾' : 'TRANSLATE ▸';
   });
 
+  // ---------------------------------------------------------------------
+  // TFRs (Temporary Flight Restrictions)
+  // tfr.faa.gov has no per-station query like aviationweather.gov does, so
+  // this pulls the full national JSON list and filters client-side by state.
+  // Same CORS-proxy fallback chain as METAR/TAF (corsGet, defined above).
+  const tfrStateInput = document.getElementById('tfrStateInput');
+  const tfrFetchBtn = document.getElementById('tfrFetchBtn');
+  const tfrStatus = document.getElementById('tfrStatus');
+  const tfrList = document.getElementById('tfrList');
+  const tfrMeta = document.getElementById('tfrMeta');
+
+  let tfrAutoRefreshTimer = null;
+
+  function renderTfrs(list, state) {
+    tfrList.innerHTML = '';
+    const filtered = state ? list.filter(t => (t.state || '').toUpperCase() === state) : list;
+    if (!filtered.length) {
+      const d = document.createElement('div');
+      d.className = 'wx-raw dim';
+      d.textContent = `No active TFRs currently listed for ${state || 'all states'}.`;
+      tfrList.appendChild(d);
+      return;
+    }
+    filtered.forEach(t => {
+      const div = document.createElement('div');
+      div.className = 'wx-raw';
+      div.style.marginBottom = '8px';
+      const notamSlug = String(t.notam || '').replace('/', '_');
+      const detailUrl = `https://tfr.faa.gov/tfr3/?page=detail_${notamSlug}`;
+      const safe = (s) => String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      div.innerHTML = `<b>${safe(t.notam)}</b> · ${safe(t.facility)} · ${safe(t.type)}<br>`
+        + `${safe((t.description || '').trim())}<br>`
+        + `<a href="${detailUrl}" target="_blank" rel="noopener" style="color:var(--amber-soft);">DETAILS ▸</a>`;
+      tfrList.appendChild(div);
+    });
+  }
+
+  function fetchTfrs({ manual = true } = {}) {
+    const state = tfrStateInput.value.trim().toUpperCase();
+    tfrStateInput.value = state;
+
+    tfrStatus.textContent = manual ? 'loading…' : 'refreshing…';
+    tfrStatus.className = 'wx-status';
+    if (manual) tfrList.innerHTML = '<div class="wx-raw dim">—</div>';
+
+    corsGet('https://tfr.faa.gov/tfr3/export/json')
+      .then(text => {
+        const data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error('unexpected response shape');
+        renderTfrs(data, state);
+        tfrStatus.textContent = 'updated ' + new Date().toLocaleTimeString();
+        tfrStatus.className = 'wx-status ok';
+        tfrMeta.textContent = `Source: tfr.faa.gov · ${data.length} active nationwide · auto-refreshes every 5 min`;
+      })
+      .catch(() => {
+        tfrList.innerHTML = '';
+        const inFrame = (() => { try { return window.top !== window.self; } catch (e) { return true; } })();
+        if (inFrame) {
+          tfrStatus.textContent = 'blocked by preview sandbox';
+          tfrStatus.className = 'wx-status err';
+          tfrMeta.textContent = 'Live fetch is blocked inside this in-app preview. Download this file and open it in your browser (Safari/Chrome), or host it on a server — it will fetch normally there.';
+        } else {
+          tfrStatus.textContent = 'fetch failed — use the link below';
+          tfrStatus.className = 'wx-status err';
+          tfrMeta.textContent = 'Could not reach tfr.faa.gov right now. Use "FULL TFR LIST" below to check manually.';
+        }
+      });
+
+    resetTfrAutoRefresh();
+  }
+
+  function resetTfrAutoRefresh() {
+    if (tfrAutoRefreshTimer) clearInterval(tfrAutoRefreshTimer);
+    tfrAutoRefreshTimer = setInterval(() => fetchTfrs({ manual: false }), AUTO_REFRESH_MS);
+  }
+
+  tfrFetchBtn.addEventListener('click', () => fetchTfrs({ manual: true }));
+  tfrStateInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') fetchTfrs({ manual: true }); });
+  // ---------------------------------------------------------------------
+
   // load on page open
   fetchWx({ manual: true });
+  fetchTfrs({ manual: true });
 </script>
 
 </body>
