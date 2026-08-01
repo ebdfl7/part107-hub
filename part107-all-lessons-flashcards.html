@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Part 107 — Full Review Flashcards (Lessons 1–8)</title>
+<style>
+  :root {
+    --amber: #f2a71b;
+    --amber-soft: #ffcf6b;
+    --green: #3ddc97;
+    --red: #ff5c5c;
+    --bg-deep: #0d1013;
+    --bg-panel: #171c22;
+    --bg-card: #12161a;
+    --border: #2a3138;
+    --text-main: #dfe6ec;
+    --text-bright: #f4f7fa;
+    --text-dim: #7a8590;
+    --text-mid: #9aa5b0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at top, var(--bg-panel) 0%, var(--bg-deep) 70%);
+    color: var(--text-main);
+    font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+    min-height: 100vh;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 24px 12px;
+  }
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    z-index: 0;
+  }
+  .frame {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(13,16,19,0.6);
+    box-shadow: 0 0 0 1px rgba(242,167,27,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    height: fit-content;
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    background: #12161a;
+  }
+  .center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 28px 36px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--text-bright);
+    letter-spacing: 0.01em;
+    font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  }
+  .subtext {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-mid);
+    max-width: 420px;
+    margin: 0 0 28px;
+  }
+  .primary-button {
+    background: var(--amber);
+    color: #171200;
+    border: none;
+    padding: 14px 32px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .primary-button:hover { background: var(--amber-soft); }
+  .primary-button:disabled { opacity: 0.4; cursor: default; }
+
+  .secondary-button {
+    background: transparent;
+    color: var(--amber);
+    border: 1px solid var(--amber);
+    padding: 11px 20px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    margin-bottom: 18px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .secondary-button:hover { background: rgba(242,167,27,0.08); }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    font-size: 12.5px;
+    color: var(--text-mid);
+  }
+  .toggle-row input { accent-color: var(--amber); width: 15px; height: 15px; }
+
+  .ref-panel {
+    display: none;
+    width: 100%;
+    max-width: 420px;
+    text-align: left;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-mid);
+  }
+  .ref-panel h3 {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin: 14px 0 6px;
+    text-transform: uppercase;
+  }
+  .ref-panel h3:first-child { margin-top: 0; }
+  .ref-panel ul { margin: 0 0 4px; padding-left: 18px; }
+  .ref-panel li { margin-bottom: 4px; }
+  .ref-panel .cfr { color: var(--amber-soft); font-weight: 700; }
+
+  .lesson-filter {
+    width: 100%;
+    max-width: 420px;
+    text-align: left;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    font-size: 12.5px;
+  }
+  .lesson-filter-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .lesson-filter-actions button {
+    background: transparent;
+    border: none;
+    color: var(--amber-soft);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+    margin-left: 10px;
+    text-decoration: underline;
+  }
+  .lesson-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 0;
+    color: var(--text-mid);
+  }
+  .lesson-row input { accent-color: var(--amber); width: 14px; height: 14px; flex-shrink: 0; }
+  .lesson-row label { flex: 1; cursor: pointer; }
+  .lesson-row .lesson-count { color: var(--text-dim); font-size: 11px; }
+  .filter-count {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .filter-count b { color: var(--amber); }
+
+  .deck-wrap { padding: 20px 20px 24px; display: none; }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin: 10px 2px 18px;
+    letter-spacing: 0.06em;
+  }
+  .status-row b { color: var(--amber); }
+  .gauge-track {
+    position: relative;
+    height: 6px;
+    background: #1c2127;
+    border-radius: 3px;
+  }
+  .gauge-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), var(--amber-soft));
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+  .gauge-ticks { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
+  .tick { flex: 1 0 2%; height: 3px; border-radius: 1px; background: rgba(255,255,255,0.08); min-width: 3px; }
+  .tick.filled-known { background: var(--green); }
+  .tick.filled-unknown { background: var(--red); }
+
+  .card-scene {
+    perspective: 1400px;
+    margin-top: 18px;
+  }
+  .card-flip {
+    position: relative;
+    width: 100%;
+    min-height: 220px;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
+    cursor: pointer;
+  }
+  .card-flip.flipped { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 22px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-face.back { transform: rotateY(180deg); }
+  .card-label { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; margin-bottom: 10px; display: flex; justify-content: space-between; gap: 8px; }
+  .card-cat { color: var(--text-dim); font-weight: normal; text-align: right; }
+  .card-body-text {
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--text-bright);
+    font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+    font-weight: 500;
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+  .card-face.back .card-body-text {
+    font-size: 14.5px;
+    font-family: 'Courier New', monospace;
+    font-weight: normal;
+    color: var(--text-main);
+    align-items: flex-start;
+  }
+  .tap-hint {
+    font-size: 10.5px;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .ref-tag {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    color: var(--amber-soft);
+    background: rgba(242,167,27,0.08);
+    border: 1px solid rgba(242,167,27,0.35);
+    border-radius: 3px;
+    padding: 3px 8px;
+    align-self: flex-start;
+  }
+
+  .assess-row {
+    display: none;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .assess-row.visible { display: flex; }
+  .assess-button {
+    flex: 1;
+    padding: 13px 10px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1px solid;
+  }
+  .assess-button.know {
+    background: rgba(61,220,151,0.12);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .assess-button.know:hover { background: rgba(61,220,151,0.2); }
+  .assess-button.dontknow {
+    background: rgba(255,92,92,0.1);
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .assess-button.dontknow:hover { background: rgba(255,92,92,0.18); }
+
+  .nav-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .nav-button {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-mid);
+    padding: 10px 12px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .nav-button:hover { border-color: var(--amber); color: var(--amber); }
+  .nav-button:disabled { opacity: 0.35; cursor: default; }
+  .nav-button:disabled:hover { border-color: var(--border); color: var(--text-mid); }
+
+  .end-wrap { display: none; }
+  .result-dial {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 3px solid var(--green);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    background: var(--bg-card);
+  }
+  .result-pct { font-size: 32px; font-weight: 800; line-height: 1.1; color: var(--green); }
+  .result-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .dial-wrap { margin-bottom: 20px; opacity: 0.9; }
+
+  .breakdown {
+    width: 100%;
+    text-align: left;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+  .breakdown-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  .breakdown-title span { color: var(--text-dim); font-weight: normal; letter-spacing: 0.02em; }
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 9px;
+    font-size: 12.5px;
+  }
+  .cat-name { flex: 0 0 168px; color: var(--text-main); line-height: 1.3; }
+  .cat-bar-track {
+    flex: 1;
+    height: 8px;
+    background: #1c2127;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .cat-bar-fill { height: 100%; border-radius: 4px; }
+  .cat-pct { flex: 0 0 62px; text-align: right; color: var(--text-dim); font-size: 11.5px; }
+  .cat-empty { font-size: 12px; color: var(--text-dim); font-style: italic; }
+  .reset-stats-button {
+    margin-top: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px 12px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .reset-stats-button:hover { color: var(--red); border-color: var(--red); }
+  .no-fail-note {
+    font-size: 10.5px;
+    color: var(--text-dim);
+    margin-top: -8px;
+    margin-bottom: 24px;
+    max-width: 380px;
+    line-height: 1.5;
+  }
+  .review-list {
+    width: 100%;
+    text-align: left;
+    margin-top: 18px;
+    display: none;
+  }
+  .review-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .review-item .rf { color: var(--text-bright); font-weight: 700; margin-bottom: 4px; }
+  .review-item .rb { color: var(--text-mid); }
+  .review-item .rr { color: var(--amber-soft); font-size: 11px; margin-top: 6px; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="frame">
+  <div class="top-bar">
+    <span>PART 107 · FULL REVIEW (LESSONS 1&#8211;8)</span>
+    <span id="topBarRight">READY</span>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="center" id="startScreen">
+    <div class="dial-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#2a3138" stroke-width="2" />
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#f2a71b" stroke-width="2" stroke-dasharray="8 6" opacity="0.7" />
+        <g id="dialTicks"></g>
+        <text x="60" y="68" text-anchor="middle" font-size="18" fill="#f2a71b" font-family="'Courier New', monospace">L1&#8211;L8</text>
+      </svg>
+    </div>
+    <h1>Part 107 Full Review — All 8 Lessons Flashcards</h1>
+    <p class="subtext">
+      <span id="totalDisplayIntro"></span> cards pulled from all eight lessons: Regulations,
+      Airspace, Weather, Weather Effects on Performance, Loading/Performance/Emergency Procedures,
+      CRM &amp; Radio Communications, ADM &amp; Physiological Factors, and Airport Operations &amp;
+      Maintenance. Tap a card to reveal the answer, then mark whether you knew it. Weak spots are
+      tracked by lesson and topic across sessions.
+    </p>
+
+    <div class="lesson-filter">
+      <div class="lesson-filter-title">
+        <span>LESSONS TO INCLUDE</span>
+        <span class="lesson-filter-actions">
+          <button type="button" id="selectAllBtn">ALL</button>
+          <button type="button" id="selectNoneBtn">NONE</button>
+        </span>
+      </div>
+      <div id="lessonList"></div>
+      <div class="filter-count"><b id="filterCount">223</b> cards selected</div>
+    </div>
+
+    <button class="secondary-button" id="refToggleBtn">SHOW REFERENCES &amp; LESSON CONTENT</button>
+    <div class="ref-panel" id="refPanel">
+      <h3>Applicable Regulatory &amp; Reference Sources</h3>
+      <ul>
+        <li><span class="cfr">14 CFR Part 107</span> — Small UAS operating rules (regulations, Remote ID, ops over people, waivers)</li>
+        <li><span class="cfr">14 CFR Part 71 / 91</span> — Airspace classification and general operating rules</li>
+        <li><span class="cfr">FAA Aviation Weather Handbook (FAA-H-8083-28)</span> — METAR/TAF, weather phenomena, density altitude</li>
+        <li><span class="cfr">FAA-H-8083-2, Risk Management Handbook</span> — ADM models (DECIDE, PAVE, IMSAFE), risk management</li>
+        <li><span class="cfr">FAA-H-8083-25, Ch. 13&#8211;14</span> — CRM, radio phraseology, airport operations</li>
+        <li><span class="cfr">AIM, Ch. 2 &amp; 4</span> — Airport signage/markings and standard radio phraseology</li>
+        <li><span class="cfr">Aircraft manufacturer flight manual / POH</span> — Aircraft-specific loading, performance, and maintenance</li>
+      </ul>
+
+      <h3>Lessons Covered In This Deck</h3>
+      <ul>
+        <li>Lesson 1 &#8212; Regulations (Part 107)</li>
+        <li>Lesson 2 &#8212; Airspace Classification &amp; Operating Requirements</li>
+        <li>Lesson 3 &#8212; Aviation Weather</li>
+        <li>Lesson 4 &#8212; Weather Effects on UAS Performance</li>
+        <li>Lesson 5 &#8212; Loading, Performance &amp; Emergency Procedures</li>
+        <li>Lesson 6 &#8212; Crew Resource Management &amp; Radio Communications</li>
+        <li>Lesson 7 &#8212; Aeronautical Decision-Making &amp; Physiological Factors</li>
+        <li>Lesson 8 &#8212; Airport Operations &amp; Maintenance</li>
+      </ul>
+    </div>
+
+    <label class="toggle-row">
+      <input type="checkbox" id="shuffleToggle" checked />
+      Shuffle card order each session
+    </label>
+
+    <p class="subtext no-fail-note">
+      Note: this is a self-study flashcard tool, not the official FAA Part 107 Airman Knowledge Test.
+      "Know it" / "Still learning" marks are for your own tracking only.
+    </p>
+    <button class="primary-button" id="startBtn">START FLASHCARDS</button>
+  </div>
+
+  <!-- DECK SCREEN -->
+  <div class="deck-wrap" id="deckScreen">
+    <div class="gauge-track">
+      <div class="gauge-fill" id="gaugeFill"></div>
+    </div>
+    <div class="gauge-ticks" id="gaugeTicks"></div>
+    <div class="status-row">
+      <span>KNOWN <b id="knownDisplay">0</b> / <span id="totalDisplay">223</span></span>
+      <span id="itemDisplay">CARD 01</span>
+    </div>
+
+    <div class="card-scene">
+      <div class="card-flip" id="cardFlip">
+        <div class="card-face front">
+          <div class="card-label"><span id="cardLabelFront">CARD 1</span><span class="card-cat" id="cardCatFront"></span></div>
+          <div class="card-body-text" id="cardFrontText"></div>
+          <div class="tap-hint">TAP CARD TO REVEAL ANSWER</div>
+        </div>
+        <div class="card-face back">
+          <div class="card-label"><span id="cardLabelBack">CARD 1</span><span class="card-cat" id="cardCatBack"></span></div>
+          <div class="card-body-text" id="cardBackText"></div>
+          <span class="ref-tag" id="refTag"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="assess-row" id="assessRow">
+      <button class="assess-button dontknow" id="dontKnowBtn">✕ STILL LEARNING</button>
+      <button class="assess-button know" id="knowBtn">✓ KNOW IT</button>
+    </div>
+
+    <div class="nav-row">
+      <button class="nav-button" id="prevBtn">← PREV</button>
+      <button class="nav-button" id="skipBtn">SKIP →</button>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="center end-wrap" id="endScreen">
+    <div class="result-dial" id="resultDial">
+      <span class="result-pct" id="resultPct">0%</span>
+      <span class="result-sub" id="resultSub">0 / 223 known</span>
+    </div>
+    <h1 id="endHeading">Deck Complete</h1>
+    <p class="subtext" id="endSubtext"></p>
+
+    <div class="breakdown" id="breakdownWrap">
+      <div class="breakdown-title">WEAK AREAS — THIS SESSION</div>
+      <div id="sessionBreakdown"></div>
+    </div>
+
+    <div class="breakdown" id="lifetimeWrap">
+      <div class="breakdown-title">WEAK AREAS — ALL-TIME <span id="lifetimeAttempts"></span></div>
+      <div id="lifetimeBreakdown"></div>
+      <button class="reset-stats-button" id="resetStatsBtn">RESET ALL-TIME STATS</button>
+    </div>
+
+    <div class="review-list" id="reviewList"></div>
+
+    <button class="primary-button" id="restartBtn" style="margin-top: 20px;">RESTART DECK</button>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Flashcard deck — Part 107 Full Review: all 8 lessons combined
+// ---------------------------------------------------------------------------
+const LESSON_TITLES = {
+  1: "Regulations",
+  2: "Airspace",
+  3: "Weather",
+  4: "Weather Effects on Performance",
+  5: "Loading, Performance & Emergency Procedures",
+  6: "CRM & Radio Communications",
+  7: "ADM & Physiological Factors",
+  8: "Airport Operations & Maintenance",
+};
+
+const CARDS = [
+  { front: "What operations does 14 CFR Part 107 primarily govern?", back: "Non-recreational (e.g., commercial) small UAS operations weighing less than 55 lbs at takeoff, including everything on board.", ref: "14 CFR §107.1", cat: "L1: Applicability & Certification", lesson: 1 },
+  { front: "How is a 'small unmanned aircraft' defined?", back: "An unmanned aircraft weighing less than 55 lbs on takeoff, including all payload and equipment.", ref: "14 CFR §107.3", cat: "L1: Applicability & Certification", lesson: 1 },
+  { front: "What is generally required to serve as remote pilot in command (RPIC)?", back: "A remote pilot certificate with a small UAS rating (or direct supervision by someone who holds one).", ref: "14 CFR §107.12", cat: "L1: Applicability & Certification", lesson: 1 },
+  { front: "Minimum age for a remote pilot certificate?", back: "16 years old.", ref: "14 CFR §107.61(a)", cat: "L1: Applicability & Certification", lesson: 1 },
+  { front: "What must the RPIC do before every flight regarding the aircraft's condition?", back: "Conduct a preflight inspection to confirm the aircraft is in a condition for safe operation.", ref: "14 CFR §107.15", cat: "L1: Applicability & Certification", lesson: 1 },
+  { front: "Maximum ground speed under Part 107?", back: "100 mph (87 knots).", ref: "14 CFR §107.51(a)", cat: "L1: Operating Limitations", lesson: 1 },
+  { front: "Standard maximum altitude for Part 107 operations?", back: "400 ft AGL, or within 400 ft above a structure when flown within 400 ft laterally of it.", ref: "14 CFR §107.51(b)", cat: "L1: Operating Limitations", lesson: 1 },
+  { front: "Minimum flight visibility required (from the control station)?", back: "3 statute miles.", ref: "14 CFR §107.51(c)", cat: "L1: Operating Limitations", lesson: 1 },
+  { front: "Minimum distance from clouds?", back: "500 ft below and 2,000 ft horizontally clear of clouds.", ref: "14 CFR §107.51(d)", cat: "L1: Operating Limitations", lesson: 1 },
+  { front: "How many small UAS may one person operate at the same time?", back: "Only one.", ref: "14 CFR §107.35", cat: "L1: Operating Limitations", lesson: 1 },
+  { front: "Where can a Part 107 pilot generally fly without prior ATC authorization?", back: "Class G (uncontrolled) airspace, up to 400 ft AGL.", ref: "14 CFR §107.41; FAA AIM Ch. 11", cat: "L1: Airspace & Waivers", lesson: 1 },
+  { front: "What's required before flying in Class B, C, D, or surface Class E airspace?", back: "Prior airspace authorization from ATC, commonly obtained through LAANC.", ref: "14 CFR §107.41", cat: "L1: Airspace & Waivers", lesson: 1 },
+  { front: "What does a certificate of waiver allow?", back: "Deviation from certain specific Part 107 operating rules, once the FAA approves the proposed safety mitigations.", ref: "14 CFR §107.200", cat: "L1: Airspace & Waivers", lesson: 1 },
+  { front: "Which section lists the regulations eligible for a Part 107 waiver?", back: "§107.205 lists the specific waivable sections.", ref: "14 CFR §107.205", cat: "L1: Airspace & Waivers", lesson: 1 },
+  { front: "Name a rule that is NOT waivable and instead requires an exemption.", back: "§107.36 (carriage of hazardous materials) is not on the waivable list.", ref: "14 CFR §107.205; §107.36", cat: "L1: Airspace & Waivers", lesson: 1 },
+  { front: "What is the purpose of Remote ID?", back: "A 'digital license plate' broadcasting identification and location of the aircraft and control station in real time.", ref: "14 CFR Part 89", cat: "L1: Remote ID", lesson: 1 },
+  { front: "What are the three ways to comply with Remote ID?", back: "Fly a Standard Remote ID aircraft, add a Remote ID broadcast module, or operate within a FRIA.", ref: "14 CFR Part 89; FAA AIM Ch. 11", cat: "L1: Remote ID", lesson: 1 },
+  { front: "What is a FRIA?", back: "An FAA-Recognized Identification Area, where drones without Remote ID equipment may still legally fly.", ref: "14 CFR Part 89.130", cat: "L1: Remote ID", lesson: 1 },
+  { front: "Must a Remote ID-equipped aircraft still broadcast while operating within a FRIA?", back: "Yes — it must continue broadcasting continuously, even while inside or transiting a FRIA.", ref: "FAA AIM Ch. 11-4", cat: "L1: Remote ID", lesson: 1 },
+  { front: "Where must the operator be physically located when flying in a FRIA?", back: "Physically within the FRIA boundary, maintaining VLOS throughout the flight.", ref: "14 CFR Part 89.130; FAA AIM Ch. 11-4", cat: "L1: Remote ID", lesson: 1 },
+  { front: "What is required to legally fly a Part 107 small UAS at night today?", back: "Anti-collision lighting visible for at least 3 statute miles — no separate waiver is required.", ref: "14 CFR §107.29", cat: "L1: Night Operations", lesson: 1 },
+  { front: "How did pilots legally fly at night before the 2021 rule change?", back: "They needed a certificate of waiver against §107.29 (the daylight-operation restriction).", ref: "14 CFR §107.29 (history)", cat: "L1: Night Operations", lesson: 1 },
+  { front: "What happened to night-operation waivers issued before March 16, 2021?", back: "Those waivers, which deviated from §107.29, terminated on May 17, 2021.", ref: "14 CFR §107.29(d)", cat: "L1: Night Operations", lesson: 1 },
+  { front: "Besides true night, when else is anti-collision lighting required?", back: "During civil twilight.", ref: "14 CFR §107.29(a)(2)", cat: "L1: Night Operations", lesson: 1 },
+  { front: "How many categories of operations over people does Subpart D define?", back: "Four (Categories 1–4).", ref: "14 CFR §§107.110–107.140", cat: "L1: Operations Over People", lesson: 1 },
+  { front: "Key requirement for a Category 1 operation over people?", back: "The aircraft must weigh 0.55 lbs or less and have no exposed rotating parts that would lacerate skin on impact.", ref: "14 CFR §107.110", cat: "L1: Operations Over People", lesson: 1 },
+  { front: "Is operating from a moving vehicle over a densely populated area generally permitted?", back: "Generally no — it's significantly restricted compared to sparsely populated areas.", ref: "14 CFR §107.25", cat: "L1: Operations Over People", lesson: 1 },
+  { front: "What additional requirement applies to sustained flight over open-air assemblies of people?", back: "The operation must also meet the applicable Remote ID requirements of §89.110 or §89.115(a).", ref: "14 CFR §107.39(b)", cat: "L1: Operations Over People", lesson: 1 },
+  { front: "Who always has the right of way over a small UAS in flight?", back: "Manned aircraft, always.", ref: "14 CFR §107.37(a)", cat: "L1: Right-of-Way & VLOS", lesson: 1 },
+  { front: "What does the VLOS requirement demand of the RPIC, VO, and manipulator of controls?", back: "Being able to see the aircraft unaided (corrective lenses excepted) throughout the entire flight.", ref: "14 CFR §107.31", cat: "L1: Right-of-Way & VLOS", lesson: 1 },
+  { front: "What is the role of a visual observer?", back: "Assisting in visually locating the aircraft and scanning for hazards, supporting the RPIC's VLOS responsibility.", ref: "14 CFR §107.33", cat: "L1: Right-of-Way & VLOS", lesson: 1 },
+  { front: "How does a Part 107 remote pilot maintain recency after initial certification?", back: "By completing recurrent online training within the required recurrency period.", ref: "14 CFR §107.65", cat: "L1: Recency & Recordkeeping", lesson: 1 },
+  { front: "What must an RPIC make available to the FAA upon request?", back: "The remote pilot certificate, aircraft registration, and other required records.", ref: "14 CFR §107.7", cat: "L1: Recency & Recordkeeping", lesson: 1 },
+  { front: "What triggers a mandatory Part 107 accident report to the FAA?", back: "Serious injury, loss of consciousness, or property damage meeting the specified reporting threshold.", ref: "14 CFR §107.9", cat: "L1: Recency & Recordkeeping", lesson: 1 },
+  { front: "Within what timeframe must a qualifying accident be reported to the FAA?", back: "Within 10 calendar days.", ref: "14 CFR §107.9", cat: "L1: Recency & Recordkeeping", lesson: 1 },
+  { front: "What may an RPIC do during an in-flight emergency requiring a rule deviation?", back: "Deviate from any rule of Part 107 to the extent necessary to meet the emergency, and notify ATC/FAA if requested.", ref: "14 CFR §107.21", cat: "L1: Recency & Recordkeeping", lesson: 1 },
+  { front: "When is FAA registration generally required for a small UAS operated under Part 107?", back: "When the aircraft weighs more than 0.55 lbs.", ref: "14 CFR §107.13; Part 48", cat: "L1: Recency & Recordkeeping", lesson: 1 },
+  { front: "How many classes of airspace make up the U.S. airspace classification system?", back: "Six: A, B, C, D, E, and G.", ref: "14 CFR Part 71 / 91", cat: "L2: Airspace Overview", lesson: 2 },
+  { front: "What fundamentally distinguishes controlled from uncontrolled airspace?", back: "ATC provides separation services in controlled airspace (B, C, D, E); Class G (uncontrolled) generally does not require ATC services.", ref: "14 CFR Part 91, Subpart B", cat: "L2: Airspace Overview", lesson: 2 },
+  { front: "When must a Part 107 pilot obtain prior authorization before flying?", back: "When operating in controlled airspace such as Class B, C, D, or surface Class E.", ref: "14 CFR §107.41", cat: "L2: Airspace Overview", lesson: 2 },
+  { front: "What is the primary FAA reference for interpreting sectional chart airspace symbols?", back: "The FAA Aeronautical Chart User's Guide.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Airspace Overview", lesson: 2 },
+  { front: "What FAA tool helps check current airspace restrictions before a flight?", back: "The B4UFLY app or the UAS Data Delivery System.", ref: "FAA B4UFLY / UAS Data Delivery System", cat: "L2: Airspace Overview", lesson: 2 },
+  { front: "How is Class B airspace depicted on a sectional chart?", back: "Solid blue lines.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class B", lesson: 2 },
+  { front: "What kind of airports does Class B airspace typically surround?", back: "The busiest, highest-traffic airports — often shaped like an upside-down wedding cake.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class B", lesson: 2 },
+  { front: "On a Class B ring, what does a label like '30/SFC' mean?", back: "The ring extends from the surface up to 3,000 ft MSL (ceiling over floor, in hundreds of feet MSL).", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class B", lesson: 2 },
+  { front: "What must a Part 107 remote pilot obtain before flying in Class B airspace?", back: "Airspace authorization from ATC, often through LAANC.", ref: "14 CFR §107.41", cat: "L2: Class B", lesson: 2 },
+  { front: "How is Class C airspace depicted on a sectional chart?", back: "Solid magenta lines.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class C", lesson: 2 },
+  { front: "What is the typical shape of Class C airspace?", back: "Two tiers — an inner ring (~5 nm) from the surface, and an outer shelf (~10 nm) starting higher up (around 1,200 ft AGL).", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class C", lesson: 2 },
+  { front: "What size/traffic-level of airport does Class C generally serve?", back: "Busy regional airports with an approach control, but less traffic than Class B fields.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class C", lesson: 2 },
+  { front: "What does a Part 107 pilot need before operating in Class C airspace?", back: "Prior airspace authorization from ATC.", ref: "14 CFR §107.41", cat: "L2: Class C", lesson: 2 },
+  { front: "How is Class D airspace shown on a sectional chart?", back: "Dashed blue lines.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class D", lesson: 2 },
+  { front: "Class D airspace typically extends up to what altitude?", back: "Approximately 2,500 ft AGL.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class D", lesson: 2 },
+  { front: "What type of airport does Class D airspace typically surround?", back: "Airports with an operating control tower but lower traffic than Class B/C fields.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class D", lesson: 2 },
+  { front: "How is the Class D ceiling altitude typically displayed near the airport?", back: "As a number inside a blue box, in hundreds of feet MSL.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class D", lesson: 2 },
+  { front: "What does a dashed magenta ring around an airport indicate?", back: "Class E airspace extending down to the surface at that airport.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class E", lesson: 2 },
+  { front: "What does a shaded (fuzzy) magenta vignette indicate about Class E?", back: "Class E begins at 700 ft AGL on the faded side.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class E", lesson: 2 },
+  { front: "What does a shaded (fuzzy) blue vignette indicate about Class E?", back: "Class E begins at 1,200 ft AGL on the faded side.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class E", lesson: 2 },
+  { front: "In most of the continental U.S., absent other markings, where does Class E typically begin and end?", back: "1,200 ft AGL up to (but not including) 18,000 ft MSL, the floor of Class A.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class E", lesson: 2 },
+  { front: "Does a Part 107 pilot need authorization to fly in a surface-based Class E area (dashed magenta ring)?", back: "Yes — it's controlled airspace down to the surface there, so authorization is required just as in B, C, or D.", ref: "14 CFR §107.41", cat: "L2: Class E", lesson: 2 },
+  { front: "How is Class G airspace typically shown on a sectional chart?", back: "It is not explicitly drawn — it's whatever remains once other classes are excluded.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class G", lesson: 2 },
+  { front: "Does a Part 107 pilot need ATC authorization to fly in Class G below 400 ft AGL?", back: "No — Class G is uncontrolled and doesn't require prior authorization.", ref: "14 CFR §107.41", cat: "L2: Class G", lesson: 2 },
+  { front: "In some mountainous/high-desert regions, how high can Class G extend where no Class E shading exists?", back: "Up to 14,500 ft MSL.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Class G", lesson: 2 },
+  { front: "How are Restricted and Prohibited Areas depicted on a sectional chart?", back: "Blue hatched ('comb tooth') boundaries, labeled R-#### or P-##.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Special Use Airspace", lesson: 2 },
+  { front: "Should a pilot ever enter a Prohibited Area?", back: "No — Prohibited Areas are off-limits to flight regardless of authorization.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Special Use Airspace", lesson: 2 },
+  { front: "Under what condition might a Restricted Area be entered?", back: "When the area is not active, or with authorization from the controlling agency per the chart notes.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Special Use Airspace", lesson: 2 },
+  { front: "How are Military Operations Areas (MOAs) depicted on a sectional chart?", back: "Magenta hatched/shaded boundary with the area's name and an altitude/times table.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Special Use Airspace", lesson: 2 },
+  { front: "Where are Warning Areas established, and how do they compare to Restricted Areas?", back: "Over water; they pose similar hazards to Restricted Areas but lie outside U.S. sovereign airspace limits.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Special Use Airspace", lesson: 2 },
+  { front: "What do Alert Areas indicate to pilots?", back: "High volume of aerial activity (often flight training), requiring extra caution but no entry authorization.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Special Use Airspace", lesson: 2 },
+  { front: "What does TFR stand for?", back: "Temporary Flight Restriction.", ref: "14 CFR §91.137", cat: "L2: TFRs", lesson: 2 },
+  { front: "Name common triggers for a TFR.", back: "Wildfires, VIP movements, major sporting events, and disaster response operations.", ref: "14 CFR §91.137", cat: "L2: TFRs", lesson: 2 },
+  { front: "How are TFRs published for pilots to check before flying?", back: "Through NOTAMs (Notices to Air Missions).", ref: "14 CFR §91.137", cat: "L2: TFRs", lesson: 2 },
+  { front: "Unless otherwise labeled, altitude figures next to airspace boundaries are expressed in what unit?", back: "Hundreds of feet MSL, unless specifically labeled AGL.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Chart Symbology", lesson: 2 },
+  { front: "Why is it important to use a current sectional chart or app rather than an old one?", back: "Airspace boundaries, altitudes, and restrictions are periodically updated, so outdated charts may not reflect current conditions.", ref: "FAA Aeronautical Chart User's Guide", cat: "L2: Chart Symbology", lesson: 2 },
+  { front: "What does a METAR represent?", back: "A routine, hourly aviation surface weather report of current conditions at a station.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Basics", lesson: 3 },
+  { front: "In a METAR date/time group like '221953Z', what does '1953Z' represent?", back: "1953 hours (7:53 PM) in UTC/Zulu time.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Basics", lesson: 3 },
+  { front: "What does 'AUTO' indicate in a METAR?", back: "The report was generated by a fully automated station, with no human augmentation.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Basics", lesson: 3 },
+  { front: "In the wind group '27015KT', what do the numbers represent?", back: "Wind from 270° true at 15 knots.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Basics", lesson: 3 },
+  { front: "What does 'VRB' mean in a METAR wind group?", back: "Variable wind direction, typically associated with light wind.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Basics", lesson: 3 },
+  { front: "In '27015G25KT', what does 'G25' mean?", back: "The wind is gusting to a peak speed of 25 knots.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Basics", lesson: 3 },
+  { front: "What does '10SM' mean in a METAR?", back: "10 statute miles of flight visibility.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Decoding", lesson: 3 },
+  { front: "What does the sky condition 'BKN025' indicate?", back: "Broken clouds with bases at 2,500 ft AGL.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Decoding", lesson: 3 },
+  { front: "What does 'OVC008' indicate?", back: "An overcast ceiling with its base at 800 ft AGL.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Decoding", lesson: 3 },
+  { front: "What does 'CLR' typically indicate at an automated station?", back: "Clear skies — no clouds detected below 12,000 ft AGL.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Decoding", lesson: 3 },
+  { front: "How does '-RA' differ from '+TSRA' in a METAR?", back: "'-RA' is light rain; '+TSRA' is heavy thunderstorm activity with rain.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Decoding", lesson: 3 },
+  { front: "In a METAR showing '18/12', what does this mean?", back: "Temperature 18°C and dewpoint 12°C.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: METAR Decoding", lesson: 3 },
+  { front: "What does TAF stand for?", back: "Terminal Aerodrome Forecast — a scheduled forecast for conditions at and around an airport.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: TAF Basics", lesson: 3 },
+  { front: "In a TAF valid period like '2212/2318', what does this represent?", back: "Valid from the 22nd at 1200Z to the 23rd at 1800Z.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: TAF Basics", lesson: 3 },
+  { front: "What does an 'FM' group indicate in a TAF?", back: "A significant, rapid change in conditions expected from that specified time onward.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: TAF Basics", lesson: 3 },
+  { front: "What does 'BECMG' indicate in a TAF?", back: "A gradual change expected to occur over a specified time period.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: TAF Basics", lesson: 3 },
+  { front: "What does 'TEMPO' indicate in a TAF?", back: "Temporary, intermittent fluctuations expected, each lasting less than an hour at a time.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: TAF Basics", lesson: 3 },
+  { front: "Where can pilots find official, current METARs, TAFs, and weather charts online?", back: "The Aviation Weather Center (aviationweather.gov).", ref: "Aviation Weather Center (aviationweather.gov)", cat: "L3: Weather Sources", lesson: 3 },
+  { front: "How can a pilot obtain an official FAA weather briefing?", back: "Through Leidos Flight Service via 1800wxbrief.com or by phone (1-800-WX-BRIEF).", ref: "Leidos Flight Service", cat: "L3: Weather Sources", lesson: 3 },
+  { front: "What is a PIREP?", back: "A Pilot Report of actual observed weather conditions encountered in flight.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: Weather Sources", lesson: 3 },
+  { front: "What is a SIGMET?", back: "An advisory for significant meteorological conditions hazardous to all aircraft, such as severe icing or turbulence.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: Weather Sources", lesson: 3 },
+  { front: "What is density altitude?", back: "Pressure altitude corrected for non-standard temperature — the altitude the aircraft effectively 'feels'.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: Wind, Visibility & Density Altitude", lesson: 3 },
+  { front: "How does high density altitude generally affect small UAS performance?", back: "It can reduce lift and motor/propeller efficiency, degrading overall performance.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: Wind, Visibility & Density Altitude", lesson: 3 },
+  { front: "How does higher temperature generally affect density altitude?", back: "It increases density altitude, since warmer air is less dense.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: Wind, Visibility & Density Altitude", lesson: 3 },
+  { front: "How does higher humidity generally affect density altitude, compared to dry air?", back: "Moist air is less dense than dry air, so higher humidity tends to increase density altitude.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: Wind, Visibility & Density Altitude", lesson: 3 },
+  { front: "Why does Part 107 set a minimum flight visibility requirement?", back: "So the pilot can see and avoid other aircraft and hazards, supporting VLOS operations.", ref: "14 CFR §107.51(c)", cat: "L3: Wind, Visibility & Density Altitude", lesson: 3 },
+  { front: "What is a microburst?", back: "A strong, localized downdraft that spreads out rapidly at the surface, creating dangerous and rapidly changing winds.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: Hazardous Weather Phenomena", lesson: 3 },
+  { front: "What are thermals?", back: "Rising columns of warm air that can create turbulence, especially over sun-heated terrain.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: Hazardous Weather Phenomena", lesson: 3 },
+  { front: "What is wind shear?", back: "A sudden change in wind speed and/or direction over a short distance — especially hazardous during takeoff and landing.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: Hazardous Weather Phenomena", lesson: 3 },
+  { front: "Why should a remote pilot be cautious operating near thunderstorms?", back: "They can produce severe turbulence, gusty/shifting winds, microbursts, and rapidly deteriorating visibility.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L3: Hazardous Weather Phenomena", lesson: 3 },
+  { front: "How does cold weather typically affect a LiPo battery's voltage under load?", back: "Increased internal resistance causes greater voltage sag, which can trigger an early low-voltage warning or cutoff.", ref: "Battery manufacturer specifications", cat: "L4: Battery Performance", lesson: 4 },
+  { front: "What is a recommended practice before flying in cold weather?", back: "Keep batteries warm (e.g., insulated case or indoor storage) before flight.", ref: "Battery manufacturer specifications", cat: "L4: Battery Performance", lesson: 4 },
+  { front: "What risk increases when a battery gets too hot?", back: "Increased risk of overheating, reduced lifespan, and potential thermal runaway under aggressive use.", ref: "Battery manufacturer specifications", cat: "L4: Battery Performance", lesson: 4 },
+  { front: "What typically happens to usable flight time in cold weather?", back: "It usually decreases, due to reduced battery capacity and efficiency in the cold.", ref: "Battery manufacturer specifications", cat: "L4: Battery Performance", lesson: 4 },
+  { front: "Why should charged LiPo batteries not be left inside a hot vehicle?", back: "Elevated heat accelerates degradation and increases fire/thermal runaway risk.", ref: "Battery manufacturer specifications", cat: "L4: Battery Performance", lesson: 4 },
+  { front: "What should an RPIC do if battery voltage drops rapidly and unexpectedly during a cold-weather flight?", back: "Land promptly — a rapid, unexpected voltage drop signals a risk of losing power.", ref: "14 CFR §107.15", cat: "L4: Battery Performance", lesson: 4 },
+  { front: "What do most small UAS manufacturers specify regarding wind?", back: "A maximum sustained wind speed rating for safe operation.", ref: "Aircraft manufacturer specifications", cat: "L4: Wind Limits & Control Authority", lesson: 4 },
+  { front: "Why can gusty wind be more hazardous than the same average steady wind speed?", back: "Gusts can spike well above the aircraft's control authority even when the average/sustained wind is within limits.", ref: "Aircraft manufacturer specifications", cat: "L4: Wind Limits & Control Authority", lesson: 4 },
+  { front: "What does 'control authority' refer to?", back: "The aircraft's ability to maintain its intended attitude and position against outside forces like wind.", ref: "Aircraft manufacturer specifications", cat: "L4: Wind Limits & Control Authority", lesson: 4 },
+  { front: "Why can surface wind reported in a METAR be misleading for UAS operations?", back: "Wind aloft, at the UAS's actual operating altitude, can differ significantly from the surface wind reading.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L4: Wind Limits & Control Authority", lesson: 4 },
+  { front: "How does high wind generally affect smaller/lighter UAS compared to larger, heavier ones?", back: "Smaller/lighter aircraft are typically more susceptible to being pushed off course or losing control authority.", ref: "Aircraft manufacturer specifications", cat: "L4: Wind Limits & Control Authority", lesson: 4 },
+  { front: "What should an RPIC do if wind conditions are forecast to exceed the aircraft's manufacturer-rated limits?", back: "Postpone or cancel the operation — a no-go decision.", ref: "14 CFR §107.15", cat: "L4: Wind Limits & Control Authority", lesson: 4 },
+  { front: "How does high density altitude generally affect propeller/rotor efficiency?", back: "It reduces efficiency, since thinner air produces less lift/thrust per RPM.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L4: Density Altitude Effects", lesson: 4 },
+  { front: "What must a small UAS typically do to compensate for high density altitude during hover or climb?", back: "Draw more power or use a higher throttle setting to produce the same amount of lift.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L4: Density Altitude Effects", lesson: 4 },
+  { front: "How does high density altitude generally affect maximum payload capacity?", back: "It tends to reduce it, since less lift is available at a given power setting.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L4: Density Altitude Effects", lesson: 4 },
+  { front: "How does high density altitude generally affect flight time or range?", back: "It tends to decrease it, due to higher power draw needed to maintain lift.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L4: Density Altitude Effects", lesson: 4 },
+  { front: "Which combination of conditions produces the highest (most performance-limiting) density altitude?", back: "High elevation, high temperature, and high humidity — all compounding together.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L4: Density Altitude Effects", lesson: 4 },
+  { front: "Why is density altitude relevant to electric small UAS, not just fuel-powered manned aircraft?", back: "Thinner air reduces propeller thrust and lift regardless of what powers the motor.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L4: Density Altitude Effects", lesson: 4 },
+  { front: "Scenario: sustained winds are within your aircraft's rated limit, but gusts are 10 kt above the manufacturer's maximum. Go or no-go?", back: "No-go — gusts exceeding the rated limit pose a real hazard even if sustained wind doesn't.", ref: "14 CFR §107.15", cat: "L4: Go/No-Go Scenarios", lesson: 4 },
+  { front: "Scenario: on a cold morning, an unwarmed battery shows rapid voltage sag during preflight. Go or no-go?", back: "No-go / delay until batteries are properly warmed and voltage stabilizes.", ref: "14 CFR §107.15", cat: "L4: Go/No-Go Scenarios", lesson: 4 },
+  { front: "Scenario: high-elevation site, hot afternoon, payload near the aircraft's maximum rated weight. What's the right call?", back: "Reassess: reduce payload or delay, since high density altitude reduces the available lift margin.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L4: Go/No-Go Scenarios", lesson: 4 },
+  { front: "Scenario: a battery shows abnormal heat or visible swelling before flight. Go or no-go?", back: "No-go — do not fly with a damaged or swollen battery.", ref: "14 CFR §107.15", cat: "L4: Go/No-Go Scenarios", lesson: 4 },
+  { front: "Under §107.15, what must the RPIC confirm before every flight, regardless of weather?", back: "That the small UAS is in a condition for safe operation.", ref: "14 CFR §107.15", cat: "L4: Go/No-Go Scenarios", lesson: 4 },
+  { front: "Scenario: wind, cold temperatures, and high density altitude are all simultaneously marginal but individually within limits. Best approach?", back: "Treat the cumulative risk conservatively and lean toward no-go — combined marginal factors compound risk beyond any single factor alone.", ref: "14 CFR §107.15", cat: "L4: Go/No-Go Scenarios", lesson: 4 },
+  { front: "What does 'CG' stand for, and why does it matter for a small UAS?", back: "Center of Gravity — it affects the aircraft's stability and controllability.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Loading & CG", lesson: 5 },
+  { front: "What can happen if the CG is too far forward, aft, or off-center?", back: "It can cause instability and uncommanded pitch or roll tendencies, reducing control authority.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Loading & CG", lesson: 5 },
+  { front: "What must the RPIC verify about payload before flight?", back: "That the aircraft is loaded within the manufacturer's max takeoff weight and CG limits.", ref: "14 CFR \u00a7107.15", cat: "L5: Loading & CG", lesson: 5 },
+  { front: "Where can a remote pilot typically find an aircraft's max takeoff weight and CG limits?", back: "In the manufacturer's flight manual or POH-equivalent aircraft documentation.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Loading & CG", lesson: 5 },
+  { front: "What effect does adding payload near the aircraft's max rated weight typically have on performance?", back: "It tends to reduce climb rate, top speed, wind tolerance, and flight endurance.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Loading & CG", lesson: 5 },
+  { front: "Why should payload be properly secured before flight?", back: "Shifting or loose payload can alter the CG in flight, causing instability.", ref: "14 CFR \u00a7107.15", cat: "L5: Loading & CG", lesson: 5 },
+  { front: "What is the general purpose of a manufacturer-provided performance chart for an sUAS?", back: "It shows expected performance — hover time, range, climb rate — under given conditions like weight, temperature, and altitude.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Performance Charts & Limits", lesson: 5 },
+  { front: "Why should an RPIC consult performance data before a mission at high elevation or in extreme temperatures?", back: "Because density altitude and temperature affect the aircraft's available performance margins.", ref: "FAA Aviation Weather Handbook (FAA-H-8083-28)", cat: "L5: Performance Charts & Limits", lesson: 5 },
+  { front: "What generally happens to performance margins as payload approaches the aircraft's max rated weight?", back: "Margins shrink, leaving less buffer to handle wind gusts or emergencies.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Performance Charts & Limits", lesson: 5 },
+  { front: "Why is it important to know your specific airframe's limits rather than relying on generic assumptions?", back: "Performance varies significantly between models, so using the wrong specs risks unsafe operation.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Performance Charts & Limits", lesson: 5 },
+  { front: "Under \u00a7107.15, how does performance planning relate to the 'condition for safe operation' requirement?", back: "The RPIC must ensure the aircraft can safely complete the intended operation given its load and expected conditions.", ref: "14 CFR \u00a7107.15", cat: "L5: Performance Charts & Limits", lesson: 5 },
+  { front: "What is a 'lost link' event?", back: "A loss of the control link/communication between the control station and the aircraft.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Emergency Procedures: Lost Link", lesson: 5 },
+  { front: "What is a common fail-safe behavior programmed for lost-link events?", back: "The aircraft may be configured to hover, return-to-home (RTH), or land automatically, depending on settings.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Emergency Procedures: Lost Link", lesson: 5 },
+  { front: "What should an RPIC do to prepare for potential lost-link events?", back: "Know and configure the aircraft's lost-link fail-safe behavior before flight, and brief it as part of preflight planning.", ref: "14 CFR \u00a7107.15", cat: "L5: Emergency Procedures: Lost Link", lesson: 5 },
+  { front: "Under \u00a7107.21, what discretion does the RPIC have during an in-flight emergency such as a lost-link event?", back: "The RPIC may deviate from any rule of Part 107 to the extent necessary to meet the emergency.", ref: "14 CFR \u00a7107.21", cat: "L5: Emergency Procedures: Lost Link", lesson: 5 },
+  { front: "What can happen to a GPS-dependent multirotor after a GPS signal loss?", back: "It may drift with the wind or shift into an attitude/manual hold mode requiring more active pilot control.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Emergency Procedures: GPS Loss", lesson: 5 },
+  { front: "Why is practicing manual or attitude-mode flying important for emergency preparedness?", back: "In case GPS-assisted modes fail, the RPIC needs to safely retain control without GPS assistance.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Emergency Procedures: GPS Loss", lesson: 5 },
+  { front: "What preflight consideration relates to the GPS signal environment at a flight site?", back: "Checking for reflective surfaces, structures, or interference that could weaken GPS reception before flight.", ref: "14 CFR \u00a7107.15", cat: "L5: Emergency Procedures: GPS Loss", lesson: 5 },
+  { front: "What should an RPIC do immediately upon noticing GPS degradation in flight?", back: "Prepare to switch to manual control and land as soon as safely possible if instability results.", ref: "14 CFR \u00a7107.21", cat: "L5: Emergency Procedures: GPS Loss", lesson: 5 },
+  { front: "What is a 'flyaway'?", back: "A situation where the aircraft doesn't respond to control inputs and flies outside operator control unexpectedly.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Emergency Procedures: Low Battery & Flyaway", lesson: 5 },
+  { front: "What is a common fail-safe setting for low battery conditions?", back: "Automatic return-to-home or automatic landing triggered at a preset critical battery voltage threshold.", ref: "Aircraft manufacturer flight manual / POH", cat: "L5: Emergency Procedures: Low Battery & Flyaway", lesson: 5 },
+  { front: "Why should an RPIC land well before reaching the aircraft's critical/minimum battery voltage?", back: "To preserve a margin for unexpected wind or maneuvering and avoid an abrupt power loss.", ref: "14 CFR \u00a7107.15", cat: "L5: Emergency Procedures: Low Battery & Flyaway", lesson: 5 },
+  { front: "What immediate step should an RPIC take upon suspecting a flyaway?", back: "Attempt to regain control via the fail-safe/return-to-home function, and be ready to notify appropriate parties as the situation develops.", ref: "14 CFR \u00a7107.21", cat: "L5: Emergency Procedures: Low Battery & Flyaway", lesson: 5 },
+  { front: "Per \u00a7107.9, what must be reported to the FAA if an emergency like a flyaway results in serious injury or qualifying property damage?", back: "A report to the FAA within the required 10 calendar day timeframe.", ref: "14 CFR \u00a7107.9", cat: "L5: Emergency Procedures: Low Battery & Flyaway", lesson: 5 },
+  { front: "In a multi-person small UAS operation, who holds ultimate authority and responsibility for the flight?", back: "The Pilot in Command (PIC/RPIC) — final authority and responsibility for the operation and safety of the flight.", ref: "14 CFR \u00a7107.19", cat: "L6: Crew Roles", lesson: 6 },
+  { front: "What is the role of the 'manipulator of the controls'?", back: "The person actually operating the flight controls of the small UAS; may or may not be the same person as the RPIC.", ref: "14 CFR \u00a7107.19", cat: "L6: Crew Roles", lesson: 6 },
+  { front: "What is the primary duty of a visual observer (VO)?", back: "To maintain visual contact with the aircraft and assist the RPIC in maintaining awareness of the aircraft's position relative to other aircraft, people, and obstacles.", ref: "14 CFR \u00a7107.33", cat: "L6: Crew Roles", lesson: 6 },
+  { front: "Does a visual observer need a Remote Pilot Certificate?", back: "No — a VO does not need to hold a Remote Pilot Certificate, but must be capable of seeing the aircraft with vision unaided by any device other than corrective lenses.", ref: "14 CFR \u00a7107.33", cat: "L6: Crew Roles", lesson: 6 },
+  { front: "If the RPIC is not the manipulator of the controls, what must still be true of the RPIC?", back: "The RPIC retains overall responsibility and must be able to direct the flight and take over the controls or command a stop to the operation if needed.", ref: "14 CFR \u00a7107.19", cat: "L6: Crew Roles", lesson: 6 },
+  { front: "Can one person serve as both the RPIC and the visual observer at the same time?", back: "Yes, on a single-person operation the RPIC often also serves as the sole visual observer, provided they can maintain VLOS.", ref: "14 CFR \u00a7107.31", cat: "L6: Crew Roles", lesson: 6 },
+  { front: "What is Crew Resource Management (CRM), broadly defined?", back: "The effective use of all available resources — people, equipment, and information — to achieve safe and efficient flight operations.", ref: "FAA-H-8083-25, Ch. 13", cat: "L6: CRM Principles", lesson: 6 },
+  { front: "Why is clear, closed-loop communication important between RPIC and VO?", back: "It confirms that instructions and traffic/hazard calls were correctly heard and understood, reducing the chance of a missed hazard.", ref: "FAA-H-8083-25, Ch. 13", cat: "L6: CRM Principles", lesson: 6 },
+  { front: "What should happen before a multi-person UAS flight begins, from a CRM standpoint?", back: "A preflight briefing covering roles, responsibilities, communication procedures, and emergency/lost-link plans.", ref: "14 CFR \u00a7107.19", cat: "L6: CRM Principles", lesson: 6 },
+  { front: "What CRM practice helps prevent task saturation for the RPIC during a complex flight?", back: "Delegating appropriate tasks (like scanning for traffic) to a visual observer or additional crew rather than the RPIC trying to do everything alone.", ref: "FAA-H-8083-25, Ch. 13", cat: "L6: CRM Principles", lesson: 6 },
+  { front: "What should a crew member do if they see a hazard the RPIC may not have noticed?", back: "Communicate it immediately and clearly, regardless of role or hierarchy — good CRM means every crew member can speak up.", ref: "FAA-H-8083-25, Ch. 13", cat: "L6: CRM Principles", lesson: 6 },
+  { front: "How does CRM apply even to a single-pilot (no VO) small UAS operation?", back: "It still applies to managing the pilot's own attention, workload, and use of resources like checklists and automation.", ref: "FAA-H-8083-25, Ch. 13", cat: "L6: CRM Principles", lesson: 6 },
+  { front: "Why is standard aviation phraseology used instead of casual conversation on the radio?", back: "It reduces ambiguity and ensures messages are understood quickly and consistently by all listeners.", ref: "AIM, Ch. 4", cat: "L6: Standard Phraseology", lesson: 6 },
+  { front: "In radio phraseology, what does the word 'affirmative' mean, and why use it instead of 'yes'?", back: "It means 'yes' — it's used because it's clearer and less likely to be confused with other words over a radio, especially in poor audio conditions.", ref: "AIM, Ch. 4", cat: "L6: Standard Phraseology", lesson: 6 },
+  { front: "What does 'negative' mean in radio phraseology?", back: "No, or 'permission not granted,' or 'that is not correct' — used instead of 'no' for clarity.", ref: "AIM, Ch. 4", cat: "L6: Standard Phraseology", lesson: 6 },
+  { front: "What is the standard phraseology term for repeating back a message to confirm understanding?", back: "'Readback' or 'say again' — used to confirm the content of a transmission was received correctly.", ref: "AIM, Ch. 4", cat: "L6: Standard Phraseology", lesson: 6 },
+  { front: "How should numbers generally be spoken in standard aviation phraseology?", back: "Each digit is pronounced individually (e.g., 'one-two-zero' instead of 'one hundred twenty'), except for round thousands and altitudes with certain conventions.", ref: "AIM, Ch. 4", cat: "L6: Standard Phraseology", lesson: 6 },
+  { front: "What phrase is used to indicate a transmission should be repeated because it wasn't understood?", back: "'Say again' — requests that the previous transmission be repeated.", ref: "AIM, Ch. 4", cat: "L6: Standard Phraseology", lesson: 6 },
+  { front: "What is a CTAF?", back: "Common Traffic Advisory Frequency — the designated frequency for pilots to self-announce position and intentions at a non-towered airport.", ref: "FAA-H-8083-25, Ch. 13", cat: "L6: Radio Procedures", lesson: 6 },
+  { front: "At a non-towered airport, what should a radio call typically include?", back: "Airport name, position/intentions, and airport name again (e.g., \"[Airport], UAS operations, departing runway, remaining in the pattern, [Airport]\").", ref: "FAA-H-8083-25, Ch. 13", cat: "L6: Radio Procedures", lesson: 6 },
+  { front: "Why might a remote pilot monitor or transmit on a CTAF even without an airborne aircraft transponder?", back: "To announce ground-based UAS operations near the airport environment and help maintain situational awareness for manned traffic.", ref: "FAA-H-8083-25, Ch. 13", cat: "L6: Radio Procedures", lesson: 6 },
+  { front: "At a towered airport, who must a remote pilot typically coordinate with before operating nearby?", back: "Air Traffic Control (ATC), often via airspace authorization procedures such as LAANC or direct coordination.", ref: "14 CFR \u00a7107.41", cat: "L6: Radio Procedures", lesson: 6 },
+  { front: "What is the purpose of announcing position and intentions before entering an active runway or pattern area?", back: "To alert other traffic in the area and reduce the risk of a conflict, since many small non-towered airports rely on pilots self-announcing.", ref: "FAA-H-8083-25, Ch. 13", cat: "L6: Radio Procedures", lesson: 6 },
+  { front: "What should a remote pilot do if they are uncertain whether a radio call was correctly received?", back: "Request a readback or confirmation, or repeat the call, rather than assuming it was heard.", ref: "AIM, Ch. 4", cat: "L6: Radio Procedures", lesson: 6 },
+  { front: "What does the acronym 'ADM' stand for?", back: "Aeronautical Decision-Making — a systematic approach to consistently determining the best course of action.", ref: "FAA-H-8083-2", cat: "L7: ADM Models", lesson: 7 },
+  { front: "What does each letter of the DECIDE model stand for?", back: "Detect, Estimate, Choose a course of action, Identify solutions, Do the necessary actions, Evaluate the effect of the action.", ref: "FAA-H-8083-2", cat: "L7: ADM Models", lesson: 7 },
+  { front: "Why use a structured model like DECIDE instead of relying on instinct alone?", back: "It provides a repeatable framework so a pilot doesn't miss steps when working through a problem under pressure.", ref: "FAA-H-8083-2", cat: "L7: ADM Models", lesson: 7 },
+  { front: "What does the PAVE checklist stand for?", back: "Pilot, Aircraft, enVironment, External pressures — the four risk categories a pilot assesses before flight.", ref: "FAA-H-8083-2", cat: "L7: ADM Models", lesson: 7 },
+  { front: "In PAVE, what does the 'P' (Pilot) category assess?", back: "The pilot's own fitness to fly — experience, currency, and physical/mental condition.", ref: "FAA-H-8083-2", cat: "L7: ADM Models", lesson: 7 },
+  { front: "In PAVE, what does the 'V' (enVironment) category assess?", back: "Weather, terrain, airspace, lighting, and other conditions surrounding the flight.", ref: "FAA-H-8083-2", cat: "L7: ADM Models", lesson: 7 },
+  { front: "What does IMSAFE stand for?", back: "Illness, Medication, Stress, Alcohol, Fatigue, Eating/Emotion — a personal fitness-for-flight checklist.", ref: "FAA-H-8083-2", cat: "L7: ADM Models", lesson: 7 },
+  { front: "When should a remote pilot perform an IMSAFE self-assessment?", back: "Before every flight, as part of routine preflight planning, not just when something feels obviously wrong.", ref: "14 CFR \u00a7107.19", cat: "L7: ADM Models", lesson: 7 },
+  { front: "In IMSAFE, what does the 'I' (Illness) check for?", back: "Any current illness or symptoms that could impair judgment, reaction time, or physical capability.", ref: "FAA-H-8083-2", cat: "L7: Physiological Factors", lesson: 7 },
+  { front: "In IMSAFE, what does the 'M' (Medication) check for?", back: "Whether any prescription or over-the-counter medication could cause drowsiness, impaired judgment, or other side effects.", ref: "FAA-H-8083-2", cat: "L7: Physiological Factors", lesson: 7 },
+  { front: "In IMSAFE, what does the 'S' (Stress) check for?", back: "Emotional or mental stress from personal, financial, or work pressures that could distract from safe operation.", ref: "FAA-H-8083-2", cat: "L7: Physiological Factors", lesson: 7 },
+  { front: "What does 14 CFR \u00a7107.27 prohibit regarding alcohol and drugs?", back: "Operating or acting as a crewmember of a small UAS while impaired by alcohol or any drug that affects safety.", ref: "14 CFR \u00a7107.27", cat: "L7: Physiological Factors", lesson: 7 },
+  { front: "In IMSAFE, what does the 'F' (Fatigue) check for, and why is it especially risky?", back: "Physical or mental tiredness — it's risky because it can degrade judgment and reaction time without the pilot always recognizing it.", ref: "FAA-H-8083-2", cat: "L7: Physiological Factors", lesson: 7 },
+  { front: "In IMSAFE, what does the final 'E' (Eating/Emotion) check for?", back: "Whether the pilot is adequately nourished/hydrated and emotionally steady enough to fly safely.", ref: "FAA-H-8083-2", cat: "L7: Physiological Factors", lesson: 7 },
+  { front: "Why can fatigue be more dangerous than other IMSAFE factors in terms of self-recognition?", back: "A fatigued pilot may not accurately judge their own performance decline, unlike more obvious factors like illness.", ref: "FAA-H-8083-2", cat: "L7: Physiological Factors", lesson: 7 },
+  { front: "What is the general safety guidance regarding stress and flight planning?", back: "Significant acute stress should prompt a pilot to reconsider or delay a flight until they can operate with full attention and sound judgment.", ref: "FAA-H-8083-2", cat: "L7: Physiological Factors", lesson: 7 },
+  { front: "What is the first general step in a basic risk management process?", back: "Identifying hazards — recognizing anything with the potential to cause harm to people, equipment, or the operation.", ref: "FAA-H-8083-2", cat: "L7: Risk Management", lesson: 7 },
+  { front: "What is the difference between a 'hazard' and a 'risk'?", back: "A hazard is a condition with the potential for harm; risk is the probability and severity of that harm actually occurring.", ref: "FAA-H-8083-2", cat: "L7: Risk Management", lesson: 7 },
+  { front: "What does a risk assessment matrix typically plot against each other?", back: "The likelihood (probability) of a hazard occurring against the severity of its potential consequences.", ref: "FAA-H-8083-2", cat: "L7: Risk Management", lesson: 7 },
+  { front: "What are common ways to mitigate an identified risk?", back: "Avoid it, reduce its likelihood or severity, transfer it, or accept it if it's within an acceptable threshold.", ref: "FAA-H-8083-2", cat: "L7: Risk Management", lesson: 7 },
+  { front: "What is the overall goal of applying a risk management framework to flight planning?", back: "To make hazards and their associated risks visible early, so they can be deliberately mitigated before they become incidents.", ref: "FAA-H-8083-2", cat: "L7: Risk Management", lesson: 7 },
+  { front: "Why should risk assessment continue throughout a flight rather than stopping after the preflight check?", back: "Conditions and risk factors — weather, fatigue, equipment status — can change during the operation, requiring ongoing reassessment.", ref: "FAA-H-8083-2", cat: "L7: Risk Management", lesson: 7 },
+  { front: "What is an 'external pressure' in the context of PAVE and risk management?", back: "Outside influences — like a client deadline or schedule pressure — that might tempt a pilot to accept more risk than they should.", ref: "FAA-H-8083-2", cat: "L7: Risk Management", lesson: 7 },
+  { front: "How does documenting a go/no-go decision benefit a pilot or organization over time?", back: "It creates a record that supports consistent decision-making and can be reviewed to improve future risk assessments.", ref: "FAA-H-8083-2", cat: "L7: Risk Management", lesson: 7 },
+  { front: "What does a lighted wind cone or tetrahedron at an airport indicate?", back: "Wind direction (and, for a tetrahedron, sometimes the direction of landing) — the small end points into the wind.", ref: "AIM, Ch. 2", cat: "L8: Airport Markings & Signage", lesson: 8 },
+  { front: "What do yellow airport signs with black text and numbers/letters typically indicate?", back: "Location signs — they identify the taxiway or runway the aircraft is currently on.", ref: "AIM, Ch. 2", cat: "L8: Airport Markings & Signage", lesson: 8 },
+  { front: "What does a runway holding position marking look like, and what does it mean?", back: "Two solid and two dashed yellow lines across a taxiway — it marks the boundary where an aircraft must stop before entering the runway without clearance.", ref: "AIM, Ch. 2", cat: "L8: Airport Markings & Signage", lesson: 8 },
+  { front: "What color are taxiway centerline markings, versus runway centerline markings?", back: "Taxiway centerlines are yellow; runway markings are white.", ref: "AIM, Ch. 2", cat: "L8: Airport Markings & Signage", lesson: 8 },
+  { front: "What does a rotating beacon showing alternating white and green flashes typically indicate?", back: "A lighted civilian land airport (white-green flashes identify the airport at night or in low visibility).", ref: "AIM, Ch. 2", cat: "L8: Airport Markings & Signage", lesson: 8 },
+  { front: "What is the purpose of a segmented circle installation at a non-towered airport?", back: "It shows traffic pattern information, including pattern direction, for pilots approaching the airport.", ref: "AIM, Ch. 2", cat: "L8: Airport Markings & Signage", lesson: 8 },
+  { front: "What are the five legs of a standard rectangular traffic pattern, in order?", back: "Upwind, crosswind, downwind, base, and final.", ref: "FAA-H-8083-25, Ch. 14", cat: "L8: Traffic Patterns", lesson: 8 },
+  { front: "Unless otherwise indicated, which direction are traffic pattern turns typically made?", back: "Left turns (\"left traffic\") — right traffic is used only where specifically indicated.", ref: "FAA-H-8083-25, Ch. 14", cat: "L8: Traffic Patterns", lesson: 8 },
+  { front: "Why does a remote pilot need to understand manned-aircraft traffic patterns even though the sUAS doesn't fly the pattern itself?", back: "To anticipate where manned traffic will be near an airport and avoid conflicting with it during sUAS operations in the vicinity.", ref: "FAA-H-8083-25, Ch. 14", cat: "L8: Traffic Patterns", lesson: 8 },
+  { front: "What is the 'downwind' leg of a traffic pattern?", back: "The leg flown parallel to the runway, in the opposite direction of landing.", ref: "FAA-H-8083-25, Ch. 14", cat: "L8: Traffic Patterns", lesson: 8 },
+  { front: "What is the 'final' leg of a traffic pattern?", back: "The leg aligned with the runway centerline, leading directly to landing.", ref: "FAA-H-8083-25, Ch. 14", cat: "L8: Traffic Patterns", lesson: 8 },
+  { front: "What should a remote pilot do if operating near an airport's active runway or pattern area?", back: "Maintain awareness of manned traffic patterns, avoid interfering with them, and coordinate/announce as appropriate for the airspace.", ref: "FAA-H-8083-25, Ch. 14", cat: "L8: Traffic Patterns", lesson: 8 },
+  { front: "What is the general purpose of a preflight inspection for a small UAS?", back: "To confirm the aircraft is in a condition for safe operation before every flight.", ref: "14 CFR \u00a7107.15", cat: "L8: Preflight Inspection", lesson: 8 },
+  { front: "What should be checked on the propellers/rotors during a preflight inspection?", back: "Look for cracks, chips, warping, or looseness that could affect performance or cause an in-flight failure.", ref: "Aircraft manufacturer flight manual / POH", cat: "L8: Preflight Inspection", lesson: 8 },
+  { front: "What should be checked regarding the battery during a preflight inspection?", back: "Charge level, physical condition (swelling, damage), and secure mounting/connection.", ref: "Aircraft manufacturer flight manual / POH", cat: "L8: Preflight Inspection", lesson: 8 },
+  { front: "Why should a pilot verify firmware/software status before flight?", back: "Outdated or incomplete updates can cause unexpected behavior, including in flight-critical systems like GPS or fail-safes.", ref: "Aircraft manufacturer flight manual / POH", cat: "L8: Preflight Inspection", lesson: 8 },
+  { front: "What role does a manufacturer's checklist play in the preflight process?", back: "It provides an aircraft-specific, standardized list of items to verify, reducing the chance of skipping a critical check.", ref: "Aircraft manufacturer flight manual / POH", cat: "L8: Preflight Inspection", lesson: 8 },
+  { front: "Why should a preflight inspection be performed even if the aircraft flew without issue on a previous flight?", back: "Conditions, components, and wear can change between flights, so each flight requires its own independent safety verification.", ref: "14 CFR \u00a7107.15", cat: "L8: Preflight Inspection", lesson: 8 },
+  { front: "What does 14 CFR \u00a7107.15 require regarding the aircraft's condition before flight?", back: "The RPIC must not operate unless the small UAS is in a condition for safe operation, and must inspect it prior to each flight.", ref: "14 CFR \u00a7107.15", cat: "L8: Maintenance & Recordkeeping", lesson: 8 },
+  { front: "Does Part 107 mandate a specific FAA maintenance logbook format for small UAS, the way manned aircraft maintenance is tracked?", back: "No — Part 107 does not prescribe a specific maintenance recordkeeping form, but the RPIC is still responsible for ensuring an airworthy condition.", ref: "14 CFR \u00a7107.15", cat: "L8: Maintenance & Recordkeeping", lesson: 8 },
+  { front: "Why is it good practice to keep a maintenance log even though Part 107 doesn't require a specific form?", back: "It helps track component wear, repairs, and firmware history, supporting safer decisions and demonstrating due diligence.", ref: "Aircraft manufacturer flight manual / POH", cat: "L8: Maintenance & Recordkeeping", lesson: 8 },
+  { front: "What should happen to a small UAS after a hard landing or a component replacement, before its next flight?", back: "It should be inspected to confirm the aircraft is still in a condition for safe operation before flying again.", ref: "14 CFR \u00a7107.15", cat: "L8: Maintenance & Recordkeeping", lesson: 8 },
+  { front: "What kinds of events are worth logging in a personal maintenance record?", back: "Component replacements, firmware updates, repairs, damage incidents, and any anomalies noticed during preflight or flight.", ref: "Aircraft manufacturer flight manual / POH", cat: "L8: Maintenance & Recordkeeping", lesson: 8 },
+  { front: "How does good maintenance recordkeeping support the RPIC's broader responsibility under \u00a7107.15?", back: "It creates a documented history that helps the RPIC make an informed judgment about whether the aircraft is currently in a safe condition to fly.", ref: "14 CFR \u00a7107.15", cat: "L8: Maintenance & Recordkeeping", lesson: 8 },
+];
+
+let order = [];
+let index = 0;
+let known = 0;
+let flipped = false;
+let sessionCatStats = {};
+let missedCards = [];
+let currentDeck = [];
+
+const STORAGE_KEY = 'part107_full_review_flashcards_v1';
+
+async function loadLifetimeStats() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY, false);
+    return result ? JSON.parse(result.value) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+async function saveLifetimeStats(stats) {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(stats), false);
+  } catch (e) {
+  }
+}
+
+async function recordAnswer(cat, isKnown) {
+  if (!sessionCatStats[cat]) sessionCatStats[cat] = { correct: 0, total: 0 };
+  sessionCatStats[cat].total++;
+  if (isKnown) sessionCatStats[cat].correct++;
+
+  const lifetime = await loadLifetimeStats();
+  if (!lifetime[cat]) lifetime[cat] = { correct: 0, total: 0 };
+  lifetime[cat].total++;
+  if (isKnown) lifetime[cat].correct++;
+  await saveLifetimeStats(lifetime);
+}
+
+let startScreen, deckScreen, endScreen, topBarRight, gaugeTicks, cardFlip, assessRow, prevBtn, skipBtn;
+
+function lessonCardCount(lessonNum) {
+  return CARDS.filter(c => c.lesson === lessonNum).length;
+}
+
+function buildLessonFilter() {
+  const container = document.getElementById('lessonList');
+  let html = '';
+  for (let i = 1; i <= 8; i++) {
+    html += `
+      <div class="lesson-row">
+        <input type="checkbox" id="lesson${i}" checked />
+        <label for="lesson${i}">L${i} &#8212; ${LESSON_TITLES[i]}</label>
+        <span class="lesson-count">${lessonCardCount(i)}</span>
+      </div>
+    `;
+  }
+  container.innerHTML = html;
+  for (let i = 1; i <= 8; i++) {
+    document.getElementById(`lesson${i}`).addEventListener('change', updateFilterCount);
+  }
+}
+
+function getSelectedLessons() {
+  const selected = [];
+  for (let i = 1; i <= 8; i++) {
+    if (document.getElementById(`lesson${i}`).checked) selected.push(i);
+  }
+  return selected;
+}
+
+function updateFilterCount() {
+  const selected = getSelectedLessons();
+  const count = CARDS.filter(c => selected.includes(c.lesson)).length;
+  document.getElementById('filterCount').textContent = count;
+  document.getElementById('totalDisplayIntro').textContent = count;
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function init() {
+  startScreen = document.getElementById('startScreen');
+  deckScreen = document.getElementById('deckScreen');
+  endScreen = document.getElementById('endScreen');
+  topBarRight = document.getElementById('topBarRight');
+  gaugeTicks = document.getElementById('gaugeTicks');
+  cardFlip = document.getElementById('cardFlip');
+  assessRow = document.getElementById('assessRow');
+  prevBtn = document.getElementById('prevBtn');
+  skipBtn = document.getElementById('skipBtn');
+
+  const dialTicks = document.getElementById('dialTicks');
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * 2 * Math.PI;
+    const x1 = 60 + 44 * Math.sin(angle);
+    const y1 = 60 - 44 * Math.cos(angle);
+    const x2 = 60 + 50 * Math.sin(angle);
+    const y2 = 60 - 50 * Math.cos(angle);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+    line.setAttribute("stroke", "#f2a71b"); line.setAttribute("stroke-width", "2");
+    dialTicks.appendChild(line);
+  }
+
+  buildLessonFilter();
+  document.getElementById('totalDisplayIntro').textContent = CARDS.length;
+  document.getElementById('filterCount').textContent = CARDS.length;
+  renderLifetimeBreakdown();
+
+  document.getElementById('selectAllBtn').addEventListener('click', () => {
+    for (let i = 1; i <= 8; i++) document.getElementById(`lesson${i}`).checked = true;
+    updateFilterCount();
+  });
+  document.getElementById('selectNoneBtn').addEventListener('click', () => {
+    for (let i = 1; i <= 8; i++) document.getElementById(`lesson${i}`).checked = false;
+    updateFilterCount();
+  });
+
+  document.getElementById('startBtn').addEventListener('click', beginDeck);
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    startScreen.style.display = 'flex';
+    endScreen.style.display = 'none';
+    deckScreen.style.display = 'none';
+    topBarRight.textContent = 'READY';
+  });
+  document.getElementById('resetStatsBtn').addEventListener('click', async () => {
+    try { await window.storage.delete(STORAGE_KEY, false); } catch (e) {}
+    renderLifetimeBreakdown();
+  });
+  document.getElementById('refToggleBtn').addEventListener('click', () => {
+    const panel = document.getElementById('refPanel');
+    const btn = document.getElementById('refToggleBtn');
+    const isOpen = panel.style.display === 'block';
+    panel.style.display = isOpen ? 'none' : 'block';
+    btn.textContent = isOpen
+      ? 'SHOW REFERENCES & LESSON CONTENT'
+      : 'HIDE REFERENCES & LESSON CONTENT';
+  });
+
+  cardFlip.addEventListener('click', () => {
+    if (!flipped) revealCard();
+  });
+  document.getElementById('knowBtn').addEventListener('click', (e) => { e.stopPropagation(); mark(true); });
+  document.getElementById('dontKnowBtn').addEventListener('click', (e) => { e.stopPropagation(); mark(false); });
+  prevBtn.addEventListener('click', (e) => { e.stopPropagation(); goPrev(); });
+  skipBtn.addEventListener('click', (e) => { e.stopPropagation(); goNext(); });
+}
+
+function categoryColor(pct) {
+  if (pct >= 80) return '#3ddc97';
+  if (pct >= 60) return '#f2a71b';
+  return '#ff5c5c';
+}
+
+function renderBreakdown(containerEl, stats) {
+  const cats = Object.keys(stats);
+  if (cats.length === 0) {
+    containerEl.innerHTML = '<div class="cat-empty">No data yet.</div>';
+    return;
+  }
+  const rows = cats
+    .map((cat) => {
+      const s = stats[cat];
+      const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+      return { cat, pct, correct: s.correct, total: s.total };
+    })
+    .sort((a, b) => a.pct - b.pct);
+
+  containerEl.innerHTML = rows
+    .map((r) => {
+      const color = categoryColor(r.pct);
+      return `
+        <div class="cat-row">
+          <span class="cat-name">${r.cat}</span>
+          <span class="cat-bar-track"><span class="cat-bar-fill" style="width:${r.pct}%;background:${color};"></span></span>
+          <span class="cat-pct">${r.correct}/${r.total} · ${r.pct}%</span>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+async function renderLifetimeBreakdown() {
+  const lifetime = await loadLifetimeStats();
+  const totalAttempts = Object.values(lifetime).reduce((sum, s) => sum + s.total, 0);
+  document.getElementById('lifetimeAttempts').textContent = totalAttempts > 0 ? `(${totalAttempts} cards logged)` : '';
+  renderBreakdown(document.getElementById('lifetimeBreakdown'), lifetime);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function beginDeck() {
+  const selectedLessons = getSelectedLessons();
+  currentDeck = CARDS.filter(c => selectedLessons.includes(c.lesson));
+  if (currentDeck.length === 0) return;
+
+  const shuffleOn = document.getElementById('shuffleToggle').checked;
+  const indices = currentDeck.map((_, i) => i);
+  order = shuffleOn ? shuffle(indices) : indices;
+  index = 0;
+  known = 0;
+  flipped = false;
+  sessionCatStats = {};
+  missedCards = [];
+
+  gaugeTicks.innerHTML = '';
+  for (let i = 0; i < currentDeck.length; i++) {
+    const d = document.createElement('div');
+    d.className = 'tick';
+    gaugeTicks.appendChild(d);
+  }
+  document.getElementById('totalDisplay').textContent = currentDeck.length;
+
+  startScreen.style.display = 'none';
+  endScreen.style.display = 'none';
+  deckScreen.style.display = 'block';
+  topBarRight.textContent = `Card 1 / ${currentDeck.length}`;
+  renderCard();
+}
+
+function renderCard() {
+  flipped = false;
+  cardFlip.classList.remove('flipped');
+  assessRow.classList.remove('visible');
+
+  const cardIdx = order[index];
+  const current = currentDeck[cardIdx];
+
+  document.getElementById('cardLabelFront').textContent = `CARD ${index + 1}`;
+  document.getElementById('cardLabelBack').textContent = `CARD ${index + 1}`;
+  document.getElementById('cardCatFront').textContent = current.cat;
+  document.getElementById('cardCatBack').textContent = current.cat;
+  document.getElementById('cardFrontText').textContent = current.front;
+  document.getElementById('cardBackText').textContent = current.back;
+  document.getElementById('refTag').textContent = current.ref;
+
+  document.getElementById('knownDisplay').textContent = known;
+  document.getElementById('itemDisplay').textContent = `CARD ${String(index + 1).padStart(2, '0')}`;
+  topBarRight.textContent = `Card ${index + 1} / ${currentDeck.length}`;
+
+  const pct = (index / currentDeck.length) * 100;
+  document.getElementById('gaugeFill').style.width = pct + '%';
+
+  prevBtn.disabled = index === 0;
+}
+
+function revealCard() {
+  flipped = true;
+  cardFlip.classList.add('flipped');
+  assessRow.classList.add('visible');
+}
+
+async function mark(isKnown) {
+  const cardIdx = order[index];
+  const current = currentDeck[cardIdx];
+  await recordAnswer(current.cat, isKnown);
+
+  const ticks = gaugeTicks.children;
+  if (ticks[index]) {
+    ticks[index].className = 'tick ' + (isKnown ? 'filled-known' : 'filled-unknown');
+  }
+
+  if (isKnown) {
+    known++;
+    document.getElementById('knownDisplay').textContent = known;
+  } else {
+    missedCards.push(cardIdx);
+  }
+
+  goNext();
+}
+
+function goNext() {
+  if (index + 1 >= order.length) {
+    showEnd();
+  } else {
+    index++;
+    renderCard();
+  }
+}
+
+function goPrev() {
+  if (index > 0) {
+    index--;
+    renderCard();
+  }
+}
+
+function showEnd() {
+  deckScreen.style.display = 'none';
+  endScreen.style.display = 'flex';
+  topBarRight.textContent = 'SUMMARY';
+
+  const pct = Math.round((known / currentDeck.length) * 100);
+
+  document.getElementById('resultPct').textContent = pct + '%';
+  document.getElementById('resultSub').textContent = `${known} / ${currentDeck.length} known`;
+  document.getElementById('resultDial').style.borderColor = pct >= 70 ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('resultPct').style.color = pct >= 70 ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('endHeading').textContent = pct >= 70 ? 'Strong Deck Run' : 'Keep Reviewing';
+  document.getElementById('endSubtext').textContent = pct >= 70
+    ? "Solid recall on this pass. Review any 'still learning' cards below, then move to full-length practice exams to test it under exam-style conditions."
+    : "A good number of cards still need review. Go through the 'still learning' list below, then run through the deck again — or narrow the lesson filter to just your weak spots.";
+
+  renderBreakdown(document.getElementById('sessionBreakdown'), sessionCatStats);
+  renderLifetimeBreakdown();
+
+  const reviewList = document.getElementById('reviewList');
+  if (missedCards.length > 0) {
+    reviewList.style.display = 'block';
+    reviewList.innerHTML = '<div class="breakdown-title" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);">STILL LEARNING — REVIEW THESE</div>' +
+      missedCards.map(idx => {
+        const c = currentDeck[idx];
+        return `<div class="review-item"><div class="rf">${c.front}</div><div class="rb">${c.back}</div><span class="rr">${c.ref}</span></div>`;
+      }).join('');
+  } else {
+    reviewList.style.display = 'none';
+    reviewList.innerHTML = '';
+  }
+}
+</script>
+</body>
+</html>

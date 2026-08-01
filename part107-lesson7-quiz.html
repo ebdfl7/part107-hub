@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Part 107 — Lesson 7 ADM &amp; Physiological Factors Practice Quiz</title>
+<style>
+  :root {
+    --amber: #f2a71b;
+    --amber-soft: #ffcf6b;
+    --green: #3ddc97;
+    --red: #ff5c5c;
+    --bg-deep: #0d1013;
+    --bg-panel: #171c22;
+    --bg-card: #12161a;
+    --border: #2a3138;
+    --text-main: #dfe6ec;
+    --text-bright: #f4f7fa;
+    --text-dim: #7a8590;
+    --text-mid: #9aa5b0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at top, var(--bg-panel) 0%, var(--bg-deep) 70%);
+    color: var(--text-main);
+    font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+    min-height: 100vh;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 24px 12px;
+  }
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    z-index: 0;
+  }
+  .frame {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(13,16,19,0.6);
+    box-shadow: 0 0 0 1px rgba(242,167,27,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    height: fit-content;
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    background: #12161a;
+  }
+  .center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 28px 36px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--text-bright);
+    letter-spacing: 0.01em;
+    font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  }
+  .subtext {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-mid);
+    max-width: 420px;
+    margin: 0 0 28px;
+  }
+  .primary-button {
+    background: var(--amber);
+    color: #171200;
+    border: none;
+    padding: 14px 32px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .primary-button:hover { background: var(--amber-soft); }
+
+  .secondary-button {
+    background: transparent;
+    color: var(--amber);
+    border: 1px solid var(--amber);
+    padding: 11px 20px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    margin-bottom: 18px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .secondary-button:hover { background: rgba(242,167,27,0.08); }
+
+  .ref-panel {
+    display: none;
+    width: 100%;
+    max-width: 420px;
+    text-align: left;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-mid);
+  }
+  .ref-panel h3 {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin: 14px 0 6px;
+    text-transform: uppercase;
+  }
+  .ref-panel h3:first-child { margin-top: 0; }
+  .ref-panel ul { margin: 0 0 4px; padding-left: 18px; }
+  .ref-panel li { margin-bottom: 4px; }
+  .ref-panel .cfr { color: var(--amber-soft); font-weight: 700; }
+
+  .quiz-wrap { padding: 20px 20px 24px; display: none; }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin: 10px 2px 18px;
+    letter-spacing: 0.06em;
+  }
+  .status-row b { color: var(--amber); }
+  .gauge-track {
+    position: relative;
+    height: 6px;
+    background: #1c2127;
+    border-radius: 3px;
+  }
+  .gauge-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), var(--amber-soft));
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+  .gauge-ticks { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
+  .tick { flex: 1 0 2%; height: 3px; border-radius: 1px; background: rgba(255,255,255,0.08); min-width: 3px; }
+  .tick.filled { background: var(--amber); }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 20px 22px;
+  }
+  .q-label { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .q-cat { color: var(--text-dim); font-weight: normal; }
+  .q-text {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text-bright);
+    margin-bottom: 18px;
+    font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+    font-weight: 500;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 3px;
+    font-size: 13.5px;
+    line-height: 1.4;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    background: #171c22;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    cursor: pointer;
+    width: 100%;
+  }
+  .option-button:disabled { cursor: default; }
+  .option-button.correct-choice {
+    background: rgba(61, 220, 151, 0.12);
+    border: 1px solid var(--green);
+    color: var(--green);
+  }
+  .option-button.wrong-choice {
+    background: rgba(255, 92, 92, 0.12);
+    border: 1px solid var(--red);
+    color: var(--red);
+  }
+  .option-letter {
+    font-weight: 700;
+    font-size: 12px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    opacity: 0.8;
+  }
+  .correct-banner {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: rgba(61,220,151,0.1);
+    border: 1px solid var(--green);
+    color: var(--green);
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+    display: none;
+  }
+  .incorrect-panel {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(255,92,92,0.06);
+    border: 1px solid rgba(255,92,92,0.4);
+    border-radius: 3px;
+    display: none;
+  }
+  .incorrect-header { color: var(--red); font-weight: 700; font-size: 13px; margin-bottom: 8px; letter-spacing: 0.04em; }
+  .incorrect-body { font-size: 13px; line-height: 1.55; color: #c7cdd3; }
+  .incorrect-body p { margin: 8px 0 0; }
+  .ref-tag {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    color: var(--amber-soft);
+    background: rgba(242,167,27,0.08);
+    border: 1px solid rgba(242,167,27,0.35);
+    border-radius: 3px;
+    padding: 3px 8px;
+  }
+  .next-button {
+    margin-top: 14px;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    padding: 11px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .next-button:hover { background: rgba(242,167,27,0.08); }
+
+  .end-wrap { display: none; }
+  .result-dial {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 3px solid var(--green);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    background: var(--bg-card);
+  }
+  .result-pct { font-size: 32px; font-weight: 800; line-height: 1.1; color: var(--green); }
+  .result-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .dial-wrap { margin-bottom: 20px; opacity: 0.9; }
+
+  .breakdown {
+    width: 100%;
+    text-align: left;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+  .breakdown-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  .breakdown-title span { color: var(--text-dim); font-weight: normal; letter-spacing: 0.02em; }
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 9px;
+    font-size: 12.5px;
+  }
+  .cat-name { flex: 0 0 168px; color: var(--text-main); line-height: 1.3; }
+  .cat-bar-track {
+    flex: 1;
+    height: 8px;
+    background: #1c2127;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .cat-bar-fill { height: 100%; border-radius: 4px; }
+  .cat-pct { flex: 0 0 62px; text-align: right; color: var(--text-dim); font-size: 11.5px; }
+  .cat-empty { font-size: 12px; color: var(--text-dim); font-style: italic; }
+  .reset-stats-button {
+    margin-top: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px 12px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .reset-stats-button:hover { color: var(--red); border-color: var(--red); }
+  .no-fail-note {
+    font-size: 10.5px;
+    color: var(--text-dim);
+    margin-top: -18px;
+    margin-bottom: 24px;
+    max-width: 380px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="frame">
+  <div class="top-bar">
+    <span>PART 107 · LESSON 7 ADM SIM</span>
+    <span id="topBarRight">READY</span>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="center" id="startScreen">
+    <div class="dial-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#2a3138" stroke-width="2" />
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#f2a71b" stroke-width="2" stroke-dasharray="8 6" opacity="0.7" />
+        <g id="dialTicks"></g>
+        <text x="60" y="68" text-anchor="middle" font-size="18" fill="#f2a71b" font-family="'Courier New', monospace">IMSAFE</text>
+      </svg>
+    </div>
+    <h1>Part 107 Lesson 7 — Aeronautical Decision-Making &amp; Physiological Factors Practice Quiz</h1>
+    <p class="subtext">
+      <span id="totalDisplayIntro"></span> questions covering ADM models (DECIDE, PAVE, IMSAFE),
+      the effects of drugs, alcohol, fatigue, and stress, and the risk management framework.
+      One question at a time. Your weakest categories are tracked after each run.
+    </p>
+
+    <button class="secondary-button" id="refToggleBtn">SHOW REFERENCES, PREREQUISITES &amp; LESSON CONTENT</button>
+    <div class="ref-panel" id="refPanel">
+      <h3>Applicable Regulatory &amp; Reference Sources</h3>
+      <ul>
+        <li><span class="cfr">14 CFR §107.27</span> — Alcohol or drugs; requires compliance with §§91.17 and 91.19</li>
+        <li><span class="cfr">14 CFR §91.17</span> — Alcohol: 8-hour "bottle to throttle" rule, 0.04% BAC limit, prohibition on operating while under the influence</li>
+        <li><span class="cfr">14 CFR §91.19</span> — Drugs: prohibition on operating while using a drug that affects mental or physical capabilities</li>
+        <li><span class="cfr">14 CFR §107.57</span> — Offenses involving alcohol or drugs; grounds for denial, suspension, or revocation of a remote pilot certificate</li>
+        <li><span class="cfr">FAA Risk Management Handbook (FAA-H-8083-2)</span> — ADM models: DECIDE, PAVE, IMSAFE, and risk management framework</li>
+      </ul>
+
+      <h3>Knowledge Prerequisites (before this quiz)</h3>
+      <ul>
+        <li>Completion of Lesson 6 (CRM &amp; Radio Communications) is helpful but not required</li>
+        <li>No prior aeronautical decision-making background required</li>
+        <li>Willingness to honestly self-assess personal fitness to fly using models like IMSAFE</li>
+      </ul>
+
+      <h3>Required Lesson 7 Content Covered</h3>
+      <ul>
+        <li>ADM models: DECIDE, PAVE, and IMSAFE</li>
+        <li>Effects of drugs and alcohol on pilot performance</li>
+        <li>Effects of fatigue and stress on pilot performance</li>
+        <li>Risk management framework</li>
+      </ul>
+    </div>
+
+    <p class="subtext no-fail-note">
+      Note: this is a self-study simulator, not the official FAA Part 107 Airman Knowledge Test.
+      It uses a 70% mark as a self-check benchmark, matching the real exam's passing score.
+    </p>
+    <button class="primary-button" id="startBtn">START QUIZ</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="quiz-wrap" id="quizScreen">
+    <div class="gauge-track">
+      <div class="gauge-fill" id="gaugeFill"></div>
+    </div>
+    <div class="gauge-ticks" id="gaugeTicks"></div>
+    <div class="status-row">
+      <span>SCORE <b id="scoreDisplay">0</b> / <span id="totalDisplay">24</span></span>
+      <span id="itemDisplay">ITEM 01</span>
+    </div>
+
+    <div class="card">
+      <div class="q-label"><span id="qLabel">QUESTION 1</span><span class="q-cat" id="qCat"></span></div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="optionsWrap"></div>
+
+      <div class="correct-banner" id="correctBanner">✓ CORRECT — advancing…</div>
+
+      <div class="incorrect-panel" id="incorrectPanel">
+        <div class="incorrect-header">✕ INCORRECT</div>
+        <div class="incorrect-body">
+          <b>Correct answer:</b> <span id="correctAnswerText"></span>
+          <p id="explainText"></p>
+          <span class="ref-tag" id="refTag"></span>
+        </div>
+        <button class="next-button" id="nextBtn">NEXT QUESTION →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="center end-wrap" id="endScreen">
+    <div class="result-dial" id="resultDial">
+      <span class="result-pct" id="resultPct">0%</span>
+      <span class="result-sub" id="resultSub">0 / 24 correct</span>
+    </div>
+    <h1 id="endHeading">Strong Run</h1>
+    <p class="subtext" id="endSubtext"></p>
+
+    <div class="breakdown" id="breakdownWrap">
+      <div class="breakdown-title">WEAK AREAS — THIS RUN</div>
+      <div id="sessionBreakdown"></div>
+    </div>
+
+    <div class="breakdown" id="lifetimeWrap">
+      <div class="breakdown-title">WEAK AREAS — ALL-TIME <span id="lifetimeAttempts"></span></div>
+      <div id="lifetimeBreakdown"></div>
+      <button class="reset-stats-button" id="resetStatsBtn">RESET ALL-TIME STATS</button>
+    </div>
+
+    <button class="primary-button" id="restartBtn" style="margin-top: 20px;">RESTART QUIZ</button>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Question bank — Part 107 Lesson 7: Aeronautical Decision-Making & Physiological Factors
+// (24 questions = 3x the recommended 8-question lesson quiz).
+// ---------------------------------------------------------------------------
+const QUESTIONS = [
+  // ADM Models Overview
+  { q: "What does ADM stand for?", options: ["Airspace Deviation Management", "Aircraft Damage Monitoring", "Aeronautical Decision-Making", "Aviation Data Module"], correct: 2, explain: "ADM stands for Aeronautical Decision-Making, a structured approach to making sound choices in flight operations.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "ADM Models" },
+  { q: "What does the 'I' in the IMSAFE checklist stand for?", options: ["Insurance", "Instruments", "Illness", "Ignition"], correct: 2, explain: "The 'I' in IMSAFE stands for Illness — a self-check for any sickness that could affect flight fitness.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "ADM Models" },
+  { q: "What does the 'M' in the IMSAFE checklist stand for?", options: ["Motivation", "Medication", "Manifest", "Maintenance"], correct: 1, explain: "The 'M' in IMSAFE stands for Medication — checking whether any drugs, prescribed or otherwise, could impair performance.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "ADM Models" },
+  { q: "What do the remaining letters 'S,' 'A,' 'F,' and 'E' represent in the IMSAFE checklist?", options: ["Speed, Airspace, Frequency, Elevation", "Stress, Alcohol, Fatigue, Eating", "Sensor, Antenna, Firmware, Encryption", "Safety, Authorization, Flight plan, Emergency"], correct: 1, explain: "IMSAFE's remaining letters stand for Stress, Alcohol, Fatigue, and Eating — all factors that can affect a pilot's fitness to fly.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "ADM Models" },
+  { q: "What does PAVE stand for in the ADM risk-assessment framework?", options: ["Payload, Altitude, Velocity, Endurance", "Personnel, Authorization, Vehicle, Equipment", "Pilot, Aircraft, enVironment, External pressures", "Preflight, Airspace, Visibility, Emergency"], correct: 2, explain: "PAVE organizes risk factors into four categories: Pilot, Aircraft, enVironment, and External pressures.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "ADM Models" },
+  { q: "In the PAVE model, what does the 'P' (Pilot) category assess?", options: ["The airport's runway paint markings", "The type of propeller installed on the aircraft", "The pilot's own fitness, readiness, and currency to fly", "The pilot's payment method for services rendered"], correct: 2, explain: "The 'P' in PAVE focuses on the pilot's own physical and mental readiness to conduct the flight safely.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "ADM Models" },
+  { q: "What general process does the DECIDE model represent?", options: ["A method for filing accident reports", "A checklist solely for battery maintenance", "A radio phraseology standard", "A systematic sequence for detecting a change, assessing it, and choosing/implementing/evaluating a course of action"], correct: 3, explain: "DECIDE outlines a systematic decision-making sequence: detect a change, estimate its significance, choose a course of action, identify solutions, do the chosen action, and evaluate the outcome.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "ADM Models" },
+  { q: "Why are structured ADM models like IMSAFE and PAVE useful for remote pilots, even without a pilot physically on board?", options: ["They are only relevant to manned aircraft and have no bearing on small UAS", "They provide a structured way to assess risk and make sound decisions, since human-factors risk still applies to remote operations", "They exist solely to satisfy a paperwork requirement with no practical value", "They replace the need for any preflight inspection"], correct: 1, explain: "Human-factors risks like fatigue, stress, or impaired judgment still apply to the RPIC even though they aren't physically airborne, so these structured models remain valuable.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "ADM Models" },
+
+  // Effects of Drugs & Alcohol
+  { q: "Under 14 CFR §107.27, which regulations must a remote PIC, manipulator of controls, or visual observer comply with regarding alcohol and drugs?", options: ["There are no alcohol or drug regulations for Part 107", "14 CFR §107.51 only", "14 CFR Part 61 exclusively", "14 CFR §§91.17 and 91.19"], correct: 3, explain: "§107.27 requires compliance with §91.17 (alcohol) and §91.19 (drugs), the same standards applied to manned aircraft crew.", ref: "14 CFR §107.27", cat: "Drugs & Alcohol" },
+  { q: "Per §91.17, how many hours must a person refrain from alcohol before acting as a required crewmember?", options: ["24 hours", "There is no minimum time requirement", "8 hours", "2 hours"], correct: 2, explain: "The commonly cited '8 hours bottle to throttle' rule comes from §91.17's alcohol restriction.", ref: "14 CFR §91.17", cat: "Drugs & Alcohol" },
+  { q: "What is the maximum blood alcohol concentration (BAC) allowed under §91.17?", options: ["0.04 percent", "0.08 percent", "There is no numeric BAC limit", "0.10 percent"], correct: 0, explain: "§91.17 sets a 0.04 percent BAC limit for required crewmembers.", ref: "14 CFR §91.17", cat: "Drugs & Alcohol" },
+  { q: "Besides the numeric BAC limit, what else does §91.17 prohibit?", options: ["Drinking coffee before a flight", "Only prohibits alcohol use after the flight has concluded", "Nothing further — the BAC limit is the sole restriction", "Acting as a crewmember while under the influence of alcohol, regardless of the exact BAC reading"], correct: 3, explain: "§91.17 also prohibits being under the influence of alcohol at all, independent of the specific 0.04% threshold.", ref: "14 CFR §91.17", cat: "Drugs & Alcohol" },
+  { q: "Can certain over-the-counter medications impair a remote pilot's fitness to fly?", options: ["Only prescription medications carry any risk", "Yes — for example, some antihistamines and decongestants can cause drowsiness", "Medications have no bearing on Part 107 operations", "No, only illegal drugs can impair flight fitness"], correct: 1, explain: "Common over-the-counter medications, such as certain antihistamines and decongestants, can cause drowsiness and impair fitness to fly.", ref: "14 CFR §91.19", cat: "Drugs & Alcohol" },
+  { q: "What can result from a conviction for a drug-related offense under §107.57?", options: ["Automatic renewal of the certificate", "Only a monetary fine with no effect on certification", "No consequence to the remote pilot certificate whatsoever", "Denial, suspension, or revocation of a remote pilot certificate"], correct: 3, explain: "§107.57 makes qualifying drug or alcohol convictions grounds for denial, suspension, or revocation of a remote pilot certificate.", ref: "14 CFR §107.57", cat: "Drugs & Alcohol" },
+
+  // Effects of Fatigue & Stress
+  { q: "How does fatigue typically affect pilot performance?", options: ["It slows reaction time and impairs judgment and decision-making", "Fatigue improves focus and reaction time", "It only affects night flights, never daytime ones", "It has no measurable effect on performance"], correct: 0, explain: "Fatigue is well-documented to slow reaction time and degrade judgment and decision-making ability.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "Fatigue & Stress" },
+  { q: "What is a practical way to mitigate fatigue before a flight?", options: ["Ensure adequate rest and sleep beforehand, and avoid flying when fatigued", "Fatigue cannot be mitigated in any practical way", "Schedule flights only late at night regardless of rest", "Drink large amounts of caffeine immediately before flight instead of resting"], correct: 0, explain: "Getting adequate rest beforehand — and simply not flying when fatigued — is the most reliable mitigation.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "Fatigue & Stress" },
+  { q: "How can acute stress affect a pilot's decision-making in flight?", options: ["Acute stress has no measurable effect on decision-making", "It always improves focus and reaction speed", "Stress only affects manned aircraft pilots, not remote pilots", "It can narrow attention ('tunnel vision'), impair judgment, and increase the likelihood of errors"], correct: 3, explain: "Acute stress commonly narrows a person's attention and impairs judgment, raising the risk of errors.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "Fatigue & Stress" },
+  { q: "What is one way pilots can manage stress to maintain safe decision-making?", options: ["Recognize stress and consciously apply a structured decision framework, such as PAVE or IMSAFE, rather than reacting impulsively", "Stress cannot be managed in any practical way", "Ignore stress entirely and proceed exactly as originally planned", "Increase risk-taking to compensate for the stress"], correct: 0, explain: "Recognizing stress and deliberately applying a structured framework helps counteract its tendency to degrade decision-making.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "Fatigue & Stress" },
+  { q: "Why is a self-assessment tool like IMSAFE especially important for remote pilots who aren't physically airborne?", options: ["Only in-flight sensory feedback matters, so preflight self-checks are unnecessary", "Because they lack direct in-flight sensory feedback, they must rely more heavily on deliberate self-checks before flight to catch impairment", "It isn't important, since remote pilots face no personal risk", "IMSAFE only applies to manned aircraft pilots"], correct: 1, explain: "Without the physical sensations of being airborne, remote pilots benefit even more from a deliberate, structured preflight self-check.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "Fatigue & Stress" },
+
+  // Risk Management Framework
+  { q: "What is the general goal of a risk management framework in ADM?", options: ["To assign blame after an incident occurs", "To systematically identify hazards, assess their risk level, and implement mitigations before and during flight", "To replace the remote pilot certification process", "To eliminate the need for any preflight planning"], correct: 1, explain: "Risk management frameworks exist to systematically identify hazards, assess risk levels, and put mitigations in place.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "Risk Management" },
+  { q: "What are the typical steps of a risk management process?", options: ["Skip assessment and rely solely on pilot instinct", "Only file paperwork after any incident", "Simply proceed as planned regardless of identified hazards", "Identify hazards, assess risk, make a decision (mitigate/accept/avoid), implement controls, and monitor/review"], correct: 3, explain: "A typical risk management process moves through identifying hazards, assessing risk, deciding how to handle it, implementing controls, and reviewing outcomes.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "Risk Management" },
+  { q: "Why should risk assessment continue throughout a flight, not just before it?", options: ["Conditions and hazards can change during flight, so ongoing reassessment is part of active risk management", "Once a flight begins, no new hazards can emerge", "Continuous assessment is unnecessary for short flights", "Risk assessment is only relevant before engine/motor start"], correct: 0, explain: "Conditions can change mid-flight, so effective risk management includes continuously reassessing hazards, not just a one-time preflight check.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "Risk Management" },
+  { q: "What role does maintaining currency (such as recurrent training) play in the ADM risk framework?", options: ["It supports the 'Pilot' factor in PAVE by keeping the RPIC's knowledge and skills up to date", "It has no connection to any ADM risk factor", "It only affects the 'Aircraft' factor in PAVE", "Currency requirements were eliminated for all remote pilots"], correct: 0, explain: "Staying current through recurrent training helps ensure the pilot themselves — the 'P' in PAVE — remains a low-risk factor.", ref: "14 CFR §107.65", cat: "Risk Management" },
+  { q: "What is a good overall practice tying ADM together with the go/no-go decisions covered in earlier lessons?", options: ["Relying exclusively on weather data and ignoring personal fitness entirely", "ADM and go/no-go decisions are unrelated and should be considered separately", "Combining objective performance and weather data with an honest self-assessment of personal fitness and stress to make a comprehensive go/no-go decision", "Making go/no-go decisions based solely on how experienced the pilot feels, regardless of data"], correct: 2, explain: "The strongest go/no-go decisions combine objective data (weather, performance limits) with honest personal self-assessment from models like IMSAFE.", ref: "FAA Risk Management Handbook (FAA-H-8083-2)", cat: "Risk Management" },
+];
+
+const TOTAL = QUESTIONS.length;
+let index = 0;
+let score = 0;
+let selected = null;
+let missed = [];
+let sessionCatStats = {};
+
+const STORAGE_KEY = 'part107_lesson7_stats_v1';
+
+async function loadLifetimeStats() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY, false);
+    return result ? JSON.parse(result.value) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+async function saveLifetimeStats(stats) {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(stats), false);
+  } catch (e) {
+    // storage unavailable — stats just won't persist between sessions
+  }
+}
+
+async function recordAnswer(cat, isCorrect) {
+  if (!sessionCatStats[cat]) sessionCatStats[cat] = { correct: 0, total: 0 };
+  sessionCatStats[cat].total++;
+  if (isCorrect) sessionCatStats[cat].correct++;
+
+  const lifetime = await loadLifetimeStats();
+  if (!lifetime[cat]) lifetime[cat] = { correct: 0, total: 0 };
+  lifetime[cat].total++;
+  if (isCorrect) lifetime[cat].correct++;
+  await saveLifetimeStats(lifetime);
+}
+
+let startScreen, quizScreen, endScreen, topBarRight, gaugeTicks;
+
+function init() {
+  startScreen = document.getElementById('startScreen');
+  quizScreen = document.getElementById('quizScreen');
+  endScreen = document.getElementById('endScreen');
+  topBarRight = document.getElementById('topBarRight');
+  gaugeTicks = document.getElementById('gaugeTicks');
+
+  const dialTicks = document.getElementById('dialTicks');
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * 2 * Math.PI;
+    const x1 = 60 + 44 * Math.sin(angle);
+    const y1 = 60 - 44 * Math.cos(angle);
+    const x2 = 60 + 50 * Math.sin(angle);
+    const y2 = 60 - 50 * Math.cos(angle);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+    line.setAttribute("stroke", "#f2a71b"); line.setAttribute("stroke-width", "2");
+    dialTicks.appendChild(line);
+  }
+
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'tick';
+    gaugeTicks.appendChild(d);
+  }
+
+  document.getElementById('totalDisplay').textContent = TOTAL;
+  document.getElementById('totalDisplayIntro').textContent = TOTAL;
+  renderLifetimeBreakdown();
+
+  document.getElementById('startBtn').addEventListener('click', beginTest);
+  document.getElementById('restartBtn').addEventListener('click', beginTest);
+  document.getElementById('nextBtn').addEventListener('click', advance);
+  document.getElementById('resetStatsBtn').addEventListener('click', async () => {
+    try { await window.storage.delete(STORAGE_KEY, false); } catch (e) {}
+    renderLifetimeBreakdown();
+  });
+  document.getElementById('refToggleBtn').addEventListener('click', () => {
+    const panel = document.getElementById('refPanel');
+    const btn = document.getElementById('refToggleBtn');
+    const isOpen = panel.style.display === 'block';
+    panel.style.display = isOpen ? 'none' : 'block';
+    btn.textContent = isOpen
+      ? 'SHOW REFERENCES, PREREQUISITES & LESSON CONTENT'
+      : 'HIDE REFERENCES, PREREQUISITES & LESSON CONTENT';
+  });
+}
+
+function categoryColor(pct) {
+  if (pct >= 80) return '#3ddc97';
+  if (pct >= 60) return '#f2a71b';
+  return '#ff5c5c';
+}
+
+function renderBreakdown(containerEl, stats) {
+  const cats = Object.keys(stats);
+  if (cats.length === 0) {
+    containerEl.innerHTML = '<div class="cat-empty">No data yet.</div>';
+    return;
+  }
+  const rows = cats
+    .map((cat) => {
+      const s = stats[cat];
+      const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+      return { cat, pct, correct: s.correct, total: s.total };
+    })
+    .sort((a, b) => a.pct - b.pct);
+
+  containerEl.innerHTML = rows
+    .map((r) => {
+      const color = categoryColor(r.pct);
+      return `
+        <div class="cat-row">
+          <span class="cat-name">${r.cat}</span>
+          <span class="cat-bar-track"><span class="cat-bar-fill" style="width:${r.pct}%;background:${color};"></span></span>
+          <span class="cat-pct">${r.correct}/${r.total} · ${r.pct}%</span>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+async function renderLifetimeBreakdown() {
+  const lifetime = await loadLifetimeStats();
+  const totalAttempts = Object.values(lifetime).reduce((sum, s) => sum + s.total, 0);
+  document.getElementById('lifetimeAttempts').textContent = totalAttempts > 0 ? `(${totalAttempts} answers logged)` : '';
+  renderBreakdown(document.getElementById('lifetimeBreakdown'), lifetime);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+function beginTest() {
+  index = 0; score = 0; selected = null; missed = []; sessionCatStats = {};
+  startScreen.style.display = 'none';
+  endScreen.style.display = 'none';
+  quizScreen.style.display = 'block';
+  topBarRight.textContent = `Q 1 / ${TOTAL}`;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  selected = null;
+  const current = QUESTIONS[index];
+  document.getElementById('qLabel').textContent = `QUESTION ${index + 1}`;
+  document.getElementById('qCat').textContent = current.cat;
+  document.getElementById('qText').textContent = current.q;
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('itemDisplay').textContent = `ITEM ${String(index + 1).padStart(2, '0')}`;
+  topBarRight.textContent = `Q ${index + 1} / ${TOTAL}`;
+
+  const pct = (index / TOTAL) * 100;
+  document.getElementById('gaugeFill').style.width = pct + '%';
+  const ticks = gaugeTicks.children;
+  for (let i = 0; i < ticks.length; i++) {
+    ticks[i].className = 'tick' + (i < index ? ' filled' : '');
+  }
+
+  const optionsWrap = document.getElementById('optionsWrap');
+  optionsWrap.innerHTML = '';
+  current.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-button';
+    btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => choose(i));
+    optionsWrap.appendChild(btn);
+  });
+
+  document.getElementById('correctBanner').style.display = 'none';
+  document.getElementById('incorrectPanel').style.display = 'none';
+}
+
+async function choose(i) {
+  if (selected !== null) return;
+  selected = i;
+  const current = QUESTIONS[index];
+  const buttons = document.querySelectorAll('#optionsWrap .option-button');
+  buttons.forEach(b => b.disabled = true);
+
+  const isCorrect = i === current.correct;
+  await recordAnswer(current.cat, isCorrect);
+
+  if (isCorrect) {
+    score++;
+    document.getElementById('scoreDisplay').textContent = score;
+    buttons[i].classList.add('correct-choice');
+    document.getElementById('correctBanner').style.display = 'block';
+    setTimeout(advance, 900);
+  } else {
+    missed.push(index);
+    buttons[i].classList.add('wrong-choice');
+    buttons[current.correct].classList.add('correct-choice');
+    document.getElementById('correctAnswerText').textContent = current.options[current.correct];
+    document.getElementById('explainText').textContent = current.explain;
+    document.getElementById('refTag').textContent = current.ref;
+    document.getElementById('incorrectPanel').style.display = 'block';
+  }
+}
+
+function advance() {
+  if (index + 1 >= TOTAL) {
+    showEnd();
+  } else {
+    index++;
+    renderQuestion();
+  }
+}
+
+function showEnd() {
+  quizScreen.style.display = 'none';
+  endScreen.style.display = 'flex';
+  topBarRight.textContent = 'DEBRIEF';
+
+  const pct = Math.round((score / TOTAL) * 100);
+  const passed = pct >= 70;
+
+  document.getElementById('resultPct').textContent = pct + '%';
+  document.getElementById('resultSub').textContent = `${score} / ${TOTAL} correct`;
+  document.getElementById('resultDial').style.borderColor = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('resultPct').style.color = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('endHeading').textContent = passed ? 'Strong Run' : 'Keep Studying';
+  document.getElementById('endSubtext').textContent = passed
+    ? "You cleared 70% on this self-check run, matching the FAA passing threshold. Review any missed ADM or physiological-factor items before moving to Lesson 8."
+    : "This run fell below the 70% passing benchmark used on the real FAA Part 107 Airman Knowledge Test. Review the explanations and references below, and run through a few more IMSAFE self-assessments before retaking.";
+
+  renderBreakdown(document.getElementById('sessionBreakdown'), sessionCatStats);
+  renderLifetimeBreakdown();
+}
+</script>
+</body>
+</html>

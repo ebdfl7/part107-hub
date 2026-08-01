@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Part 107 — Lesson 1 Regulations Practice Quiz</title>
+<style>
+  :root {
+    --amber: #f2a71b;
+    --amber-soft: #ffcf6b;
+    --green: #3ddc97;
+    --red: #ff5c5c;
+    --bg-deep: #0d1013;
+    --bg-panel: #171c22;
+    --bg-card: #12161a;
+    --border: #2a3138;
+    --text-main: #dfe6ec;
+    --text-bright: #f4f7fa;
+    --text-dim: #7a8590;
+    --text-mid: #9aa5b0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at top, var(--bg-panel) 0%, var(--bg-deep) 70%);
+    color: var(--text-main);
+    font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+    min-height: 100vh;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 24px 12px;
+  }
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    z-index: 0;
+  }
+  .frame {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(13,16,19,0.6);
+    box-shadow: 0 0 0 1px rgba(242,167,27,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    height: fit-content;
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    background: #12161a;
+  }
+  .center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 28px 36px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--text-bright);
+    letter-spacing: 0.01em;
+    font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  }
+  .subtext {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-mid);
+    max-width: 420px;
+    margin: 0 0 28px;
+  }
+  .primary-button {
+    background: var(--amber);
+    color: #171200;
+    border: none;
+    padding: 14px 32px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .primary-button:hover { background: var(--amber-soft); }
+
+  .secondary-button {
+    background: transparent;
+    color: var(--amber);
+    border: 1px solid var(--amber);
+    padding: 11px 20px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    margin-bottom: 18px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .secondary-button:hover { background: rgba(242,167,27,0.08); }
+
+  .ref-panel {
+    display: none;
+    width: 100%;
+    max-width: 420px;
+    text-align: left;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-mid);
+  }
+  .ref-panel h3 {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin: 14px 0 6px;
+    text-transform: uppercase;
+  }
+  .ref-panel h3:first-child { margin-top: 0; }
+  .ref-panel ul { margin: 0 0 4px; padding-left: 18px; }
+  .ref-panel li { margin-bottom: 4px; }
+  .ref-panel .cfr { color: var(--amber-soft); font-weight: 700; }
+
+  .quiz-wrap { padding: 20px 20px 24px; display: none; }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin: 10px 2px 18px;
+    letter-spacing: 0.06em;
+  }
+  .status-row b { color: var(--amber); }
+  .gauge-track {
+    position: relative;
+    height: 6px;
+    background: #1c2127;
+    border-radius: 3px;
+  }
+  .gauge-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), var(--amber-soft));
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+  .gauge-ticks { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
+  .tick { flex: 1 0 2%; height: 3px; border-radius: 1px; background: rgba(255,255,255,0.08); min-width: 3px; }
+  .tick.filled { background: var(--amber); }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 20px 22px;
+  }
+  .q-label { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .q-cat { color: var(--text-dim); font-weight: normal; }
+  .q-text {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text-bright);
+    margin-bottom: 18px;
+    font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+    font-weight: 500;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 3px;
+    font-size: 13.5px;
+    line-height: 1.4;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    background: #171c22;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    cursor: pointer;
+    width: 100%;
+  }
+  .option-button:disabled { cursor: default; }
+  .option-button.correct-choice {
+    background: rgba(61, 220, 151, 0.12);
+    border: 1px solid var(--green);
+    color: var(--green);
+  }
+  .option-button.wrong-choice {
+    background: rgba(255, 92, 92, 0.12);
+    border: 1px solid var(--red);
+    color: var(--red);
+  }
+  .option-letter {
+    font-weight: 700;
+    font-size: 12px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    opacity: 0.8;
+  }
+  .correct-banner {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: rgba(61,220,151,0.1);
+    border: 1px solid var(--green);
+    color: var(--green);
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+    display: none;
+  }
+  .incorrect-panel {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(255,92,92,0.06);
+    border: 1px solid rgba(255,92,92,0.4);
+    border-radius: 3px;
+    display: none;
+  }
+  .incorrect-header { color: var(--red); font-weight: 700; font-size: 13px; margin-bottom: 8px; letter-spacing: 0.04em; }
+  .incorrect-body { font-size: 13px; line-height: 1.55; color: #c7cdd3; }
+  .incorrect-body p { margin: 8px 0 0; }
+  .ref-tag {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    color: var(--amber-soft);
+    background: rgba(242,167,27,0.08);
+    border: 1px solid rgba(242,167,27,0.35);
+    border-radius: 3px;
+    padding: 3px 8px;
+  }
+  .next-button {
+    margin-top: 14px;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    padding: 11px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .next-button:hover { background: rgba(242,167,27,0.08); }
+
+  .end-wrap { display: none; }
+  .result-dial {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 3px solid var(--green);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    background: var(--bg-card);
+  }
+  .result-pct { font-size: 32px; font-weight: 800; line-height: 1.1; color: var(--green); }
+  .result-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .dial-wrap { margin-bottom: 20px; opacity: 0.9; }
+
+  .breakdown {
+    width: 100%;
+    text-align: left;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+  .breakdown-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  .breakdown-title span { color: var(--text-dim); font-weight: normal; letter-spacing: 0.02em; }
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 9px;
+    font-size: 12.5px;
+  }
+  .cat-name { flex: 0 0 168px; color: var(--text-main); line-height: 1.3; }
+  .cat-bar-track {
+    flex: 1;
+    height: 8px;
+    background: #1c2127;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .cat-bar-fill { height: 100%; border-radius: 4px; }
+  .cat-pct { flex: 0 0 62px; text-align: right; color: var(--text-dim); font-size: 11.5px; }
+  .cat-empty { font-size: 12px; color: var(--text-dim); font-style: italic; }
+  .reset-stats-button {
+    margin-top: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px 12px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .reset-stats-button:hover { color: var(--red); border-color: var(--red); }
+  .no-fail-note {
+    font-size: 10.5px;
+    color: var(--text-dim);
+    margin-top: -18px;
+    margin-bottom: 24px;
+    max-width: 380px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="frame">
+  <div class="top-bar">
+    <span>PART 107 · LESSON 1 REGULATIONS SIM</span>
+    <span id="topBarRight">READY</span>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="center" id="startScreen">
+    <div class="dial-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#2a3138" stroke-width="2" />
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#f2a71b" stroke-width="2" stroke-dasharray="8 6" opacity="0.7" />
+        <g id="dialTicks"></g>
+        <text x="60" y="68" text-anchor="middle" font-size="24" fill="#f2a71b" font-family="'Courier New', monospace">107</text>
+      </svg>
+    </div>
+    <h1>Part 107 Lesson 1 — Regulations Full Practice Quiz</h1>
+    <p class="subtext">
+      <span id="totalDisplayIntro"></span> questions covering applicability &amp; certification,
+      operating limitations, airspace &amp; waivers, Remote ID, night operations, operations
+      over people, right-of-way/VLOS, and recordkeeping. One question at a time, with a CFR
+      or 14 CFR Part 89 citation on every item. Your weakest categories are tracked after each run.
+    </p>
+
+    <button class="secondary-button" id="refToggleBtn">SHOW CFR REFERENCES, PREREQUISITES &amp; LESSON CONTENT</button>
+    <div class="ref-panel" id="refPanel">
+      <h3>Applicable CFR / Regulatory References</h3>
+      <ul>
+        <li><span class="cfr">14 CFR Part 107, Subpart A (General)</span> — §107.1 Applicability, §107.3 Definitions</li>
+        <li><span class="cfr">14 CFR Part 107, Subpart B (Operating Rules)</span> — §107.15 preflight condition, §107.21 in-flight emergency, §107.25 moving vehicle, §107.29 daylight/night operation, §107.31 VLOS, §107.33 visual observer, §107.35 multiple aircraft, §107.36 hazmat, §107.37 right-of-way, §107.39 operation over people, §107.41 operation in certain airspace, §107.51 operating limitations</li>
+        <li><span class="cfr">14 CFR Part 107, Subpart C</span> — §107.61 certificate eligibility, §107.65 recurrent training</li>
+        <li><span class="cfr">14 CFR Part 107, Subpart D (Operations Over People)</span> — §107.110–§107.145, Categories 1–4</li>
+        <li><span class="cfr">14 CFR Part 107, Subpart E (Waivers)</span> — §107.200 certificate of waiver, §107.205 list of waivable sections</li>
+        <li><span class="cfr">14 CFR Part 89</span> — Remote Identification of Unmanned Aircraft (Standard Remote ID, broadcast modules, FRIAs)</li>
+        <li><span class="cfr">14 CFR Part 107.9</span> — Accident reporting requirements</li>
+      </ul>
+
+      <h3>Knowledge Prerequisites (before this quiz)</h3>
+      <ul>
+        <li>Comfortable with basic aviation terms: AGL, MSL, ATC, VLOS, RPIC</li>
+        <li>Have read 14 CFR Part 107 Subparts A and B at least once (Lesson 1 required reading)</li>
+        <li>No prior FAA certificate or flight experience required</li>
+      </ul>
+
+      <h3>Required Lesson 1 Content Covered</h3>
+      <ul>
+        <li>Who needs a Remote Pilot Certificate and when</li>
+        <li>Operating rules: altitude, speed, visibility, cloud clearance</li>
+        <li>Waivers and airspace authorization (LAANC)</li>
+        <li>Remote ID requirements: Standard Remote ID, broadcast modules, FRIAs</li>
+        <li>Night operations requirements (anti-collision lighting, no separate waiver since 2021)</li>
+        <li>Operations over people and moving vehicles (Categories 1–4)</li>
+        <li>Certificate privileges and recurrent training</li>
+        <li>Accident reporting requirements</li>
+      </ul>
+    </div>
+
+    <p class="subtext no-fail-note">
+      Note: this is a self-study simulator, not the official FAA Part 107 Airman Knowledge Test.
+      It uses a 70% mark as a self-check benchmark — the real exam requires a 70% passing score
+      administered at an FAA-approved testing center.
+    </p>
+    <button class="primary-button" id="startBtn">START QUIZ</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="quiz-wrap" id="quizScreen">
+    <div class="gauge-track">
+      <div class="gauge-fill" id="gaugeFill"></div>
+    </div>
+    <div class="gauge-ticks" id="gaugeTicks"></div>
+    <div class="status-row">
+      <span>SCORE <b id="scoreDisplay">0</b> / <span id="totalDisplay">36</span></span>
+      <span id="itemDisplay">ITEM 01</span>
+    </div>
+
+    <div class="card">
+      <div class="q-label"><span id="qLabel">QUESTION 1</span><span class="q-cat" id="qCat"></span></div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="optionsWrap"></div>
+
+      <div class="correct-banner" id="correctBanner">✓ CORRECT — advancing…</div>
+
+      <div class="incorrect-panel" id="incorrectPanel">
+        <div class="incorrect-header">✕ INCORRECT</div>
+        <div class="incorrect-body">
+          <b>Correct answer:</b> <span id="correctAnswerText"></span>
+          <p id="explainText"></p>
+          <span class="ref-tag" id="refTag"></span>
+        </div>
+        <button class="next-button" id="nextBtn">NEXT QUESTION →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="center end-wrap" id="endScreen">
+    <div class="result-dial" id="resultDial">
+      <span class="result-pct" id="resultPct">0%</span>
+      <span class="result-sub" id="resultSub">0 / 36 correct</span>
+    </div>
+    <h1 id="endHeading">Strong Run</h1>
+    <p class="subtext" id="endSubtext"></p>
+
+    <div class="breakdown" id="breakdownWrap">
+      <div class="breakdown-title">WEAK AREAS — THIS RUN</div>
+      <div id="sessionBreakdown"></div>
+    </div>
+
+    <div class="breakdown" id="lifetimeWrap">
+      <div class="breakdown-title">WEAK AREAS — ALL-TIME <span id="lifetimeAttempts"></span></div>
+      <div id="lifetimeBreakdown"></div>
+      <button class="reset-stats-button" id="resetStatsBtn">RESET ALL-TIME STATS</button>
+    </div>
+
+    <button class="primary-button" id="restartBtn" style="margin-top: 20px;">RESTART QUIZ</button>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Question bank — Part 107 Lesson 1: Regulations (36 questions = 3x the
+// recommended 12-question lesson quiz). Every item cites its CFR/Part 89 basis.
+// ---------------------------------------------------------------------------
+const QUESTIONS = [
+  // Applicability & Certification
+  { q: "What kind of operations does 14 CFR Part 107 primarily govern?", options: ["Only manned general aviation aircraft", "Only recreational hobby flights", "Only drones over 55 lbs", "Non-recreational (e.g., commercial) small UAS operations under 55 lbs"], correct: 3, explain: "Part 107 covers civil small unmanned aircraft operations that don't fall under the recreational flyer exception.", ref: "14 CFR §107.1", cat: "Applicability & Certification" },
+  { q: "How is a 'small unmanned aircraft' defined under Part 107?", options: ["Any aircraft without a pilot seat", "An aircraft under 400 ft in altitude", "Any aircraft under 10 lbs", "An unmanned aircraft weighing less than 55 lbs on takeoff, including everything on board"], correct: 3, explain: "The weight threshold of under 55 lbs at takeoff, including payload, is what defines a small UAS under the rule.", ref: "14 CFR §107.3", cat: "Applicability & Certification" },
+  { q: "What is generally required to serve as remote pilot in command (RPIC) under Part 107?", options: ["A commercial driver's license", "A remote pilot certificate with a small UAS rating", "A private pilot certificate only", "No certificate, only registration"], correct: 1, explain: "Acting as RPIC requires holding a remote pilot certificate with a small UAS rating (or direct supervision by someone who does).", ref: "14 CFR §107.12", cat: "Applicability & Certification" },
+  { q: "What is the minimum age to obtain a remote pilot certificate?", options: ["14 years old", "16 years old", "21 years old", "18 years old"], correct: 1, explain: "Applicants must be at least 16 years old to qualify for a remote pilot certificate.", ref: "14 CFR §107.61(a)", cat: "Applicability & Certification" },
+  { q: "What must the RPIC do before every flight regarding the aircraft's condition?", options: ["Nothing is required before flight", "Ensure the small UAS is in a condition for safe operation via preflight inspection", "Have it inspected by an A&P mechanic", "Only check it once per month"], correct: 1, explain: "The RPIC must inspect the aircraft before flight to confirm it's safe to operate.", ref: "14 CFR §107.15", cat: "Applicability & Certification" },
+
+  // Operating Limitations (§107.51)
+  { q: "What is the maximum ground speed for small UAS operations under Part 107?", options: ["60 mph", "87 knots (100 mph)", "There is no speed limit", "120 knots"], correct: 1, explain: "Operating limitations cap ground speed at 100 mph (87 knots).", ref: "14 CFR §107.51(a)", cat: "Operating Limitations" },
+  { q: "What is the standard maximum altitude for Part 107 operations?", options: ["200 ft AGL", "1,000 ft AGL", "400 ft AGL (or within 400 ft of a structure)", "18,000 ft MSL"], correct: 2, explain: "Small UAS must generally stay at or below 400 ft AGL, with an exception allowing up to 400 ft above a structure's highest point when flown within 400 ft laterally of it.", ref: "14 CFR §107.51(b)", cat: "Operating Limitations" },
+  { q: "What minimum flight visibility is required, as observed from the control station?", options: ["3 statute miles", "5 statute miles", "No minimum is specified", "1 statute mile"], correct: 0, explain: "Flight visibility from the control station must be at least 3 statute miles.", ref: "14 CFR §107.51(c)", cat: "Operating Limitations" },
+  { q: "What is the minimum distance a small UAS must stay from clouds?", options: ["100 ft in any direction", "1,000 ft below only", "No requirement exists", "500 ft below and 2,000 ft horizontally from clouds"], correct: 3, explain: "The aircraft must remain at least 500 ft below and 2,000 ft horizontally clear of clouds.", ref: "14 CFR §107.51(d)", cat: "Operating Limitations" },
+  { q: "How many small unmanned aircraft may one person operate at the same time under Part 107?", options: ["Up to three", "As many as they can visually track", "Unlimited, if all have Remote ID", "Only one"], correct: 3, explain: "A person may operate only one small UAS at a time.", ref: "14 CFR §107.35", cat: "Operating Limitations" },
+
+  // Airspace & Waivers
+  { q: "Where can a Part 107 pilot generally fly without prior ATC coordination?", options: ["Class C airspace with no restrictions", "Class B airspace only", "Anywhere below 18,000 ft MSL", "Class G (uncontrolled) airspace up to 400 ft AGL"], correct: 3, explain: "Class G airspace up to 400 ft AGL doesn't require prior ATC coordination for Part 107 flights.", ref: "14 CFR §107.41; FAA AIM Ch. 11", cat: "Airspace & Waivers" },
+  { q: "What must a Part 107 pilot obtain before flying in Class B, C, D, or surface E airspace?", options: ["Airspace authorization from ATC, commonly through LAANC", "A written letter from the airport manager", "Nothing — Part 107 pilots are exempt", "A recreational flyer exemption"], correct: 0, explain: "Controlled airspace requires prior authorization, most often obtained quickly through LAANC.", ref: "14 CFR §107.41", cat: "Airspace & Waivers" },
+  { q: "What does a certificate of waiver allow a Part 107 operator to do?", options: ["Skip the knowledge test entirely", "Avoid accident reporting requirements", "Deviate from certain specific operating rules if the FAA approves the safety case", "Operate without a remote pilot certificate"], correct: 2, explain: "A certificate of waiver authorizes deviation from specific waivable provisions of Part 107 once the FAA approves the proposed mitigations.", ref: "14 CFR §107.200", cat: "Airspace & Waivers" },
+  { q: "Which section of Part 107 lists the regulations that are eligible for a waiver?", options: ["§107.9", "§107.205", "§107.3", "§107.51 alone"], correct: 1, explain: "§107.205 is the specific list of sections that a certificate of waiver may authorize deviation from.", ref: "14 CFR §107.205", cat: "Airspace & Waivers" },
+  { q: "Which of the following is NOT eligible for a Part 107 waiver and instead requires an exemption?", options: ["§107.39 operation over people", "§107.51 operating limitations", "§107.36 carriage of hazardous materials", "§107.29 night/twilight anti-collision lighting"], correct: 2, explain: "§107.36's hazmat prohibition is not on the list of waivable sections, so it requires a separate exemption process rather than a waiver.", ref: "14 CFR §107.205; §107.36", cat: "Airspace & Waivers" },
+
+  // Remote ID (Part 89)
+  { q: "In simple terms, what is the purpose of Remote ID?", options: ["A pilot's personal ID card", "A registration sticker placed on the aircraft body", "A 'digital license plate' broadcasting identification and location of the drone in flight", "A paid GPS subscription service"], correct: 2, explain: "Remote ID broadcasts identification and location data about the aircraft and control station in real time.", ref: "14 CFR Part 89", cat: "Remote ID" },
+  { q: "What are the three general ways a Part 107 operator can comply with Remote ID?", options: ["Standard Remote ID drone, a Remote ID broadcast module, or operating within a FRIA", "There is only one compliance method", "Only by purchasing a new drone every year", "Filing a flight plan with ATC"], correct: 0, explain: "Operators can fly a Standard Remote ID aircraft, add a broadcast module to an existing aircraft, or operate within an FAA-Recognized Identification Area.", ref: "14 CFR Part 89; FAA AIM Ch. 11", cat: "Remote ID" },
+  { q: "What is a FRIA?", options: ["A backup registration number", "An FAA-Recognized Identification Area where drones without Remote ID equipment may still legally fly", "A no-fly zone with zero exceptions", "A required flight instructor rating"], correct: 1, explain: "A FRIA is a specific, FAA-recognized area (often tied to a community-based organization) where non-equipped aircraft may operate legally.", ref: "14 CFR Part 89.130", cat: "Remote ID" },
+  { q: "If an aircraft equipped with Remote ID capability operates within a FRIA, must it still broadcast?", options: ["No, broadcasting is disabled inside all FRIAs", "Only during takeoff and landing", "Only if requested by ATC", "Yes — it must continue broadcasting continuously even while operating within or transiting a FRIA"], correct: 3, explain: "Aircraft with Remote ID capability must broadcast continuously, including while inside or transiting a FRIA.", ref: "FAA AIM Ch. 11-4", cat: "Remote ID" },
+  { q: "Where must an operator be physically located when flying inside a FRIA?", options: ["Physically within the boundaries of the FRIA, operating within VLOS at all times", "Location doesn't matter inside a FRIA", "Anywhere in the same state", "At least 5 miles away using FPV goggles"], correct: 0, explain: "FRIA operations require the pilot to be physically inside the FRIA boundary and maintain visual line of sight throughout the flight.", ref: "14 CFR Part 89.130; FAA AIM Ch. 11-4", cat: "Remote ID" },
+
+  // Night Operations (§107.29)
+  { q: "What is required to legally fly a Part 107 small UAS at night today?", options: ["Anti-collision lighting visible for at least 3 statute miles, with no separate waiver needed", "A separate FAA night waiver is always required", "Night flight is prohibited under Part 107", "Only a flashlight mounted on the aircraft"], correct: 0, explain: "Since the 2021 rule change, night operations are allowed with anti-collision lighting visible for 3 statute miles and no separate waiver of §107.29 is required.", ref: "14 CFR §107.29", cat: "Night Operations" },
+  { q: "Before the 2021 rule change, how did Part 107 pilots legally fly at night?", options: ["They needed a manned-aircraft pilot certificate", "Night flight was always freely allowed", "They had to obtain a certificate of waiver against §107.29", "Night flight has never been permitted"], correct: 2, explain: "Prior to the rule change, a waiver of the daylight-operation restriction in §107.29 was required to fly at night.", ref: "14 CFR §107.29 (history)", cat: "Night Operations" },
+  { q: "What happened to night-operation waivers issued before March 16, 2021?", options: ["They remain valid indefinitely with no changes", "They were cancelled immediately upon the rule's publication", "They were upgraded automatically to permanent authorizations", "Those waivers authorizing deviation from §107.29 terminated on May 17, 2021"], correct: 3, explain: "Certificates of waiver issued before March 16, 2021 that deviated from §107.29 terminated on May 17, 2021 under the amended rule.", ref: "14 CFR §107.29(d)", cat: "Night Operations" },
+  { q: "Besides true night, when else is anti-collision lighting required under §107.29?", options: ["During periods of civil twilight", "Anti-collision lighting is never required", "Only above 400 ft AGL", "Only over open water"], correct: 0, explain: "§107.29(a)(2) requires anti-collision lighting during civil twilight as well as at night.", ref: "14 CFR §107.29(a)(2)", cat: "Night Operations" },
+
+  // Operations Over People & Moving Vehicles (Subpart D)
+  { q: "How many categories of operations over people does Subpart D define?", options: ["Three", "There is no formal category system", "Four (Categories 1–4)", "Two"], correct: 2, explain: "Subpart D establishes four categories of operations over human beings, each with its own eligibility requirements.", ref: "14 CFR §§107.110–107.140", cat: "Operations Over People" },
+  { q: "What is a key requirement for a Category 1 operation over people?", options: ["The aircraft must weigh over 55 lbs", "A waiver is always required", "The aircraft must weigh 0.55 lbs or less and have no exposed rotating parts that would lacerate skin", "The operation must occur only at night"], correct: 2, explain: "Category 1 requires the aircraft to weigh 0.55 lbs or less at takeoff and have no exposed rotating parts capable of lacerating human skin on impact.", ref: "14 CFR §107.110", cat: "Operations Over People" },
+  { q: "Is operating a small UAS from a moving vehicle over a densely populated area generally permitted?", options: ["Only with a passenger in the vehicle", "Yes, with no restriction", "Only if the drone is under Category 1", "Generally no — it's restricted, though limited allowances exist over sparsely populated areas"], correct: 3, explain: "Operating from a moving vehicle is significantly more restricted over populated areas than over sparsely populated ones.", ref: "14 CFR §107.25", cat: "Operations Over People" },
+  { q: "What additional requirement applies to sustained flight over open-air assemblies of people?", options: ["The operation must also meet the Remote ID requirements of §89.110 or §89.115(a)", "No additional requirement beyond the basic over-people category", "It's absolutely prohibited under all circumstances", "It requires a manned aircraft chase escort"], correct: 0, explain: "Sustained flight over open-air assemblies must meet the applicable Remote ID provisions in addition to the relevant over-people category rule.", ref: "14 CFR §107.39(b)", cat: "Operations Over People" },
+
+  // Right-of-Way, VLOS & Visual Observer
+  { q: "Who always has the right of way over a small UAS in flight?", options: ["Manned aircraft, always", "It's negotiated by radio in real time", "Whichever aircraft is faster", "The small UAS, since it arrived first"], correct: 0, explain: "Small UAS must yield the right of way to all manned aircraft without exception.", ref: "14 CFR §107.37(a)", cat: "Right-of-Way & VLOS" },
+  { q: "What does the visual line of sight (VLOS) requirement demand of the RPIC, visual observer, and manipulator of controls?", options: ["Using binoculars continuously", "Use of FPV goggles at all times", "Only seeing the aircraft at takeoff and landing", "Being able to see the aircraft unaided (corrective lenses excepted) throughout the entire flight"], correct: 3, explain: "All required crew must be able to see the aircraft with unaided vision, other than ordinary corrective lenses, for the whole flight.", ref: "14 CFR §107.31", cat: "Right-of-Way & VLOS" },
+  { q: "What is the role of a visual observer under Part 107?", options: ["To operate the aircraft's controls instead of the RPIC", "To assist in visually locating the aircraft and scanning for hazards, supporting the RPIC's VLOS responsibility", "Visual observers aren't recognized under Part 107", "To file the accident report after every flight"], correct: 1, explain: "A visual observer can help maintain awareness of the aircraft and surrounding airspace, supporting VLOS compliance.", ref: "14 CFR §107.33", cat: "Right-of-Way & VLOS" },
+
+  // Recency, Recordkeeping & Accident Reporting
+  { q: "How does a Part 107 remote pilot currently maintain recency after initial certification?", options: ["No recency requirement exists once certified", "Completing recurrent online training within the required recurrency period", "Recency only applies to manned-aircraft pilots", "The certificate expires and a brand-new test must be taken every year"], correct: 1, explain: "Recurrent online training satisfies the ongoing recency requirement rather than a repeat in-person knowledge test for most certificated pilots.", ref: "14 CFR §107.65", cat: "Recency & Recordkeeping" },
+  { q: "What must an RPIC make available to the FAA upon request?", options: ["Nothing is required to be shown", "The remote pilot certificate, aircraft registration, and other required records", "Proof of liability insurance", "Only a driver's license"], correct: 1, explain: "The RPIC must be able to produce required certificates, registration, and records for inspection when asked.", ref: "14 CFR §107.7", cat: "Recency & Recordkeeping" },
+  { q: "What triggers a Part 107 accident report to the FAA?", options: ["Serious injury, loss of consciousness, or property damage at or above the reporting threshold", "Accident reporting isn't required under Part 107", "Any flight lasting longer than 30 minutes", "Only a total loss of the aircraft"], correct: 0, explain: "Certain thresholds — serious injury, loss of consciousness, or property damage meeting the specified dollar threshold — trigger a mandatory report to the FAA.", ref: "14 CFR §107.9", cat: "Recency & Recordkeeping" },
+  { q: "Within what timeframe must a qualifying accident be reported to the FAA?", options: ["Within 10 calendar days of the operation", "There is no required timeframe", "Within 30 days", "Within 24 hours"], correct: 0, explain: "A qualifying accident must be reported to the FAA within 10 calendar days.", ref: "14 CFR §107.9", cat: "Recency & Recordkeeping" },
+  { q: "What may an RPIC do during an in-flight emergency that requires deviating from Part 107 rules?", options: ["Only land immediately with no other options", "Deviations are only allowed for manned aircraft", "Deviate from any rule of Part 107 to the extent necessary to meet the emergency, and notify ATC/FAA if requested", "Nothing — no deviation is ever allowed"], correct: 2, explain: "In an in-flight emergency requiring immediate action, the RPIC may deviate from any rule of Part 107 to the extent required by the emergency.", ref: "14 CFR §107.21", cat: "Recency & Recordkeeping" },
+  { q: "What must a small UAS operator generally do before flying, regarding FAA registration?", options: ["Only register if the flight is over 400 ft", "Registration is never required for Part 107 operations", "Register the aircraft with the FAA if it weighs more than 0.55 lbs", "Registration is optional but recommended"], correct: 2, explain: "Small UAS operated under Part 107 weighing more than 0.55 lbs generally must be registered with the FAA before flight.", ref: "14 CFR §107.13; Part 48", cat: "Recency & Recordkeeping" },
+];
+
+const TOTAL = QUESTIONS.length;
+let index = 0;
+let score = 0;
+let selected = null;
+let missed = [];
+let sessionCatStats = {};
+
+const STORAGE_KEY = 'part107_lesson1_stats_v1';
+
+async function loadLifetimeStats() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY, false);
+    return result ? JSON.parse(result.value) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+async function saveLifetimeStats(stats) {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(stats), false);
+  } catch (e) {
+    // storage unavailable — stats just won't persist between sessions
+  }
+}
+
+async function recordAnswer(cat, isCorrect) {
+  if (!sessionCatStats[cat]) sessionCatStats[cat] = { correct: 0, total: 0 };
+  sessionCatStats[cat].total++;
+  if (isCorrect) sessionCatStats[cat].correct++;
+
+  const lifetime = await loadLifetimeStats();
+  if (!lifetime[cat]) lifetime[cat] = { correct: 0, total: 0 };
+  lifetime[cat].total++;
+  if (isCorrect) lifetime[cat].correct++;
+  await saveLifetimeStats(lifetime);
+}
+
+let startScreen, quizScreen, endScreen, topBarRight, gaugeTicks;
+
+function init() {
+  startScreen = document.getElementById('startScreen');
+  quizScreen = document.getElementById('quizScreen');
+  endScreen = document.getElementById('endScreen');
+  topBarRight = document.getElementById('topBarRight');
+  gaugeTicks = document.getElementById('gaugeTicks');
+
+  const dialTicks = document.getElementById('dialTicks');
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * 2 * Math.PI;
+    const x1 = 60 + 44 * Math.sin(angle);
+    const y1 = 60 - 44 * Math.cos(angle);
+    const x2 = 60 + 50 * Math.sin(angle);
+    const y2 = 60 - 50 * Math.cos(angle);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+    line.setAttribute("stroke", "#f2a71b"); line.setAttribute("stroke-width", "2");
+    dialTicks.appendChild(line);
+  }
+
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'tick';
+    gaugeTicks.appendChild(d);
+  }
+
+  document.getElementById('totalDisplay').textContent = TOTAL;
+  document.getElementById('totalDisplayIntro').textContent = TOTAL;
+  renderLifetimeBreakdown();
+
+  document.getElementById('startBtn').addEventListener('click', beginTest);
+  document.getElementById('restartBtn').addEventListener('click', beginTest);
+  document.getElementById('nextBtn').addEventListener('click', advance);
+  document.getElementById('resetStatsBtn').addEventListener('click', async () => {
+    try { await window.storage.delete(STORAGE_KEY, false); } catch (e) {}
+    renderLifetimeBreakdown();
+  });
+  document.getElementById('refToggleBtn').addEventListener('click', () => {
+    const panel = document.getElementById('refPanel');
+    const btn = document.getElementById('refToggleBtn');
+    const isOpen = panel.style.display === 'block';
+    panel.style.display = isOpen ? 'none' : 'block';
+    btn.textContent = isOpen
+      ? 'SHOW CFR REFERENCES, PREREQUISITES & LESSON CONTENT'
+      : 'HIDE CFR REFERENCES, PREREQUISITES & LESSON CONTENT';
+  });
+}
+
+function categoryColor(pct) {
+  if (pct >= 80) return '#3ddc97';
+  if (pct >= 60) return '#f2a71b';
+  return '#ff5c5c';
+}
+
+function renderBreakdown(containerEl, stats) {
+  const cats = Object.keys(stats);
+  if (cats.length === 0) {
+    containerEl.innerHTML = '<div class="cat-empty">No data yet.</div>';
+    return;
+  }
+  const rows = cats
+    .map((cat) => {
+      const s = stats[cat];
+      const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+      return { cat, pct, correct: s.correct, total: s.total };
+    })
+    .sort((a, b) => a.pct - b.pct);
+
+  containerEl.innerHTML = rows
+    .map((r) => {
+      const color = categoryColor(r.pct);
+      return `
+        <div class="cat-row">
+          <span class="cat-name">${r.cat}</span>
+          <span class="cat-bar-track"><span class="cat-bar-fill" style="width:${r.pct}%;background:${color};"></span></span>
+          <span class="cat-pct">${r.correct}/${r.total} · ${r.pct}%</span>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+async function renderLifetimeBreakdown() {
+  const lifetime = await loadLifetimeStats();
+  const totalAttempts = Object.values(lifetime).reduce((sum, s) => sum + s.total, 0);
+  document.getElementById('lifetimeAttempts').textContent = totalAttempts > 0 ? `(${totalAttempts} answers logged)` : '';
+  renderBreakdown(document.getElementById('lifetimeBreakdown'), lifetime);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+function beginTest() {
+  index = 0; score = 0; selected = null; missed = []; sessionCatStats = {};
+  startScreen.style.display = 'none';
+  endScreen.style.display = 'none';
+  quizScreen.style.display = 'block';
+  topBarRight.textContent = `Q 1 / ${TOTAL}`;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  selected = null;
+  const current = QUESTIONS[index];
+  document.getElementById('qLabel').textContent = `QUESTION ${index + 1}`;
+  document.getElementById('qCat').textContent = current.cat;
+  document.getElementById('qText').textContent = current.q;
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('itemDisplay').textContent = `ITEM ${String(index + 1).padStart(2, '0')}`;
+  topBarRight.textContent = `Q ${index + 1} / ${TOTAL}`;
+
+  const pct = (index / TOTAL) * 100;
+  document.getElementById('gaugeFill').style.width = pct + '%';
+  const ticks = gaugeTicks.children;
+  for (let i = 0; i < ticks.length; i++) {
+    ticks[i].className = 'tick' + (i < index ? ' filled' : '');
+  }
+
+  const optionsWrap = document.getElementById('optionsWrap');
+  optionsWrap.innerHTML = '';
+  current.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-button';
+    btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => choose(i));
+    optionsWrap.appendChild(btn);
+  });
+
+  document.getElementById('correctBanner').style.display = 'none';
+  document.getElementById('incorrectPanel').style.display = 'none';
+}
+
+async function choose(i) {
+  if (selected !== null) return;
+  selected = i;
+  const current = QUESTIONS[index];
+  const buttons = document.querySelectorAll('#optionsWrap .option-button');
+  buttons.forEach(b => b.disabled = true);
+
+  const isCorrect = i === current.correct;
+  await recordAnswer(current.cat, isCorrect);
+
+  if (isCorrect) {
+    score++;
+    document.getElementById('scoreDisplay').textContent = score;
+    buttons[i].classList.add('correct-choice');
+    document.getElementById('correctBanner').style.display = 'block';
+    setTimeout(advance, 900);
+  } else {
+    missed.push(index);
+    buttons[i].classList.add('wrong-choice');
+    buttons[current.correct].classList.add('correct-choice');
+    document.getElementById('correctAnswerText').textContent = current.options[current.correct];
+    document.getElementById('explainText').textContent = current.explain;
+    document.getElementById('refTag').textContent = current.ref;
+    document.getElementById('incorrectPanel').style.display = 'block';
+  }
+}
+
+function advance() {
+  if (index + 1 >= TOTAL) {
+    showEnd();
+  } else {
+    index++;
+    renderQuestion();
+  }
+}
+
+function showEnd() {
+  quizScreen.style.display = 'none';
+  endScreen.style.display = 'flex';
+  topBarRight.textContent = 'DEBRIEF';
+
+  const pct = Math.round((score / TOTAL) * 100);
+  const passed = pct >= 70;
+
+  document.getElementById('resultPct').textContent = pct + '%';
+  document.getElementById('resultSub').textContent = `${score} / ${TOTAL} correct`;
+  document.getElementById('resultDial').style.borderColor = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('resultPct').style.color = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('endHeading').textContent = passed ? 'Strong Run' : 'Keep Studying';
+  document.getElementById('endSubtext').textContent = passed
+    ? 'You cleared 70% on this self-check run, matching the FAA passing threshold. Review any missed items to lock it in before moving to Lesson 2.'
+    : 'This run fell below the 70% passing benchmark used on the real FAA Part 107 Airman Knowledge Test. Review the explanations and CFR references below and restudy your weaker categories before retaking.';
+
+  renderBreakdown(document.getElementById('sessionBreakdown'), sessionCatStats);
+  renderLifetimeBreakdown();
+}
+</script>
+</body>
+</html>
