@@ -111,6 +111,7 @@
     background: rgba(242,167,27,0.04);
   }
   .wx-decoded.dim { color: var(--text-dim); font-style: italic; border-left-color: var(--border); background: none; padding-left: 8px; }
+  .wx-decoded.wx-hidden { display: none; }
   .wx-meta { font-size: 10px; color: var(--text-dim); margin-top: 6px; letter-spacing: 0.02em; }
 
   /* generic button rows */
@@ -186,13 +187,14 @@
       <div class="wx-block">
         <div class="wx-label">METAR</div>
         <div class="wx-raw dim" id="metarRaw">—</div>
-        <div class="wx-decoded dim" id="metarDecoded">—</div>
+        <div class="wx-decoded dim wx-hidden" id="metarDecoded">—</div>
       </div>
       <div class="wx-block">
         <div class="wx-label">TAF</div>
         <div class="wx-raw dim" id="tafRaw">—</div>
-        <div class="wx-decoded dim" id="tafDecoded">—</div>
+        <div class="wx-decoded dim wx-hidden" id="tafDecoded">—</div>
       </div>
+      <button class="wx-go" id="translateBtn" style="margin-top:4px;">TRANSLATE ▸</button>
       <div class="wx-meta" id="wxMeta"></div>
     </div>
 
@@ -668,6 +670,15 @@
 
   fetchBtn.addEventListener('click', () => fetchWx({ manual: true }));
   stationInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') fetchWx({ manual: true }); });
+
+  const translateBtn = document.getElementById('translateBtn');
+  let translationsShown = false;
+  translateBtn.addEventListener('click', () => {
+    translationsShown = !translationsShown;
+    metarDecoded.classList.toggle('wx-hidden', !translationsShown);
+    tafDecoded.classList.toggle('wx-hidden', !translationsShown);
+    translateBtn.textContent = translationsShown ? 'HIDE TRANSLATION ▾' : 'TRANSLATE ▸';
+  });
 
   // load on page open
   fetchWx({ manual: true });
