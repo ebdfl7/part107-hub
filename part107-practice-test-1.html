@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Part 107 Knowledge Test Simulator</title>
+<style>
+  :root {
+    --amber: #f2a71b;
+    --amber-soft: #ffcf6b;
+    --green: #3ddc97;
+    --red: #ff5c5c;
+    --bg-deep: #0d1013;
+    --bg-panel: #171c22;
+    --bg-card: #12161a;
+    --border: #2a3138;
+    --text-main: #dfe6ec;
+    --text-bright: #f4f7fa;
+    --text-dim: #7a8590;
+    --text-mid: #9aa5b0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at top, var(--bg-panel) 0%, var(--bg-deep) 70%);
+    color: var(--text-main);
+    font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+    min-height: 100vh;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 24px 12px;
+  }
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    z-index: 0;
+  }
+  .frame {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(13,16,19,0.6);
+    box-shadow: 0 0 0 1px rgba(242,167,27,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    height: fit-content;
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    background: #12161a;
+  }
+  .center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 28px 36px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--text-bright);
+    letter-spacing: 0.01em;
+    font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  }
+  .subtext {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-mid);
+    max-width: 420px;
+    margin: 0 0 28px;
+  }
+  .primary-button {
+    background: var(--amber);
+    color: #171200;
+    border: none;
+    padding: 14px 32px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .primary-button:hover { background: var(--amber-soft); }
+
+  .quiz-wrap { padding: 20px 20px 24px; display: none; }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin: 10px 2px 18px;
+    letter-spacing: 0.06em;
+  }
+  .status-row b { color: var(--amber); }
+  .gauge-track {
+    position: relative;
+    height: 6px;
+    background: #1c2127;
+    border-radius: 3px;
+  }
+  .gauge-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), var(--amber-soft));
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+  .gauge-ticks { display: flex; gap: 2px; margin-top: 4px; }
+  .tick { flex: 1; height: 3px; border-radius: 1px; background: rgba(255,255,255,0.08); }
+  .tick.filled { background: var(--amber); }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 20px 22px;
+  }
+  .q-label { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; margin-bottom: 8px; }
+  .q-text {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text-bright);
+    margin-bottom: 18px;
+    font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+    font-weight: 500;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 3px;
+    font-size: 13.5px;
+    line-height: 1.4;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    background: #171c22;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    cursor: pointer;
+    width: 100%;
+  }
+  .option-button:disabled { cursor: default; }
+  .option-button.correct-choice {
+    background: rgba(61, 220, 151, 0.12);
+    border: 1px solid var(--green);
+    color: var(--green);
+  }
+  .option-button.wrong-choice {
+    background: rgba(255, 92, 92, 0.12);
+    border: 1px solid var(--red);
+    color: var(--red);
+  }
+  .option-letter {
+    font-weight: 700;
+    font-size: 12px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    opacity: 0.8;
+  }
+  .correct-banner {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: rgba(61,220,151,0.1);
+    border: 1px solid var(--green);
+    color: var(--green);
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+    display: none;
+  }
+  .incorrect-panel {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(255,92,92,0.06);
+    border: 1px solid rgba(255,92,92,0.4);
+    border-radius: 3px;
+    display: none;
+  }
+  .incorrect-header { color: var(--red); font-weight: 700; font-size: 13px; margin-bottom: 8px; letter-spacing: 0.04em; }
+  .incorrect-body { font-size: 13px; line-height: 1.55; color: #c7cdd3; }
+  .incorrect-body p { margin: 8px 0 0; }
+  .next-button {
+    margin-top: 14px;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    padding: 11px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .next-button:hover { background: rgba(242,167,27,0.08); }
+
+  .end-wrap { display: none; }
+  .result-dial {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 3px solid var(--green);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    background: var(--bg-card);
+  }
+  .result-pct { font-size: 32px; font-weight: 800; line-height: 1.1; color: var(--green); }
+  .result-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .dial-wrap { margin-bottom: 20px; opacity: 0.9; }
+
+  .breakdown {
+    width: 100%;
+    text-align: left;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+  .breakdown-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  .breakdown-title span { color: var(--text-dim); font-weight: normal; letter-spacing: 0.02em; }
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 9px;
+    font-size: 12.5px;
+  }
+  .cat-name { flex: 0 0 168px; color: var(--text-main); line-height: 1.3; }
+  .cat-bar-track {
+    flex: 1;
+    height: 8px;
+    background: #1c2127;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .cat-bar-fill { height: 100%; border-radius: 4px; }
+  .cat-pct { flex: 0 0 62px; text-align: right; color: var(--text-dim); font-size: 11.5px; }
+  .cat-empty { font-size: 12px; color: var(--text-dim); font-style: italic; }
+  .reset-stats-button {
+    margin-top: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px 12px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .reset-stats-button:hover { color: var(--red); border-color: var(--red); }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="frame">
+  <div class="top-bar">
+    <span>PART 107 · KNOWLEDGE TEST SIM</span>
+    <span id="topBarRight">READY</span>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="center" id="startScreen">
+    <div class="dial-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#2a3138" stroke-width="2" />
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#f2a71b" stroke-width="2" stroke-dasharray="8 6" opacity="0.7" />
+        <g id="dialTicks"></g>
+        <text x="60" y="68" text-anchor="middle" font-size="28" fill="#f2a71b" font-family="'Courier New', monospace">60</text>
+      </svg>
+    </div>
+    <h1>sUAS Knowledge Test — Full Simulation</h1>
+    <p class="subtext">
+      <span id="totalDisplayIntro"></span> questions covering regulations, airspace, sectional charts, weather, loading and
+      performance, radio and airport operations, emergency procedures, ADM/CRM, physiology,
+      and maintenance. One question at a time. FAA passing threshold: 70%. Your weakest
+      categories are tracked after each run.
+    </p>
+    <button class="primary-button" id="startBtn">START TEST</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="quiz-wrap" id="quizScreen">
+    <div class="gauge-track">
+      <div class="gauge-fill" id="gaugeFill"></div>
+    </div>
+    <div class="gauge-ticks" id="gaugeTicks"></div>
+    <div class="status-row">
+      <span>SCORE <b id="scoreDisplay">0</b> / <span id="totalDisplay">60</span></span>
+      <span id="itemDisplay">ITEM 01</span>
+    </div>
+
+    <div class="card">
+      <div class="q-label" id="qLabel">QUESTION 1</div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="optionsWrap"></div>
+
+      <div class="correct-banner" id="correctBanner">✓ CORRECT — advancing…</div>
+
+      <div class="incorrect-panel" id="incorrectPanel">
+        <div class="incorrect-header">✕ INCORRECT</div>
+        <div class="incorrect-body">
+          <b>Correct answer:</b> <span id="correctAnswerText"></span>
+          <p id="explainText"></p>
+        </div>
+        <button class="next-button" id="nextBtn">NEXT QUESTION →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="center end-wrap" id="endScreen">
+    <div class="result-dial" id="resultDial">
+      <span class="result-pct" id="resultPct">0%</span>
+      <span class="result-sub" id="resultSub">0 / 60 correct</span>
+    </div>
+    <h1 id="endHeading">Simulated Pass</h1>
+    <p class="subtext" id="endSubtext"></p>
+
+    <div class="breakdown" id="breakdownWrap">
+      <div class="breakdown-title">WEAK AREAS — THIS RUN</div>
+      <div id="sessionBreakdown"></div>
+    </div>
+
+    <div class="breakdown" id="lifetimeWrap">
+      <div class="breakdown-title">WEAK AREAS — ALL-TIME <span id="lifetimeAttempts"></span></div>
+      <div id="lifetimeBreakdown"></div>
+      <button class="reset-stats-button" id="resetStatsBtn">RESET ALL-TIME STATS</button>
+    </div>
+
+    <button class="primary-button" id="restartBtn" style="margin-top: 20px;">RESTART TEST</button>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Question bank — 60 original questions covering the FAA Part 107 (sUAS)
+// Airman Knowledge Test areas.
+// ---------------------------------------------------------------------------
+const QUESTIONS = [
+  { q: "Under 14 CFR Part 107, what is the maximum altitude a small UAS may be flown above ground level, absent a waiver?", options: ["400 feet", "500 feet", "1,000 feet", "1,200 feet"], correct: 0, explain: "Part 107 limits sUAS operations to 400 feet AGL, or within 400 feet of a structure if the aircraft stays within 400 feet of that structure's lateral boundaries.", cat: "Regulations" },
+  { q: "What is the maximum groundspeed permitted for a small UAS under Part 107?", options: ["55 knots", "65 knots", "87 knots", "100 knots"], correct: 2, explain: "The Part 107 speed limit is 87 knots (100 mph), not 100 knots.", cat: "Regulations" },
+  { q: "What is the minimum age to hold a Remote Pilot Certificate?", options: ["14 years old", "16 years old", "18 years old", "21 years old"], correct: 1, explain: "An applicant must be at least 16 years old to be issued a Remote Pilot Certificate.", cat: "Regulations" },
+  { q: "How long is a Remote Pilot Certificate valid before recurrent training is required?", options: ["12 calendar months", "24 calendar months", "36 calendar months", "It never expires"], correct: 1, explain: "A remote pilot must complete recurrent training every 24 calendar months to keep operating privileges current.", cat: "Regulations" },
+  { q: "Under Part 107, who has the right of way: a manned aircraft or a small UAS?", options: ["The small UAS always", "The manned aircraft always", "Whichever is faster", "Whoever declares an emergency first"], correct: 1, explain: "Remote pilots must always yield the right of way to manned aircraft, regardless of the type of manned operation.", cat: "Regulations" },
+  { q: "A remote pilot may not operate a small UAS if they have consumed alcohol within the preceding:", options: ["4 hours", "6 hours", "8 hours", "12 hours"], correct: 2, explain: "Part 107 prohibits operating within 8 hours of consuming alcohol, while under its influence, or with a blood alcohol concentration of 0.04 or greater.", cat: "Regulations" },
+  { q: "Which of the following best describes when an sUAS accident must be reported to the FAA?", options: ["Any time the aircraft touches down off the intended landing spot", "Only if the aircraft is destroyed", "Within 10 days if it results in serious injury, loss of consciousness, or more than $500 of property damage", "Only if a manned aircraft was involved"], correct: 2, explain: "Part 107 requires reporting to the FAA within 10 days for an accident involving serious injury, loss of consciousness, or property damage exceeding $500.", cat: "Regulations" },
+  { q: "What is required before conducting any Part 107 operation?", options: ["Filing a flight plan with ATC", "A preflight inspection to ensure the aircraft is safe for flight", "A signed waiver from the FAA", "A licensed aircraft mechanic's sign-off"], correct: 1, explain: "The remote pilot in command must conduct a preflight inspection of the sUAS to ensure it's in a safe condition for operation; no flight plan or mechanic sign-off is required.", cat: "Regulations" },
+  { q: "Can a remote pilot operate more than one small UAS at the same time?", options: ["Yes, with no restrictions", "No, only one unmanned aircraft may be operated at a time", "Yes, up to three", "Only at night"], correct: 1, explain: "Part 107 permits only one unmanned aircraft to be operated at a time by a single remote pilot.", cat: "Regulations" },
+  { q: "Which statement about operating a small UAS from a moving vehicle is correct?", options: ["It is never allowed under any condition", "It is allowed over a sparsely populated area and if the UAS isn't carrying another person's property for compensation", "It is allowed anywhere as long as the vehicle stays under 25 mph", "It requires a specific FAA waiver in all cases"], correct: 1, explain: "Operation from a moving vehicle is allowed in sparsely populated areas, but is prohibited in populated areas, and package delivery for compensation from a moving land vehicle isn't permitted without a waiver.", cat: "Regulations" },
+  { q: "A remote pilot certificate may be suspended or revoked if the holder:", options: ["Flies more than once a week", "Operates carelessly or recklessly so as to endanger life or property", "Uses a quadcopter instead of a fixed-wing aircraft", "Registers more than one aircraft"], correct: 1, explain: "Careless or reckless operation that endangers life or property of another is prohibited and can result in certificate action.", cat: "Regulations" },
+  { q: "Under Part 107, is a remote pilot required to hold a medical certificate?", options: ["Yes, a third-class medical is required", "No, but the pilot must not fly if a physical or mental condition would interfere with safe operation", "Yes, but only for night operations", "Only if operating over people"], correct: 1, explain: "No FAA medical certificate is required for Part 107 operations, but the remote pilot must self-assess fitness and not fly if impaired physically or mentally.", cat: "Regulations" },
+  { q: "In which class of airspace can a small UAS be operated without prior ATC authorization?", options: ["Class B", "Class C", "Class D", "Class G"], correct: 3, explain: "Class G (uncontrolled) airspace does not require ATC authorization for Part 107 operations, unlike Class B, C, D, and surface-area Class E.", cat: "Airspace & Sectional Charts" },
+  { q: "What tool is most commonly used to obtain near-real-time ATC authorization to fly in controlled airspace?", options: ["NOTAMs", "LAANC (Low Altitude Authorization and Notification Capability)", "A Notice to Airmen filed by phone only", "TFR database"], correct: 1, explain: "LAANC provides automated, near-real-time authorization for eligible controlled airspace at or below approved altitudes.", cat: "Airspace & Sectional Charts" },
+  { q: "On a sectional chart, controlled airspace that begins at the surface around a non-towered airport with a part-time control tower is typically depicted with what symbol?", options: ["A solid blue line", "A solid magenta line", "A dashed magenta line", "A dashed blue line"], correct: 3, explain: "Class D airspace (often with a part-time tower) is shown with a dashed blue line on sectional charts.", cat: "Airspace & Sectional Charts" },
+  { q: "A dashed magenta line around an airport on a sectional chart most likely indicates:", options: ["Class B airspace", "Class C airspace", "Class E airspace that begins at the surface", "Restricted airspace"], correct: 2, explain: "A dashed magenta line denotes Class E surface-area airspace, distinguishing it from the solid blue (Class B) or solid magenta (Class C) boundaries.", cat: "Airspace & Sectional Charts" },
+  { q: "Altitudes for airspace boundaries printed on a sectional chart are given:", options: ["Above ground level (AGL)", "Mean sea level (MSL), unless otherwise noted", "Relative to the aircraft's takeoff point", "In flight levels only"], correct: 1, explain: "Sectional chart airspace altitudes are MSL unless specifically labeled AGL, so a remote pilot must subtract field elevation to determine the AGL ceiling.", cat: "Airspace & Sectional Charts" },
+  { q: "A Temporary Flight Restriction (TFR) is typically issued to:", options: ["Permanently close airspace around a city", "Restrict flight in a defined area for events like wildfires, VIP movement, or major sporting events", "Mark the boundary of Class G airspace", "Identify glider operating areas"], correct: 1, explain: "TFRs are temporary restrictions issued for situations such as disaster response, VIP travel, or large public events, and remote pilots must check for them before flying.", cat: "Airspace & Sectional Charts" },
+  { q: "What does a Military Operations Area (MOA) depicted on a sectional chart indicate?", options: ["Airspace permanently closed to all aircraft", "An area where military training activities occur; caution is advised for nonparticipating aircraft", "A restricted area requiring FAA authorization only", "An area reserved exclusively for small UAS operations"], correct: 1, explain: "An MOA alerts nonparticipating pilots, including remote pilots, that military training activity may be underway, though it isn't necessarily restricted airspace.", cat: "Airspace & Sectional Charts" },
+  { q: "If a remote pilot wants to fly at 250 feet AGL within the boundaries of Class C airspace, what must they do first?", options: ["Nothing, Class C is unrestricted below 400 feet", "Obtain ATC authorization before operating", "File a NOTAM 24 hours in advance", "Contact the nearest FSDO by mail"], correct: 1, explain: "Class C is controlled airspace, so prior ATC authorization (often via LAANC) is required before operating there under Part 107.", cat: "Airspace & Sectional Charts" },
+  { q: "A blue segmented (dot-dash) circle on a sectional chart typically represents:", options: ["Class B airspace floor and ceiling", "A Mode C veil", "Class D airspace, showing where it doesn't extend to the surface", "A restricted area"], correct: 2, explain: "Segmented blue lines mark portions of Class D (or similar) airspace where the controlled airspace has cutouts and doesn't reach the surface.", cat: "Airspace & Sectional Charts" },
+  { q: "Where can a remote pilot find current information about airspace restrictions, NOTAMs, and TFRs before a flight?", options: ["Only from a local library", "FAA resources such as the B4UFLY app or a briefing service", "Social media flight groups", "There is no reliable source"], correct: 1, explain: "Tools like the B4UFLY app and official FAA briefing resources provide current airspace, NOTAM, and TFR information for a planned flight.", cat: "Airspace & Sectional Charts" },
+  { q: "A METAR reporting 'FEW045' means:", options: ["Few clouds are forecast in 45 hours", "Cloud coverage of 1 to 2 oktas at 4,500 feet AGL", "Visibility of 4.5 statute miles", "Wind gusting to 45 knots"], correct: 1, explain: "'FEW045' reports a sky condition of few clouds (1-2 oktas coverage) with the cloud base at 4,500 feet AGL.", cat: "Weather" },
+  { q: "High density altitude conditions (hot, humid, high elevation) will generally cause a small UAS to experience:", options: ["Improved lift and better climb performance", "Reduced lift, reduced climb performance, and increased power demand", "No measurable performance change", "Increased battery life"], correct: 1, explain: "High density altitude thins the air, reducing propeller and motor efficiency, which degrades lift and climb performance and increases power draw.", cat: "Weather" },
+  { q: "Which weather condition poses the greatest risk of structural icing for a small UAS?", options: ["Clear skies with low humidity", "Visible moisture at temperatures at or below freezing", "High winds with no precipitation", "Bright sunshine at high noon"], correct: 1, explain: "Icing requires visible moisture (clouds, rain, fog) combined with freezing or near-freezing temperatures.", cat: "Weather" },
+  { q: "A significant temperature/dewpoint spread in a METAR generally indicates:", options: ["A higher likelihood of fog or low clouds forming soon", "A lower likelihood of fog or low clouds forming", "Guaranteed thunderstorms", "No bearing on visibility"], correct: 1, explain: "A wide spread between temperature and dewpoint means the air is relatively dry, making fog or low cloud formation less likely; a narrow spread raises that likelihood.", cat: "Weather" },
+  { q: "Winds reported as '18025G35KT' in a METAR indicate:", options: ["Wind from 180° at 25 knots gusting to 35 knots", "Wind from 250° at 18 knots gusting to 35 knots", "Wind at 18,025 feet", "Wind gusting from 35° to 18°"], correct: 0, explain: "The format is direction/speed with gust, so '18025G35KT' is wind from 180° true at 25 knots, gusting to 35 knots.", cat: "Weather" },
+  { q: "What effect does higher humidity have on small UAS lift performance, all else being equal?", options: ["Humid air is denser and improves lift", "Humid air is less dense than dry air, slightly reducing lift and performance", "Humidity has no effect on air density", "Humid air only affects fixed-wing aircraft"], correct: 1, explain: "Water vapor is less dense than dry air molecules, so humid air is slightly less dense, which can slightly reduce propeller performance.", cat: "Weather" },
+  { q: "Strong, gusty surface winds are especially hazardous to small multirotor UAS because they can cause:", options: ["Improved GPS accuracy", "Loss of control authority, drift, or difficulty holding position", "Automatic increases in battery capacity", "No effect since multirotors are wind-proof"], correct: 1, explain: "Gusty winds can exceed a small UAS's control authority, leading to drift, instability, or loss of control, particularly with lightweight aircraft.", cat: "Weather" },
+  { q: "What is the primary hazard of flying a small UAS in or near towering cumulus clouds?", options: ["Excessive sunlight interference with cameras", "Turbulence, strong up/downdrafts, and potential lightning", "Reduced radio frequency interference", "Guaranteed calm winds beneath the cloud"], correct: 1, explain: "Towering cumulus clouds are associated with strong vertical currents, turbulence, and the potential for lightning as they develop toward thunderstorms.", cat: "Weather" },
+  { q: "Adding payload weight to a small UAS without adjusting flight planning will generally:", options: ["Increase maximum flight time", "Decrease maximum flight time and reduce maneuverability", "Have no impact on performance", "Only affect radio range"], correct: 1, explain: "Additional weight increases power demand to maintain lift, which reduces available flight time and can reduce the aircraft's maneuvering margin.", cat: "Loading & Performance" },
+  { q: "Why is weight and balance (center of gravity) important for small UAS operations?", options: ["It only matters for large manned aircraft", "An improperly balanced aircraft can be harder to control and less stable in flight", "CG has no effect on multirotor aircraft", "It only affects battery charging time"], correct: 1, explain: "An unbalanced load shifts the center of gravity, which can degrade stability and controllability, similar to manned aircraft.", cat: "Loading & Performance" },
+  { q: "As battery voltage drops during a flight, a remote pilot should expect:", options: ["No change in performance until the battery is completely empty", "A gradual decrease in available power and potential performance degradation", "An increase in maximum speed", "Guaranteed improved GPS lock"], correct: 1, explain: "As batteries discharge, voltage sag reduces available power, which can degrade climb rate, speed, and control responsiveness before failure.", cat: "Loading & Performance" },
+  { q: "Which of the following would most reduce the maximum safe flight time of a small UAS on a given battery?", options: ["Flying in calm, cool conditions", "Flying into a strong headwind for an extended return leg", "Flying at a lower altitude than planned", "Using a fresh, fully charged battery"], correct: 1, explain: "Fighting a strong headwind requires more power over a longer duration, consuming battery capacity faster and reducing the safe flight time margin.", cat: "Loading & Performance" },
+  { q: "At an airport without an operating control tower, what frequency is commonly used by pilots to self-announce position and intentions?", options: ["Guard frequency 121.5", "The Common Traffic Advisory Frequency (CTAF)", "Any open frequency", "The ATIS frequency only"], correct: 1, explain: "CTAF is the designated frequency pilots use to coordinate and announce position at airports without an operating control tower.", cat: "Airport Ops & Radio" },
+  { q: "Although not required for most Part 107 operations, monitoring the CTAF near an airport can help a remote pilot:", options: ["Get automatic priority over manned traffic", "Maintain situational awareness of manned aircraft traffic in the area", "Avoid needing a preflight inspection", "Bypass airspace authorization requirements"], correct: 1, explain: "Monitoring CTAF helps the remote pilot stay aware of manned aircraft movements nearby, supporting safe integration and see-and-avoid practices.", cat: "Airport Ops & Radio" },
+  { q: "A rotating beacon at an airport, alternating white and green, generally indicates:", options: ["A seaplane base", "A lighted land airport", "A military airport only", "A heliport"], correct: 1, explain: "Alternating white and green flashes from a rotating beacon indicate a lighted civilian land airport.", cat: "Airport Ops & Radio" },
+  { q: "What does the segmented circle at an airport help indicate to pilots?", options: ["The location of the fuel pumps", "Traffic pattern direction and airport wind information", "Runway length in feet", "The airport's radio frequency"], correct: 1, explain: "The segmented circle system, including the wind indicator and traffic pattern indicators, shows pilots the traffic pattern direction for each runway.", cat: "Airport Ops & Radio" },
+  { q: "Which statement best describes why remote pilots benefit from understanding airport traffic patterns even though Part 107 doesn't require using them?", options: ["It has no practical benefit", "It helps the remote pilot anticipate where manned aircraft are likely to be during arrivals and departures", "It's only relevant for radio-equipped drones", "It replaces the need for airspace authorization"], correct: 1, explain: "Knowing standard traffic pattern flow helps a remote pilot predict where manned traffic will be near an airport, supporting collision avoidance.", cat: "Airport Ops & Radio" },
+  { q: "If a small UAS experiences a lost-link (loss of control link) event, the remote pilot should:", options: ["Immediately assume the aircraft is destroyed", "Follow the aircraft's programmed lost-link procedure (such as return-to-home) and be prepared to regain control", "Fly a second aircraft to physically intercept it", "Ignore it since lost-link never happens in practice"], correct: 1, explain: "Most sUAS have a preprogrammed lost-link behavior such as return-to-home or auto-land, and the remote pilot should know and rely on that procedure while attempting to reestablish control.", cat: "Emergency Procedures" },
+  { q: "What is the best practice for preparing for a lost-GPS or compass-error event before flight?", options: ["Assume it will never happen", "Review the aircraft's manual for its GPS-loss behavior and brief the response in advance", "Disable all failsafes to keep manual control simple", "There is no useful preparation possible"], correct: 1, explain: "Understanding the aircraft's specific failsafe behavior ahead of time lets the remote pilot react correctly and quickly if GPS or compass errors occur.", cat: "Emergency Procedures" },
+  { q: "During an in-flight emergency, which action reflects good aeronautical decision-making for a remote pilot?", options: ["Prioritizing the safety of people and property over completing the mission", "Continuing the flight plan regardless of the emergency to finish the job", "Handing the controller to an untrained bystander", "Waiting to assess the situation until after landing"], correct: 0, explain: "Good ADM prioritizes the safety of people and property on the ground and in the air above completing the original mission.", cat: "Emergency Procedures" },
+  { q: "In a Part 107 operation with a visual observer, who retains final authority and responsibility for the safety of the flight?", options: ["The visual observer", "The remote pilot in command", "Whoever owns the aircraft", "The FAA air traffic controller"], correct: 1, explain: "The remote pilot in command holds final authority and responsibility for the safe operation of the small UAS, even when using a visual observer.", cat: "ADM & CRM" },
+  { q: "What is the primary purpose of a visual observer in a Part 107 operation?", options: ["To operate the aircraft's controls instead of the remote pilot", "To assist in seeing and avoiding other aircraft and hazards", "To handle FAA paperwork after the flight", "To replace the need for a preflight inspection"], correct: 1, explain: "A visual observer assists the remote pilot in maintaining awareness of the airspace and spotting potential hazards or aircraft, supporting see-and-avoid.", cat: "ADM & CRM" },
+  { q: "Which of the following is a hazardous attitude that can affect a remote pilot's decision-making, per ADM principles?", options: ["Caution", "Invulnerability ('it won't happen to me')", "Thoroughness", "Patience"], correct: 1, explain: "Invulnerability, the belief that accidents happen to others but not oneself, is one of the five classic hazardous attitudes taught in ADM training.", cat: "ADM & CRM" },
+  { q: "The antidote thought for the hazardous attitude of 'anti-authority' is best summarized as:", options: ["'I can do it my way'", "'Follow the rules, they are usually right'", "'Not this time'", "'Nothing will happen'"], correct: 1, explain: "The anti-authority hazardous attitude ('don't tell me') is countered by the antidote thought that rules and procedures are usually there for good reason.", cat: "ADM & CRM" },
+  { q: "A remote pilot who has been flying for several hours in hot conditions without adequate water intake is at risk of:", options: ["Improved reaction time", "Dehydration, which can impair judgment and reaction time", "Hyperoxia", "No performance effect"], correct: 1, explain: "Dehydration reduces alertness, reaction time, and decision-making ability, all of which are important for safe remote pilot performance.", cat: "Physiology" },
+  { q: "Which of the following can impair a remote pilot's performance in a way similar to alcohol intoxication?", options: ["Adequate sleep", "Fatigue from lack of sleep", "Proper hydration", "Balanced meals"], correct: 1, explain: "Fatigue degrades attention, judgment, and reaction time in ways that can resemble the effects of alcohol impairment.", cat: "Physiology" },
+  { q: "Staring at a small controller screen for a long period in bright sunlight can contribute to which physiological issue?", options: ["Improved night vision", "Eye strain and reduced visual acuity", "Increased inner-ear balance", "Immunity to glare"], correct: 1, explain: "Prolonged screen viewing in bright glare can cause eye strain and temporarily reduced visual acuity, both relevant to maintaining situational awareness.", cat: "Physiology" },
+  { q: "A remote pilot taking an over-the-counter medication with a warning label about drowsiness should:", options: ["Fly as normal since it's not a prescription", "Consider the medication's effects on alertness and judgment before deciding to fly", "Only worry about it if flying at night", "Assume OTC medications never cause impairment"], correct: 1, explain: "Both prescription and over-the-counter medications can impair alertness or judgment, so a remote pilot must assess fitness to fly regardless of whether a drug requires a prescription.", cat: "Physiology" },
+  { q: "Stress from personal or work-related issues can affect a remote pilot's flight safety primarily by:", options: ["Improving focus on the task at hand", "Reducing attention, increasing distraction, and impairing decision-making", "Having no measurable effect on performance", "Only impacting long-duration commercial flights"], correct: 1, explain: "Elevated stress can narrow attention, increase distraction, and degrade decision-making, all of which raise operational risk.", cat: "Physiology" },
+  { q: "Although Part 107 doesn't mandate a specific maintenance program, a remote pilot should still:", options: ["Never inspect the aircraft to save time", "Follow the manufacturer's guidance and maintain the aircraft in a condition for safe operation", "Only inspect the aircraft once a year", "Rely solely on the aircraft's self-diagnostics with no visual inspection"], correct: 1, explain: "Even without a mandated program, remote pilots are responsible for keeping the aircraft in a condition for safe operation and should follow manufacturer maintenance guidance.", cat: "Maintenance" },
+  { q: "Which item is most important to check on the propellers during a preflight inspection?", options: ["Color of the propeller", "Cracks, chips, warping, or other damage that could cause failure in flight", "Brand name printed on the blade", "Whether the propellers match the paint scheme"], correct: 1, explain: "Preflight inspection should look for structural damage such as cracks, chips, or warping in propellers, since damaged blades can fail during flight.", cat: "Maintenance" },
+  { q: "If a discrepancy is found during a preflight inspection that could affect safe flight, the remote pilot should:", options: ["Fly anyway and note it for later", "Resolve the discrepancy before flight or not fly the aircraft", "Have the visual observer decide", "Ignore it if the aircraft looks fine visually"], correct: 1, explain: "Any discrepancy that could affect the safety of flight must be corrected before operating the aircraft.", cat: "Maintenance" },
+  { q: "A small UAS may be operated at night under Part 107 if:", options: ["Night operations are never permitted", "The aircraft has anti-collision lighting visible for at least 3 statute miles with an appropriate flash rate", "The remote pilot uses night-vision goggles instead of lighting", "Only within Class G airspace during a full moon"], correct: 1, explain: "Since the 2021 rule update, night operations are allowed without a waiver if the sUAS has anti-collision lighting visible for 3 statute miles, and the remote pilot has completed the required training.", cat: "Regulations" },
+  { q: "Operations over people who are not direct participants in the flight are governed by:", options: ["A blanket prohibition with no exceptions", "Category 1 through 4 eligibility requirements based on aircraft weight, design, and other criteria", "Only the remote pilot's personal judgment", "State law exclusively"], correct: 1, explain: "Part 107 subpart D establishes Category 1-4 criteria (such as low kinetic energy or exposed rotating parts) that determine whether and how operations over people are permitted.", cat: "Regulations" },
+  { q: "What must a remote pilot do if operating a small UAS registered under Part 107 and asked to produce documentation by a law enforcement or FAA official?", options: ["Nothing is required to be presented", "Present the remote pilot certificate and aircraft registration upon request", "Only present a driver's license", "Refuse until a lawyer is present"], correct: 1, explain: "Remote pilots must have their remote pilot certificate and proof of aircraft registration available for inspection upon request by the FAA or law enforcement.", cat: "Regulations" },
+  { q: "A waiver under Part 107 allows a remote pilot to:", options: ["Operate outside of certain Part 107 provisions if the FAA determines the operation can be conducted safely", "Ignore all FAA regulations", "Avoid registering the aircraft", "Automatically fly in restricted airspace with no other steps"], correct: 0, explain: "A Part 107 waiver permits deviation from specific regulatory provisions (like beyond visual line of sight) once the FAA approves that the proposed operation can be conducted safely.", cat: "Regulations" },
+  { q: "Minimum visibility required for Part 107 operations, as observed from the control station, is:", options: ["1 statute mile", "2 statute miles", "3 statute miles", "5 statute miles"], correct: 2, explain: "Part 107 requires a minimum flight visibility of 3 statute miles from the control station.", cat: "Regulations" },
+  { q: "Minimum distance from clouds required under Part 107 is:", options: ["500 feet below and 2,000 feet horizontal", "1,000 feet below and 1 mile horizontal", "No cloud clearance requirement exists", "200 feet below and 500 feet horizontal"], correct: 0, explain: "Part 107 requires remaining at least 500 feet below and 2,000 feet horizontally from clouds.", cat: "Regulations" },
+  { q: "Which of the following operations would require a waiver under standard Part 107 rules?", options: ["Daytime flight below 400 feet AGL in Class G airspace", "Beyond visual line of sight (BVLOS) operation", "Flight with a visual observer present", "Flight over sparsely populated property with consent"], correct: 1, explain: "Standard Part 107 requires the aircraft to remain within visual line of sight of the remote pilot or visual observer; BVLOS operations require a waiver or exemption.", cat: "Regulations" },
+  { q: "Class B airspace is generally depicted on a sectional chart with:", options: ["A dashed magenta line", "A solid blue line", "A dashed blue line", "A solid magenta line"], correct: 1, explain: "Class B airspace, found around the nation's busiest airports, is shown with a solid blue line on sectional charts.", cat: "Airspace & Sectional Charts" },
+  { q: "Class C airspace is generally depicted on a sectional chart with:", options: ["A solid magenta line", "A dashed blue line", "A solid blue line", "A green dotted line"], correct: 0, explain: "Class C airspace is depicted with a solid magenta line on sectional charts.", cat: "Airspace & Sectional Charts" },
+  { q: "What is the primary purpose of Remote ID for small UAS?", options: ["To broadcast identification and location information to support airspace safety and accountability", "To automatically file a flight plan with ATC", "To encrypt flight data for the operator's privacy", "To extend the aircraft's battery life"], correct: 0, explain: "Remote ID broadcasts a drone's identification, location, and control station location, functioning like a digital license plate to support safety and accountability in the airspace.", cat: "Remote ID & Registration" },
+  { q: "As of the current rule, when did FAA enforcement of the Remote ID requirement begin?", options: ["Remote ID has never been enforced", "Enforcement began March 16, 2024, following a September 2023 compliance date", "It only applies to aircraft manufactured before 2015", "Enforcement begins in 2030"], correct: 1, explain: "The Remote ID rule took effect September 16, 2023, with FAA enforcement beginning March 16, 2024, and it remains in effect.", cat: "Remote ID & Registration" },
+  { q: "Which of the following allows a small UAS to legally operate without Remote ID equipment?", options: ["Operating only after sunset", "Flying within an FAA-Recognized Identification Area (FRIA)", "Flying below 100 feet AGL", "Registering the aircraft under a business name"], correct: 1, explain: "An FAA-Recognized Identification Area (FRIA) is one of the few places a drone lacking Remote ID equipment may still be legally flown.", cat: "Remote ID & Registration" },
+  { q: "What is the difference between a Standard Remote ID drone and a Remote ID broadcast module?", options: ["There is no meaningful difference", "A Standard Remote ID drone broadcasts the required data natively, while a broadcast module is an add-on device used to bring an otherwise noncompliant aircraft into compliance", "A broadcast module is only available to recreational flyers", "Standard Remote ID only functions indoors"], correct: 1, explain: "A Standard Remote ID drone has broadcast capability built in by the manufacturer, whereas a broadcast module is a separate add-on transmitter attached to an aircraft that lacks that built-in capability.", cat: "Remote ID & Registration" },
+  { q: "Under Part 107, how must a Standard Remote ID drone or broadcast module be registered?", options: ["It does not need to be registered separately from the operator", "Each device must be registered individually in the operator's inventory and issued its own registration number", "Only the make and model need to be on file", "Registration is optional if flown below 400 feet"], correct: 1, explain: "Part 107 operators must register each Standard Remote ID drone or broadcast module individually, with each device receiving its own unique registration number.", cat: "Remote ID & Registration" },
+  { q: "A drone weighing less than 0.55 lbs (250 grams) that is flown under Part 107 for compensation:", options: ["Never needs to be registered", "Still must be registered, since the recreational under-250-gram exemption does not apply to Part 107 operations", "Only needs registration if flown over people", "Is automatically exempt from all Part 107 rules"], correct: 1, explain: "The under-250-gram registration exemption applies only to recreational flyers; sub-250-gram drones flown under Part 107 must still be registered.", cat: "Remote ID & Registration" },
+  { q: "Category 1 operations over human beings under Part 107 generally apply to small unmanned aircraft that:", options: ["Weigh 55 pounds or more", "Weigh 0.55 pounds or less and have no exposed rotating parts capable of lacerating human skin", "Require an FAA-accepted Declaration of Compliance", "May only be flown at night"], correct: 1, explain: "Category 1 covers small, lightweight aircraft (0.55 lbs or less) without exposed parts likely to cause lacerations, and it does not require a Declaration of Compliance, unlike Categories 2 and 3.", cat: "Regulations" },
+  { q: "What must generally be established before a small UAS is eligible for Category 2 or Category 3 operations over people?", options: ["Nothing additional is required", "An FAA-accepted means of compliance, typically through a Declaration of Compliance, showing the aircraft meets applicable injury-severity limits", "A signed statement from the remote pilot only", "A LAANC authorization"], correct: 1, explain: "Category 2 and 3 eligibility requires an accepted means of compliance, generally submitted as a Declaration of Compliance, demonstrating the aircraft meets the applicable injury-severity limits.", cat: "Regulations" },
+  { q: "A person flying a drone purely for personal enjoyment, with no compensation involved, generally operates under:", options: ["Part 107 exclusively, with no exceptions", "The statutory recreational exception (49 U.S.C. § 44809), which has its own separate set of requirements", "No regulations whatsoever", "Part 91 airline transport rules"], correct: 1, explain: "Purely recreational flights can operate under the limited recreational exception in 49 U.S.C. § 44809, which has requirements distinct from Part 107.", cat: "Regulations" },
+  { q: "What test must recreational drone flyers complete that Part 107 remote pilots are not separately required to take?", options: ["The Airman Knowledge Test", "The Recreational UAS Safety Test (TRUST)", "A practical flight exam", "An FAA medical exam"], correct: 1, explain: "Recreational flyers must complete TRUST and carry proof of completion, while Part 107 remote pilots instead take the Airman Knowledge Test and recurrent training.", cat: "Regulations" },
+  { q: "A 'scattered' (SCT) cloud layer reported in a METAR represents approximately what fraction of sky coverage?", options: ["0 oktas (clear)", "3 to 4 oktas", "5 to 7 oktas", "8 oktas (overcast)"], correct: 1, explain: "Scattered (SCT) indicates roughly 3 to 4 oktas of sky coverage, more than few (FEW) but less than broken (BKN)." , cat: "Weather" },
+  { q: "What does the term 'density altitude' represent?", options: ["The actual surveyed elevation of the airport above sea level", "Pressure altitude corrected for non-standard temperature, representing the altitude at which the aircraft effectively performs", "The altitude at which clouds are most dense", "A measurement that only applies to fixed-wing aircraft"], correct: 1, explain: "Density altitude is pressure altitude adjusted for temperature deviation from the standard atmosphere; a higher density altitude means the aircraft performs as though it were at a higher, thinner-air elevation.", cat: "Weather" },
+  { q: "A shaded magenta area (not a bold line boundary) around an airport on a sectional chart most often represents:", options: ["A prohibited area", "Class E airspace with a floor of 700 feet AGL", "A restricted area", "A military training route"], correct: 1, explain: "A shaded magenta area typically marks Class E airspace with a floor of 700 feet AGL, distinct from the dashed magenta line used for Class E surface areas.", cat: "Airspace & Sectional Charts" },
+  { q: "A shaded blue area (not a bold line) around an airport on a sectional chart typically indicates:", options: ["The core of Class B airspace", "Class E airspace with a floor of 1,200 feet AGL", "A restricted area", "A glider operating area"], correct: 1, explain: "A shaded blue area generally marks Class E airspace with a floor of 1,200 feet AGL, distinct from the solid blue line used for Class B airspace.", cat: "Airspace & Sectional Charts" },
+  { q: "If a small UAS's low-battery warning activates mid-flight, the remote pilot should generally:", options: ["Ignore it and complete the planned mission", "Begin a prompt, controlled return and landing before the battery is further depleted", "Climb to a higher altitude to conserve power", "Wait until the aircraft loses power entirely before reacting"], correct: 1, explain: "A low-battery warning calls for promptly and safely returning and landing before the remaining power is exhausted, rather than continuing the mission.", cat: "Emergency Procedures" },
+  { q: "Which of the following reflects good crew resource management (CRM) in a Part 107 operation using a visual observer?", options: ["The remote pilot disregarding the visual observer's input", "Clear, ongoing communication and a shared understanding of roles between the remote pilot and visual observer", "Only the visual observer making all safety decisions", "Skipping any pre-flight briefing to save time"], correct: 1, explain: "Effective CRM depends on clear communication and well-understood roles between the remote pilot and any visual observers, even in a small crew.", cat: "ADM & CRM" },
+  { q: "Which preflight action helps reduce the risk of an in-flight motor or ESC failure?", options: ["Skipping the power-up check to save time", "Verifying motors spin freely and respond correctly during a ground check before takeoff", "Assuming components work if the aircraft looks cosmetically fine", "Leaving propellers off during all ground checks"], correct: 1, explain: "Confirming motors spin freely and respond correctly during a ground check helps catch potential motor or ESC issues before flight.", cat: "Maintenance" },
+  { q: "How should a remote pilot approach firmware or software updates for a small UAS?", options: ["Updates should always be avoided", "Updates should be applied per the manufacturer's guidance and verified functional before the next flight", "Updates only matter for recreational flyers", "Updates have no bearing on flight safety"], correct: 1, explain: "Firmware and software updates can affect flight behavior and safety systems, so they should be applied per manufacturer guidance and verified before flying.", cat: "Maintenance" },
+  { q: "If a small UAS is flown from a higher-elevation site than usual (such as a mountain location), the remote pilot should expect:", options: ["No change in performance", "Reduced air density requiring more power for the same amount of lift, similar to high density altitude effects", "Improved battery efficiency", "An automatic reduction in the legal altitude limit"], correct: 1, explain: "Higher field elevations mean thinner air, which behaves like high density altitude and requires more power to produce the same lift.", cat: "Loading & Performance" },
+  { q: "What effect does combining high elevation with hot temperatures (high density altitude) have on maximum safe payload?", options: ["No effect on payload capacity", "It typically reduces maximum safe payload, since more power is needed just to hover", "It always increases available payload capacity", "It only affects fixed-wing aircraft, not multirotors"], correct: 1, explain: "In thin, hot air, more power is required just to hover, which reduces the power margin available for payload and generally lowers the safe maximum payload.", cat: "Loading & Performance" },
+];
+
+const TOTAL = QUESTIONS.length;
+let index = 0;
+let score = 0;
+let selected = null;
+let missed = [];
+let sessionCatStats = {}; // { "Regulations": { correct: 0, total: 0 }, ... }
+
+const STORAGE_KEY = 'part107_lifetime_stats_v1';
+
+function loadLifetimeStats() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveLifetimeStats(stats) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+  } catch (e) {
+    // localStorage unavailable — stats just won't persist between sessions
+  }
+}
+
+function recordAnswer(cat, isCorrect) {
+  if (!sessionCatStats[cat]) sessionCatStats[cat] = { correct: 0, total: 0 };
+  sessionCatStats[cat].total++;
+  if (isCorrect) sessionCatStats[cat].correct++;
+
+  const lifetime = loadLifetimeStats();
+  if (!lifetime[cat]) lifetime[cat] = { correct: 0, total: 0 };
+  lifetime[cat].total++;
+  if (isCorrect) lifetime[cat].correct++;
+  saveLifetimeStats(lifetime);
+}
+
+let startScreen, quizScreen, endScreen, topBarRight, gaugeTicks;
+
+function init() {
+  startScreen = document.getElementById('startScreen');
+  quizScreen = document.getElementById('quizScreen');
+  endScreen = document.getElementById('endScreen');
+  topBarRight = document.getElementById('topBarRight');
+  gaugeTicks = document.getElementById('gaugeTicks');
+
+  // Build start-dial tick marks
+  const dialTicks = document.getElementById('dialTicks');
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * 2 * Math.PI;
+    const x1 = 60 + 44 * Math.sin(angle);
+    const y1 = 60 - 44 * Math.cos(angle);
+    const x2 = 60 + 50 * Math.sin(angle);
+    const y2 = 60 - 50 * Math.cos(angle);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+    line.setAttribute("stroke", "#f2a71b"); line.setAttribute("stroke-width", "2");
+    dialTicks.appendChild(line);
+  }
+
+  // Build gauge ticks (60 of them)
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'tick';
+    gaugeTicks.appendChild(d);
+  }
+
+  document.getElementById('totalDisplay').textContent = TOTAL;
+  document.getElementById('totalDisplayIntro').textContent = TOTAL;
+  renderLifetimeBreakdown();
+
+  document.getElementById('startBtn').addEventListener('click', beginTest);
+  document.getElementById('restartBtn').addEventListener('click', beginTest);
+  document.getElementById('nextBtn').addEventListener('click', advance);
+  document.getElementById('resetStatsBtn').addEventListener('click', () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    renderLifetimeBreakdown();
+  });
+}
+
+function categoryColor(pct) {
+  if (pct >= 80) return '#3ddc97';
+  if (pct >= 60) return '#f2a71b';
+  return '#ff5c5c';
+}
+
+function renderBreakdown(containerEl, stats) {
+  const cats = Object.keys(stats);
+  if (cats.length === 0) {
+    containerEl.innerHTML = '<div class="cat-empty">No data yet.</div>';
+    return;
+  }
+  const rows = cats
+    .map((cat) => {
+      const s = stats[cat];
+      const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+      return { cat, pct, correct: s.correct, total: s.total };
+    })
+    .sort((a, b) => a.pct - b.pct);
+
+  containerEl.innerHTML = rows
+    .map((r) => {
+      const color = categoryColor(r.pct);
+      return `
+        <div class="cat-row">
+          <span class="cat-name">${r.cat}</span>
+          <span class="cat-bar-track"><span class="cat-bar-fill" style="width:${r.pct}%;background:${color};"></span></span>
+          <span class="cat-pct">${r.correct}/${r.total} · ${r.pct}%</span>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+function renderLifetimeBreakdown() {
+  const lifetime = loadLifetimeStats();
+  const totalAttempts = Object.values(lifetime).reduce((sum, s) => sum + s.total, 0);
+  document.getElementById('lifetimeAttempts').textContent = totalAttempts > 0 ? `(${totalAttempts} answers logged)` : '';
+  renderBreakdown(document.getElementById('lifetimeBreakdown'), lifetime);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+function beginTest() {
+  index = 0; score = 0; selected = null; missed = []; sessionCatStats = {};
+  startScreen.style.display = 'none';
+  endScreen.style.display = 'none';
+  quizScreen.style.display = 'block';
+  topBarRight.textContent = `Q 1 / ${TOTAL}`;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  selected = null;
+  const current = QUESTIONS[index];
+  document.getElementById('qLabel').textContent = `QUESTION ${index + 1}`;
+  document.getElementById('qText').textContent = current.q;
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('itemDisplay').textContent = `ITEM ${String(index + 1).padStart(2, '0')}`;
+  topBarRight.textContent = `Q ${index + 1} / ${TOTAL}`;
+
+  const pct = (index / TOTAL) * 100;
+  document.getElementById('gaugeFill').style.width = pct + '%';
+  const ticks = gaugeTicks.children;
+  for (let i = 0; i < ticks.length; i++) {
+    ticks[i].className = 'tick' + (i < index ? ' filled' : '');
+  }
+
+  const optionsWrap = document.getElementById('optionsWrap');
+  optionsWrap.innerHTML = '';
+  current.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-button';
+    btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => choose(i));
+    optionsWrap.appendChild(btn);
+  });
+
+  document.getElementById('correctBanner').style.display = 'none';
+  document.getElementById('incorrectPanel').style.display = 'none';
+}
+
+function choose(i) {
+  if (selected !== null) return;
+  selected = i;
+  const current = QUESTIONS[index];
+  const buttons = document.querySelectorAll('#optionsWrap .option-button');
+  buttons.forEach(b => b.disabled = true);
+
+  const isCorrect = i === current.correct;
+  recordAnswer(current.cat, isCorrect);
+
+  if (isCorrect) {
+    score++;
+    document.getElementById('scoreDisplay').textContent = score;
+    buttons[i].classList.add('correct-choice');
+    document.getElementById('correctBanner').style.display = 'block';
+    setTimeout(advance, 900);
+  } else {
+    missed.push(index);
+    buttons[i].classList.add('wrong-choice');
+    buttons[current.correct].classList.add('correct-choice');
+    document.getElementById('correctAnswerText').textContent = current.options[current.correct];
+    document.getElementById('explainText').textContent = current.explain;
+    document.getElementById('incorrectPanel').style.display = 'block';
+  }
+}
+
+function advance() {
+  if (index + 1 >= TOTAL) {
+    showEnd();
+  } else {
+    index++;
+    renderQuestion();
+  }
+}
+
+function showEnd() {
+  quizScreen.style.display = 'none';
+  endScreen.style.display = 'flex';
+  topBarRight.textContent = 'DEBRIEF';
+
+  const pct = Math.round((score / TOTAL) * 100);
+  const passed = pct >= 70;
+
+  document.getElementById('resultPct').textContent = pct + '%';
+  document.getElementById('resultSub').textContent = `${score} / ${TOTAL} correct`;
+  document.getElementById('resultDial').style.borderColor = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('resultPct').style.color = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('endHeading').textContent = passed ? 'Simulated Pass' : 'Simulated Fail';
+  document.getElementById('endSubtext').textContent = passed
+    ? 'You cleared the 70% FAA passing threshold on this simulated run. Review any missed items and keep drilling weak areas before test day.'
+    : 'This run fell below the 70% FAA passing threshold. Review the explanations, restudy the missed categories, and run it again.';
+
+  renderBreakdown(document.getElementById('sessionBreakdown'), sessionCatStats);
+  renderLifetimeBreakdown();
+}
+</script>
+</body>
+</html>
