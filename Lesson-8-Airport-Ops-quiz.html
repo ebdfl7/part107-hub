@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Part 107 — Lesson 8 Airport Operations &amp; Maintenance Practice Quiz</title>
+<style>
+  :root {
+    --amber: #f2a71b;
+    --amber-soft: #ffcf6b;
+    --green: #3ddc97;
+    --red: #ff5c5c;
+    --bg-deep: #0d1013;
+    --bg-panel: #171c22;
+    --bg-card: #12161a;
+    --border: #2a3138;
+    --text-main: #dfe6ec;
+    --text-bright: #f4f7fa;
+    --text-dim: #7a8590;
+    --text-mid: #9aa5b0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at top, var(--bg-panel) 0%, var(--bg-deep) 70%);
+    color: var(--text-main);
+    font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+    min-height: 100vh;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 24px 12px;
+  }
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    z-index: 0;
+  }
+  .frame {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(13,16,19,0.6);
+    box-shadow: 0 0 0 1px rgba(242,167,27,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    height: fit-content;
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    background: #12161a;
+  }
+  .center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 28px 36px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--text-bright);
+    letter-spacing: 0.01em;
+    font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  }
+  .subtext {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-mid);
+    max-width: 420px;
+    margin: 0 0 28px;
+  }
+  .primary-button {
+    background: var(--amber);
+    color: #171200;
+    border: none;
+    padding: 14px 32px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .primary-button:hover { background: var(--amber-soft); }
+
+  .secondary-button {
+    background: transparent;
+    color: var(--amber);
+    border: 1px solid var(--amber);
+    padding: 11px 20px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    margin-bottom: 18px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .secondary-button:hover { background: rgba(242,167,27,0.08); }
+
+  .ref-panel {
+    display: none;
+    width: 100%;
+    max-width: 420px;
+    text-align: left;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-mid);
+  }
+  .ref-panel h3 {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin: 14px 0 6px;
+    text-transform: uppercase;
+  }
+  .ref-panel h3:first-child { margin-top: 0; }
+  .ref-panel ul { margin: 0 0 4px; padding-left: 18px; }
+  .ref-panel li { margin-bottom: 4px; }
+  .ref-panel .cfr { color: var(--amber-soft); font-weight: 700; }
+
+  .quiz-wrap { padding: 20px 20px 24px; display: none; }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin: 10px 2px 18px;
+    letter-spacing: 0.06em;
+  }
+  .status-row b { color: var(--amber); }
+  .gauge-track {
+    position: relative;
+    height: 6px;
+    background: #1c2127;
+    border-radius: 3px;
+  }
+  .gauge-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), var(--amber-soft));
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+  .gauge-ticks { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
+  .tick { flex: 1 0 2%; height: 3px; border-radius: 1px; background: rgba(255,255,255,0.08); min-width: 3px; }
+  .tick.filled { background: var(--amber); }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 20px 22px;
+  }
+  .q-label { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .q-cat { color: var(--text-dim); font-weight: normal; }
+  .q-text {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text-bright);
+    margin-bottom: 18px;
+    font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+    font-weight: 500;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 3px;
+    font-size: 13.5px;
+    line-height: 1.4;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    background: #171c22;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    cursor: pointer;
+    width: 100%;
+  }
+  .option-button:disabled { cursor: default; }
+  .option-button.correct-choice {
+    background: rgba(61, 220, 151, 0.12);
+    border: 1px solid var(--green);
+    color: var(--green);
+  }
+  .option-button.wrong-choice {
+    background: rgba(255, 92, 92, 0.12);
+    border: 1px solid var(--red);
+    color: var(--red);
+  }
+  .option-letter {
+    font-weight: 700;
+    font-size: 12px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    opacity: 0.8;
+  }
+  .correct-banner {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: rgba(61,220,151,0.1);
+    border: 1px solid var(--green);
+    color: var(--green);
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+    display: none;
+  }
+  .incorrect-panel {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(255,92,92,0.06);
+    border: 1px solid rgba(255,92,92,0.4);
+    border-radius: 3px;
+    display: none;
+  }
+  .incorrect-header { color: var(--red); font-weight: 700; font-size: 13px; margin-bottom: 8px; letter-spacing: 0.04em; }
+  .incorrect-body { font-size: 13px; line-height: 1.55; color: #c7cdd3; }
+  .incorrect-body p { margin: 8px 0 0; }
+  .ref-tag {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    color: var(--amber-soft);
+    background: rgba(242,167,27,0.08);
+    border: 1px solid rgba(242,167,27,0.35);
+    border-radius: 3px;
+    padding: 3px 8px;
+  }
+  .next-button {
+    margin-top: 14px;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    padding: 11px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .next-button:hover { background: rgba(242,167,27,0.08); }
+
+  .end-wrap { display: none; }
+  .result-dial {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 3px solid var(--green);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    background: var(--bg-card);
+  }
+  .result-pct { font-size: 32px; font-weight: 800; line-height: 1.1; color: var(--green); }
+  .result-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .dial-wrap { margin-bottom: 20px; opacity: 0.9; }
+
+  .breakdown {
+    width: 100%;
+    text-align: left;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+  .breakdown-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  .breakdown-title span { color: var(--text-dim); font-weight: normal; letter-spacing: 0.02em; }
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 9px;
+    font-size: 12.5px;
+  }
+  .cat-name { flex: 0 0 168px; color: var(--text-main); line-height: 1.3; }
+  .cat-bar-track {
+    flex: 1;
+    height: 8px;
+    background: #1c2127;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .cat-bar-fill { height: 100%; border-radius: 4px; }
+  .cat-pct { flex: 0 0 62px; text-align: right; color: var(--text-dim); font-size: 11.5px; }
+  .cat-empty { font-size: 12px; color: var(--text-dim); font-style: italic; }
+  .reset-stats-button {
+    margin-top: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px 12px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .reset-stats-button:hover { color: var(--red); border-color: var(--red); }
+  .no-fail-note {
+    font-size: 10.5px;
+    color: var(--text-dim);
+    margin-top: -18px;
+    margin-bottom: 24px;
+    max-width: 380px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="frame">
+  <div class="top-bar">
+    <span>PART 107 · LESSON 8 AIRPORT/MX SIM</span>
+    <span id="topBarRight">READY</span>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="center" id="startScreen">
+    <div class="dial-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#2a3138" stroke-width="2" />
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#f2a71b" stroke-width="2" stroke-dasharray="8 6" opacity="0.7" />
+        <g id="dialTicks"></g>
+        <text x="60" y="68" text-anchor="middle" font-size="20" fill="#f2a71b" font-family="'Courier New', monospace">APT/MX</text>
+      </svg>
+    </div>
+    <h1>Part 107 Lesson 8 — Airport Operations &amp; Maintenance Practice Quiz</h1>
+    <p class="subtext">
+      <span id="totalDisplayIntro"></span> questions covering airport signage and markings,
+      airport lighting, traffic patterns, preflight inspection procedures, and maintenance and
+      recordkeeping requirements. One question at a time. Your weakest categories are tracked
+      after each run.
+    </p>
+
+    <button class="secondary-button" id="refToggleBtn">SHOW REFERENCES, PREREQUISITES &amp; LESSON CONTENT</button>
+    <div class="ref-panel" id="refPanel">
+      <h3>Applicable Regulatory &amp; Reference Sources</h3>
+      <ul>
+        <li><span class="cfr">14 CFR §107.49</span> — Preflight familiarization, inspection, and actions for aircraft operation</li>
+        <li><span class="cfr">14 CFR §107.15</span> — Condition for safe operation, tying into ongoing maintenance responsibility</li>
+        <li><span class="cfr">14 CFR §107.7</span> — Records the RPIC must make available to the FAA upon request</li>
+        <li><span class="cfr">14 CFR Part 43, Appendix D</span> — Referenced as a best-practice framework for a systematic inspection approach, though written for maintenance rather than preflight use</li>
+        <li><span class="cfr">FAA Aeronautical Chart User's Guide / AIM</span> — Airport signage, markings, lighting, and traffic pattern standards</li>
+      </ul>
+
+      <h3>Knowledge Prerequisites (before this quiz)</h3>
+      <ul>
+        <li>Completion of Lesson 2 (Airspace) is helpful for airport-vicinity context</li>
+        <li>Familiarity with basic runway/taxiway terminology</li>
+        <li>No prior maintenance background required</li>
+      </ul>
+
+      <h3>Required Lesson 8 Content Covered</h3>
+      <ul>
+        <li>Airport signage, markings, and traffic patterns</li>
+        <li>Airport lighting systems</li>
+        <li>Preflight inspection procedures</li>
+        <li>Maintenance and inspection recordkeeping requirements</li>
+      </ul>
+    </div>
+
+    <p class="subtext no-fail-note">
+      Note: this is a self-study simulator, not the official FAA Part 107 Airman Knowledge Test.
+      It uses a 70% mark as a self-check benchmark, matching the real exam's passing score.
+    </p>
+    <button class="primary-button" id="startBtn">START QUIZ</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="quiz-wrap" id="quizScreen">
+    <div class="gauge-track">
+      <div class="gauge-fill" id="gaugeFill"></div>
+    </div>
+    <div class="gauge-ticks" id="gaugeTicks"></div>
+    <div class="status-row">
+      <span>SCORE <b id="scoreDisplay">0</b> / <span id="totalDisplay">24</span></span>
+      <span id="itemDisplay">ITEM 01</span>
+    </div>
+
+    <div class="card">
+      <div class="q-label"><span id="qLabel">QUESTION 1</span><span class="q-cat" id="qCat"></span></div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="optionsWrap"></div>
+
+      <div class="correct-banner" id="correctBanner">✓ CORRECT — advancing…</div>
+
+      <div class="incorrect-panel" id="incorrectPanel">
+        <div class="incorrect-header">✕ INCORRECT</div>
+        <div class="incorrect-body">
+          <b>Correct answer:</b> <span id="correctAnswerText"></span>
+          <p id="explainText"></p>
+          <span class="ref-tag" id="refTag"></span>
+        </div>
+        <button class="next-button" id="nextBtn">NEXT QUESTION →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="center end-wrap" id="endScreen">
+    <div class="result-dial" id="resultDial">
+      <span class="result-pct" id="resultPct">0%</span>
+      <span class="result-sub" id="resultSub">0 / 24 correct</span>
+    </div>
+    <h1 id="endHeading">Strong Run</h1>
+    <p class="subtext" id="endSubtext"></p>
+
+    <div class="breakdown" id="breakdownWrap">
+      <div class="breakdown-title">WEAK AREAS — THIS RUN</div>
+      <div id="sessionBreakdown"></div>
+    </div>
+
+    <div class="breakdown" id="lifetimeWrap">
+      <div class="breakdown-title">WEAK AREAS — ALL-TIME <span id="lifetimeAttempts"></span></div>
+      <div id="lifetimeBreakdown"></div>
+      <button class="reset-stats-button" id="resetStatsBtn">RESET ALL-TIME STATS</button>
+    </div>
+
+    <button class="primary-button" id="restartBtn" style="margin-top: 20px;">RESTART QUIZ</button>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Question bank — Part 107 Lesson 8: Airport Operations & Maintenance
+// (24 questions = 3x the recommended 8-question lesson quiz).
+// ---------------------------------------------------------------------------
+const QUESTIONS = [
+  // Airport Signage & Markings
+  { q: "What color scheme do mandatory instruction signs (such as runway holding position signs) use?", options: ["Black background with yellow inscription", "Red background with white inscription", "Blue background with white inscription", "Yellow background with black inscription"], correct: 1, explain: "Mandatory instruction signs use a red background with white inscription to denote a location a pilot may not cross without clearance.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Airport Signage & Markings" },
+  { q: "What do location signs indicate, and what color scheme do they use?", options: ["They indicate the direction to a taxiway, using a yellow background", "They mark a mandatory holding position, using a red background", "They indicate airport ownership, using a green background", "They indicate which taxiway or runway you're currently on, using a black background with yellow inscription/border"], correct: 3, explain: "Location signs confirm your current position on a taxiway or runway, shown with a black background and yellow inscription and border.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Airport Signage & Markings" },
+  { q: "What do direction signs indicate, and what color scheme do they use?", options: ["Airport frequency information, using a white background", "The direction to taxiways or runways, using a yellow background with black inscription", "Your current location, using a black background", "A mandatory holding instruction, using a red background"], correct: 1, explain: "Direction signs guide pilots toward specific taxiways or runways and use a yellow background with black inscription.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Airport Signage & Markings" },
+  { q: "What does a runway holding position marking on a taxiway look like?", options: ["A single dashed white line", "A solid red line across the entire taxiway", "Two solid yellow lines and two dashed yellow lines, with the solid lines nearest the runway", "A blue circle painted on the taxiway surface"], correct: 2, explain: "This marking consists of two solid and two dashed yellow lines, with the solid lines closest to the runway, indicating where an aircraft must hold absent clearance.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Airport Signage & Markings" },
+  { q: "What is the purpose of runway centerline markings?", options: ["A yellow solid line marking taxiway boundaries", "A red line indicating a closed runway", "A white dashed line down the runway's center to aid alignment during takeoff and landing", "A marking used exclusively for helicopter pads"], correct: 2, explain: "The white dashed centerline helps pilots maintain alignment with the runway during takeoff and landing.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Airport Signage & Markings" },
+  { q: "How are runway designation numbers determined?", options: ["Based on the order the runways were built", "Based on the runway's magnetic heading, rounded to the nearest 10 degrees with the last digit dropped", "Based on the airport's total number of runways", "Assigned randomly by the airport operator"], correct: 1, explain: "Runway numbers reflect the runway's magnetic heading rounded to the nearest 10 degrees, with the final digit dropped (e.g., a heading of 274° becomes 'Runway 27').", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Airport Signage & Markings" },
+
+  // Airport Lighting
+  { q: "What color are standard runway edge lights?", options: ["Solid blue along the entire runway", "Alternating red and green", "Green along the entire runway", "White (may show yellow near the end of some instrument runways as a caution zone)"], correct: 3, explain: "Runway edge lights are typically white, sometimes transitioning to yellow near the far end of certain instrument runways to signal the approaching threshold.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Airport Lighting" },
+  { q: "What color are runway threshold lights, as seen by an arriving aircraft?", options: ["White", "Blue", "Red", "Green"], correct: 3, explain: "Threshold lights show green to an arriving aircraft, marking the beginning of the usable runway.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Airport Lighting" },
+  { q: "What color are runway end lights, as seen from the runway looking outward?", options: ["Blue", "White", "Red", "Green"], correct: 2, explain: "Runway end lights show red when viewed from the runway, marking the far end of the usable surface.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Airport Lighting" },
+  { q: "What do PAPI or VASI lights indicate to a pilot on approach?", options: ["Visual glidepath information, showing whether the aircraft is above, on, or below the correct approach path", "The airport's current radio frequency", "The current wind direction at the airport", "Which taxiway to use after landing"], correct: 0, explain: "PAPI and VASI systems use combinations of red and white lights to show the pilot whether they're above, on, or below the proper glidepath.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Airport Lighting" },
+
+  // Traffic Patterns
+  { q: "What is a commonly used standard traffic pattern altitude for many general aviation aircraft?", options: ["18,000 ft MSL", "Approximately 1,000 ft AGL (varies by aircraft type and airport)", "There is no standard pattern altitude anywhere", "Exactly 400 ft AGL, matching the Part 107 altitude limit"], correct: 1, explain: "A commonly used standard traffic pattern altitude is around 1,000 ft AGL, though the specific value can vary by aircraft type and airport.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Traffic Patterns" },
+  { q: "What are the standard legs of a traffic pattern, in order?", options: ["Final, base, downwind, crosswind, upwind", "Upwind, crosswind, downwind, base, final", "Takeoff, cruise, descent, approach, landing", "North, east, south, west"], correct: 1, explain: "The standard traffic pattern sequence is upwind, crosswind, downwind, base, and then final approach.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Traffic Patterns" },
+  { q: "Unless otherwise indicated, which direction are traffic pattern turns typically made?", options: ["Left turns (left traffic)", "Turns alternate randomly each circuit", "Right turns (right traffic)", "No turns are made in a standard pattern"], correct: 0, explain: "Standard traffic patterns default to left turns unless the airport specifically indicates right traffic.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Traffic Patterns" },
+  { q: "How is non-standard (right) traffic typically indicated at an airport?", options: ["Through markings such as a segmented circle indicator or a right-traffic notation in the chart supplement", "Only by a verbal announcement from a nonexistent tower", "By painting the runway numbers in a different color", "It's never indicated anywhere and must be guessed"], correct: 0, explain: "Right traffic is typically flagged through segmented circle markings at the airport or through notations in the chart supplement.", ref: "FAA Aeronautical Chart User's Guide / AIM", cat: "Traffic Patterns" },
+  { q: "Why is understanding manned-aircraft traffic patterns relevant for a remote pilot flying near an airport?", options: ["Traffic patterns only matter for aircraft above 18,000 ft", "Small UAS are exempt from all right-of-way considerations", "It has no relevance since Part 107 aircraft never operate near airports", "It helps anticipate where manned aircraft are likely to be, supporting the right-of-way and see-and-avoid responsibilities under §107.37"], correct: 3, explain: "Knowing where manned traffic typically flies in the pattern helps the RPIC anticipate conflicts and comply with the right-of-way rule.", ref: "14 CFR §107.37", cat: "Traffic Patterns" },
+
+  // Preflight Inspection Procedures (§107.49)
+  { q: "Per §107.49(a), what must the RPIC assess about the operating environment before flight?", options: ["Nothing specific is required to be assessed", "Only the battery charge level", "Local weather conditions, local airspace and flight restrictions, the location of persons/property on the surface, and other ground hazards", "Only the aircraft's paint condition"], correct: 2, explain: "§107.49(a) requires assessing weather, airspace/restrictions, the location of persons and property, and other ground hazards before flight.", ref: "14 CFR §107.49(a)", cat: "Preflight Inspection" },
+  { q: "Per §107.49(b), what must the RPIC ensure regarding other participants in the operation before flight?", options: ["Nothing — briefing other participants is optional", "That they have signed a legal waiver", "That they hold a remote pilot certificate themselves", "That they're informed about operating conditions, emergency and contingency procedures, roles/responsibilities, and potential hazards"], correct: 3, explain: "§107.49(b) requires briefing all directly participating persons on conditions, procedures, roles, and hazards.", ref: "14 CFR §107.49(b)", cat: "Preflight Inspection" },
+  { q: "Per §107.49(c), what must be verified about the control link before flight?", options: ["That the control link uses a specific brand of radio", "Nothing regarding the control link is specified in §107.49", "That all control links between the ground control station and the aircraft are working properly", "That the control link is registered separately with the FAA"], correct: 2, explain: "§107.49(c) requires confirming that the control links between the ground station and the aircraft are functioning properly before flight.", ref: "14 CFR §107.49(c)", cat: "Preflight Inspection" },
+  { q: "If an operation is conducted over people under Subpart D, what must §107.49(f) confirm?", options: ["That the aircraft meets the requirements of the applicable over-people category (e.g., §107.110, 120(a), 130(a), or 140)", "That the pilot has completed a separate certificate exam", "That no other §107.49 provisions apply in that case", "That the operation has been approved by local law enforcement"], correct: 0, explain: "§107.49(f) requires confirming the aircraft meets the specific over-people category requirements applicable to that operation.", ref: "14 CFR §107.49(f)", cat: "Preflight Inspection" },
+  { q: "Why is a scalable, systematic preflight inspection checklist recommended, even referencing frameworks like Part 43 Appendix D as a best practice?", options: ["It provides a logical, systematic approach to inspecting the airframe, flight controls, batteries, and other subsystems, even though it's technically written for maintenance rather than preflight use", "Because it only applies to fixed-wing aircraft", "Because Part 43 Appendix D is legally required for every Part 107 preflight check", "Because it eliminates the need for any preflight inspection at all"], correct: 0, explain: "While Part 43 Appendix D is a maintenance inspection checklist, its systematic subgroup approach (airframe, controls, batteries, etc.) is a useful model for a scalable preflight inspection.", ref: "14 CFR Part 43, Appendix D (referenced as best practice)", cat: "Preflight Inspection" },
+
+  // Maintenance & Recordkeeping
+  { q: "What must an RPIC make available to the FAA upon request regarding records?", options: ["Only a personal identification card", "The remote pilot certificate, aircraft registration, and other required records", "Nothing is required to be produced", "Only proof of liability insurance"], correct: 1, explain: "§107.7 requires the RPIC to be able to produce required certificates, registration, and records for FAA inspection when requested.", ref: "14 CFR §107.7", cat: "Maintenance & Recordkeeping" },
+  { q: "Does Part 107 require a formal FAA-approved maintenance program like those used by Part 91 operators?", options: ["No formal FAA-mandated program is required, but manufacturer maintenance/inspection recommendations should be followed", "Yes, an FAA-approved maintenance program is mandatory for every small UAS", "No maintenance considerations apply to small UAS at all", "Maintenance requirements only apply to aircraft over 55 lbs"], correct: 0, explain: "Part 107 doesn't mandate a formal FAA-approved maintenance program, but following manufacturer guidance is the recommended practice.", ref: "14 CFR §107.15", cat: "Maintenance & Recordkeeping" },
+  { q: "Who is ultimately responsible for ensuring the aircraft is in a condition for safe operation before every flight?", options: ["The aircraft manufacturer exclusively", "No one — the aircraft self-certifies electronically", "The remote pilot in command (RPIC)", "The FAA inspector on duty"], correct: 2, explain: "§107.15 places the responsibility for confirming a safe operating condition on the RPIC before every flight.", ref: "14 CFR §107.15", cat: "Maintenance & Recordkeeping" },
+  { q: "What is a recommended best practice for tracking maintenance history even without a formal FAA requirement?", options: ["Relying entirely on memory with no written record", "Discarding all repair records once completed", "Only tracking maintenance if the aircraft is leased rather than owned", "Maintaining a maintenance/inspection log to track repairs, part replacements, and inspections over time"], correct: 3, explain: "Keeping a maintenance log, while not formally mandated, supports safe, consistent operation by tracking the aircraft's repair and inspection history.", ref: "14 CFR §107.15", cat: "Maintenance & Recordkeeping" },
+];
+
+const TOTAL = QUESTIONS.length;
+let index = 0;
+let score = 0;
+let selected = null;
+let missed = [];
+let sessionCatStats = {};
+
+const STORAGE_KEY = 'part107_lesson8_stats_v1';
+
+async function loadLifetimeStats() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY, false);
+    return result ? JSON.parse(result.value) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+async function saveLifetimeStats(stats) {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(stats), false);
+  } catch (e) {
+    // storage unavailable — stats just won't persist between sessions
+  }
+}
+
+async function recordAnswer(cat, isCorrect) {
+  if (!sessionCatStats[cat]) sessionCatStats[cat] = { correct: 0, total: 0 };
+  sessionCatStats[cat].total++;
+  if (isCorrect) sessionCatStats[cat].correct++;
+
+  const lifetime = await loadLifetimeStats();
+  if (!lifetime[cat]) lifetime[cat] = { correct: 0, total: 0 };
+  lifetime[cat].total++;
+  if (isCorrect) lifetime[cat].correct++;
+  await saveLifetimeStats(lifetime);
+}
+
+let startScreen, quizScreen, endScreen, topBarRight, gaugeTicks;
+
+function init() {
+  startScreen = document.getElementById('startScreen');
+  quizScreen = document.getElementById('quizScreen');
+  endScreen = document.getElementById('endScreen');
+  topBarRight = document.getElementById('topBarRight');
+  gaugeTicks = document.getElementById('gaugeTicks');
+
+  const dialTicks = document.getElementById('dialTicks');
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * 2 * Math.PI;
+    const x1 = 60 + 44 * Math.sin(angle);
+    const y1 = 60 - 44 * Math.cos(angle);
+    const x2 = 60 + 50 * Math.sin(angle);
+    const y2 = 60 - 50 * Math.cos(angle);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+    line.setAttribute("stroke", "#f2a71b"); line.setAttribute("stroke-width", "2");
+    dialTicks.appendChild(line);
+  }
+
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'tick';
+    gaugeTicks.appendChild(d);
+  }
+
+  document.getElementById('totalDisplay').textContent = TOTAL;
+  document.getElementById('totalDisplayIntro').textContent = TOTAL;
+  renderLifetimeBreakdown();
+
+  document.getElementById('startBtn').addEventListener('click', beginTest);
+  document.getElementById('restartBtn').addEventListener('click', beginTest);
+  document.getElementById('nextBtn').addEventListener('click', advance);
+  document.getElementById('resetStatsBtn').addEventListener('click', async () => {
+    try { await window.storage.delete(STORAGE_KEY, false); } catch (e) {}
+    renderLifetimeBreakdown();
+  });
+  document.getElementById('refToggleBtn').addEventListener('click', () => {
+    const panel = document.getElementById('refPanel');
+    const btn = document.getElementById('refToggleBtn');
+    const isOpen = panel.style.display === 'block';
+    panel.style.display = isOpen ? 'none' : 'block';
+    btn.textContent = isOpen
+      ? 'SHOW REFERENCES, PREREQUISITES & LESSON CONTENT'
+      : 'HIDE REFERENCES, PREREQUISITES & LESSON CONTENT';
+  });
+}
+
+function categoryColor(pct) {
+  if (pct >= 80) return '#3ddc97';
+  if (pct >= 60) return '#f2a71b';
+  return '#ff5c5c';
+}
+
+function renderBreakdown(containerEl, stats) {
+  const cats = Object.keys(stats);
+  if (cats.length === 0) {
+    containerEl.innerHTML = '<div class="cat-empty">No data yet.</div>';
+    return;
+  }
+  const rows = cats
+    .map((cat) => {
+      const s = stats[cat];
+      const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+      return { cat, pct, correct: s.correct, total: s.total };
+    })
+    .sort((a, b) => a.pct - b.pct);
+
+  containerEl.innerHTML = rows
+    .map((r) => {
+      const color = categoryColor(r.pct);
+      return `
+        <div class="cat-row">
+          <span class="cat-name">${r.cat}</span>
+          <span class="cat-bar-track"><span class="cat-bar-fill" style="width:${r.pct}%;background:${color};"></span></span>
+          <span class="cat-pct">${r.correct}/${r.total} · ${r.pct}%</span>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+async function renderLifetimeBreakdown() {
+  const lifetime = await loadLifetimeStats();
+  const totalAttempts = Object.values(lifetime).reduce((sum, s) => sum + s.total, 0);
+  document.getElementById('lifetimeAttempts').textContent = totalAttempts > 0 ? `(${totalAttempts} answers logged)` : '';
+  renderBreakdown(document.getElementById('lifetimeBreakdown'), lifetime);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+function beginTest() {
+  index = 0; score = 0; selected = null; missed = []; sessionCatStats = {};
+  startScreen.style.display = 'none';
+  endScreen.style.display = 'none';
+  quizScreen.style.display = 'block';
+  topBarRight.textContent = `Q 1 / ${TOTAL}`;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  selected = null;
+  const current = QUESTIONS[index];
+  document.getElementById('qLabel').textContent = `QUESTION ${index + 1}`;
+  document.getElementById('qCat').textContent = current.cat;
+  document.getElementById('qText').textContent = current.q;
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('itemDisplay').textContent = `ITEM ${String(index + 1).padStart(2, '0')}`;
+  topBarRight.textContent = `Q ${index + 1} / ${TOTAL}`;
+
+  const pct = (index / TOTAL) * 100;
+  document.getElementById('gaugeFill').style.width = pct + '%';
+  const ticks = gaugeTicks.children;
+  for (let i = 0; i < ticks.length; i++) {
+    ticks[i].className = 'tick' + (i < index ? ' filled' : '');
+  }
+
+  const optionsWrap = document.getElementById('optionsWrap');
+  optionsWrap.innerHTML = '';
+  current.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-button';
+    btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => choose(i));
+    optionsWrap.appendChild(btn);
+  });
+
+  document.getElementById('correctBanner').style.display = 'none';
+  document.getElementById('incorrectPanel').style.display = 'none';
+}
+
+async function choose(i) {
+  if (selected !== null) return;
+  selected = i;
+  const current = QUESTIONS[index];
+  const buttons = document.querySelectorAll('#optionsWrap .option-button');
+  buttons.forEach(b => b.disabled = true);
+
+  const isCorrect = i === current.correct;
+  await recordAnswer(current.cat, isCorrect);
+
+  if (isCorrect) {
+    score++;
+    document.getElementById('scoreDisplay').textContent = score;
+    buttons[i].classList.add('correct-choice');
+    document.getElementById('correctBanner').style.display = 'block';
+    setTimeout(advance, 900);
+  } else {
+    missed.push(index);
+    buttons[i].classList.add('wrong-choice');
+    buttons[current.correct].classList.add('correct-choice');
+    document.getElementById('correctAnswerText').textContent = current.options[current.correct];
+    document.getElementById('explainText').textContent = current.explain;
+    document.getElementById('refTag').textContent = current.ref;
+    document.getElementById('incorrectPanel').style.display = 'block';
+  }
+}
+
+function advance() {
+  if (index + 1 >= TOTAL) {
+    showEnd();
+  } else {
+    index++;
+    renderQuestion();
+  }
+}
+
+function showEnd() {
+  quizScreen.style.display = 'none';
+  endScreen.style.display = 'flex';
+  topBarRight.textContent = 'DEBRIEF';
+
+  const pct = Math.round((score / TOTAL) * 100);
+  const passed = pct >= 70;
+
+  document.getElementById('resultPct').textContent = pct + '%';
+  document.getElementById('resultSub').textContent = `${score} / ${TOTAL} correct`;
+  document.getElementById('resultDial').style.borderColor = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('resultPct').style.color = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('endHeading').textContent = passed ? 'Strong Run' : 'Keep Studying';
+  document.getElementById('endSubtext').textContent = passed
+    ? "You cleared 70% on this self-check run, matching the FAA passing threshold. Review any missed signage or preflight-procedure items before moving to your final review and practice exams."
+    : "This run fell below the 70% passing benchmark used on the real FAA Part 107 Airman Knowledge Test. Review the explanations and references below, and revisit airport chart symbols before retaking.";
+
+  renderBreakdown(document.getElementById('sessionBreakdown'), sessionCatStats);
+  renderLifetimeBreakdown();
+}
+</script>
+</body>
+</html>
