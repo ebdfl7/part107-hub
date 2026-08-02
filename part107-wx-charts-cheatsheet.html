@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Part 107 Briefing Room — Weather & Charts Cheat Sheet</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+  :root{
+    --navy:#0B1E33;
+    --navy-deep:#071523;
+    --tan:#EFE7D4;
+    --tan-line:#d8cba9;
+    --blue:#1E5AA8;
+    --magenta:#B32E76;
+    --amber:#E39B3A;
+    --green:#3E7A4E;
+    --ink:#1c2430;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--navy-deep);
+    background-image:
+      radial-gradient(circle at 15% 5%, rgba(30,90,168,0.18), transparent 40%),
+      radial-gradient(circle at 90% 95%, rgba(179,46,118,0.14), transparent 45%);
+    color:var(--tan);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:28px 18px 90px;}
+
+  header{
+    display:flex; align-items:center; gap:14px;
+    border-bottom:2px solid var(--tan-line);
+    padding-bottom:16px; margin-bottom:22px;
+  }
+  .rose{width:46px;height:46px;flex:none;}
+  h1{font-family:'Space Grotesk', sans-serif; font-size:1.35rem; margin:0; color:#fff;}
+  .sub{font-family:'IBM Plex Mono', monospace; font-size:.72rem; color:var(--tan-line); margin-top:2px;}
+
+  nav.toc{
+    background:rgba(239,231,212,0.06); border:1px solid rgba(239,231,212,0.18);
+    border-radius:10px; padding:16px 18px; margin-bottom:30px;
+  }
+  nav.toc .label{font-family:'IBM Plex Mono',monospace; font-size:.7rem; letter-spacing:.5px; color:var(--tan-line); margin-bottom:10px;}
+  nav.toc ol{margin:0; padding-left:0; list-style:none; columns:2; column-gap:24px;}
+  nav.toc li{margin-bottom:6px; break-inside:avoid;}
+  nav.toc a{color:var(--tan); text-decoration:none; font-size:.85rem; border-bottom:1px dotted rgba(239,231,212,0.35);}
+  nav.toc a:hover{color:#fff; border-color:#fff;}
+
+  section.card{
+    background:var(--tan); color:var(--ink);
+    border-radius:10px; padding:22px 22px 24px;
+    box-shadow:0 12px 34px rgba(0,0,0,.30);
+    border:1px solid var(--tan-line);
+    margin-bottom:22px;
+    scroll-margin-top:16px;
+  }
+  .qtag{
+    display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.7rem;
+    background:var(--navy); color:var(--tan); padding:3px 9px; border-radius:20px;
+    letter-spacing:.5px; margin-bottom:12px;
+  }
+  h2.title{font-family:'Space Grotesk',sans-serif; font-size:1.1rem; margin:0 0 10px;}
+  p, li{font-size:.92rem; line-height:1.55;}
+  .figure{
+    background:#fff; border:1px solid var(--tan-line); border-radius:8px;
+    padding:10px; margin:12px 0; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:14px;
+  }
+  .figure svg{max-width:100%; height:auto; display:block;}
+  .fig-caption{font-family:'IBM Plex Mono',monospace; font-size:.68rem; color:#6b6152; text-align:center; margin-top:2px;}
+  .key-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; margin:10px 0;}
+  .key-grid div{font-size:.88rem;}
+  .key-grid b{color:var(--navy);}
+  .mono-block{
+    font-family:'IBM Plex Mono',monospace; font-size:.85rem; background:#0B1E33; color:#EFE7D4;
+    padding:14px 16px; border-radius:6px; line-height:1.7; margin:10px 0; overflow-x:auto;
+  }
+  .note{
+    margin-top:12px; padding:10px 14px; border-left:4px solid var(--blue);
+    background:#f2f0e6; border-radius:0 6px 6px 0; font-size:.85rem;
+  }
+  table{width:100%; border-collapse:collapse; margin:10px 0; font-size:.85rem;}
+  th,td{border:1px solid var(--tan-line); padding:6px 8px; text-align:left;}
+  th{background:#e7ddc4; font-family:'IBM Plex Mono',monospace; font-size:.72rem;}
+
+  .backtotop{
+    position:fixed; bottom:20px; right:20px; background:var(--navy); color:var(--tan);
+    font-family:'IBM Plex Mono',monospace; font-size:.7rem; padding:8px 14px; border-radius:20px;
+    text-decoration:none; border:1px solid var(--tan-line); opacity:.85;
+  }
+  footer{
+    text-align:center; margin-top:30px; font-family:'IBM Plex Mono',monospace;
+    font-size:.68rem; color:var(--tan-line); opacity:.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <svg class="rose" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#EFE7D4" stroke-width="2"/>
+      <path d="M50 6 L56 50 L50 94 L44 50 Z" fill="#EFE7D4"/>
+      <path d="M6 50 L50 44 L94 50 L50 56 Z" fill="#B32E76"/>
+      <circle cx="50" cy="50" r="4" fill="#1E5AA8"/>
+    </svg>
+    <div>
+      <h1>Weather &amp; Charts Cheat Sheet</h1>
+      <div class="sub">PART 107 REFERENCE · COMPANION TO THE DRILL · NOT AN OFFICIAL FAA PRODUCT</div>
+    </div>
+  </header>
+
+  <nav class="toc" id="top">
+    <div class="label">JUMP TO A TOPIC</div>
+    <ol>
+      <li><a href="#metar">1. METAR decode</a></li>
+      <li><a href="#taf">2. TAF decode</a></li>
+      <li><a href="#airspace">3. Sectional airspace classes</a></li>
+      <li><a href="#obstacle">4. Obstacle elevation figures</a></li>
+      <li><a href="#fronts">5. Surface analysis fronts</a></li>
+      <li><a href="#skycover">6. Sky cover / station model</a></li>
+      <li><a href="#clouds">7. Cloud hazards</a></li>
+      <li><a href="#windsaloft">8. Winds &amp; Temps Aloft (FD)</a></li>
+      <li><a href="#density">9. Density altitude</a></li>
+      <li><a href="#depiction">10. Weather Depiction Chart</a></li>
+      <li><a href="#radar">11. Radar reflectivity</a></li>
+      <li><a href="#airmet">12. AIRMET / SIGMET types</a></li>
+      <li><a href="#barb">13. Wind barbs</a></li>
+      <li><a href="#tfr">14. TFRs &amp; NOTAMs</a></li>
+      <li><a href="#moa">15. Military Operations Areas</a></li>
+      <li><a href="#remarks">16. METAR remarks (RMK)</a></li>
+      <li><a href="#vor">17. VOR chart symbol</a></li>
+      <li><a href="#inversion">18. Temperature inversions</a></li>
+    </ol>
+  </nav>
+
+  <section class="card" id="metar">
+    <span class="qtag">METAR</span>
+    <h2 class="title">Reading a surface observation</h2>
+    <div class="mono-block">KTTA 111853Z 21009KT 7SM BKN008 OVC015 22/19 A2996</div>
+    <div class="key-grid">
+      <div><b>KTTA</b> — station identifier</div>
+      <div><b>111853Z</b> — 11th day, 1853 UTC</div>
+      <div><b>21009KT</b> — wind 210° at 9 kt</div>
+      <div><b>7SM</b> — visibility 7 statute miles</div>
+      <div><b>BKN008</b> — broken clouds, 800 ft <b>AGL</b></div>
+      <div><b>OVC015</b> — overcast layer, 1,500 ft AGL</div>
+      <div><b>22/19</b> — temp 22°C / dew point 19°C</div>
+      <div><b>A2996</b> — altimeter 29.96 inHg</div>
+    </div>
+    <div class="note">Cloud heights in a METAR are always hundreds of feet <b>AGL</b> — directly comparable to your 400 ft ceiling.</div>
+  </section>
+
+  <section class="card" id="taf">
+    <span class="qtag">TAF</span>
+    <h2 class="title">Reading a terminal forecast</h2>
+    <div class="mono-block">
+      TAF KTTA 111740Z 1118/1218<br>
+      20012KT P6SM SCT040<br>
+      FM111800 22015G25KT P6SM SCT025
+    </div>
+    <div class="key-grid">
+      <div><b>1118/1218</b> — valid 18th 1800Z–19th 1800Z</div>
+      <div><b>P6SM</b> — visibility greater than 6SM</div>
+      <div><b>FM111800</b> — new forecast period starting 1800Z</div>
+      <div><b>G25KT</b> — gusting to 25 kt</div>
+    </div>
+    <div class="note">"FM" groups mark a rapid, significant change — always the first thing to scan for a shift in wind or ceiling.</div>
+  </section>
+
+  <section class="card" id="airspace">
+    <span class="qtag">SECTIONAL</span>
+    <h2 class="title">Airspace classes at a glance</h2>
+    <div class="figure">
+      <svg viewBox="0 0 150 150" width="150">
+        <rect width="150" height="150" fill="#fff"/>
+        <circle cx="75" cy="75" r="60" fill="none" stroke="#1E5AA8" stroke-width="3"/>
+        <circle cx="75" cy="75" r="40" fill="none" stroke="#1E5AA8" stroke-width="3"/>
+        <circle cx="75" cy="75" r="20" fill="none" stroke="#1E5AA8" stroke-width="3"/>
+        <text x="75" y="140" text-anchor="middle" font-size="10" font-family="IBM Plex Mono, monospace" fill="#1c2430">Class B</text>
+      </svg>
+      <svg viewBox="0 0 150 150" width="150">
+        <rect width="150" height="150" fill="#fff"/>
+        <circle cx="75" cy="75" r="55" fill="none" stroke="#B32E76" stroke-width="3"/>
+        <text x="75" y="140" text-anchor="middle" font-size="10" font-family="IBM Plex Mono, monospace" fill="#1c2430">Class C</text>
+      </svg>
+      <svg viewBox="0 0 150 150" width="150">
+        <rect width="150" height="150" fill="#fff"/>
+        <circle cx="75" cy="75" r="50" fill="none" stroke="#1E5AA8" stroke-width="3" stroke-dasharray="8 6"/>
+        <text x="75" y="140" text-anchor="middle" font-size="10" font-family="IBM Plex Mono, monospace" fill="#1c2430">Class D</text>
+      </svg>
+    </div>
+    <table>
+      <tr><th>Class</th><th>Sectional symbol</th><th>sUAS requirement</th></tr>
+      <tr><td>B</td><td>Solid blue, tiered rings</td><td>ATC authorization required (LAANC where available)</td></tr>
+      <tr><td>C</td><td>Solid magenta rings</td><td>ATC authorization required</td></tr>
+      <tr><td>D</td><td>Dashed blue circle</td><td>ATC authorization required</td></tr>
+      <tr><td>E surface area</td><td>Dashed magenta</td><td>Authorization required only where surface-based</td></tr>
+      <tr><td>G</td><td>No boundary shown</td><td>No authorization required (still check TFRs/NOTAMs)</td></tr>
+    </table>
+  </section>
+
+  <section class="card" id="obstacle">
+    <span class="qtag">SECTIONAL</span>
+    <h2 class="title">Obstacle elevation figures</h2>
+    <div class="figure">
+      <svg viewBox="0 0 200 130" width="200">
+        <rect width="200" height="130" fill="#fff"/>
+        <line x1="100" y1="30" x2="100" y2="100" stroke="#1c2430" stroke-width="3"/>
+        <polygon points="100,30 92,45 108,45" fill="#1c2430"/>
+        <text x="120" y="60" font-size="16" fill="#1c2430" font-family="IBM Plex Mono, monospace">1780</text>
+        <text x="120" y="80" font-size="14" fill="#1c2430" font-family="IBM Plex Mono, monospace">(456)</text>
+      </svg>
+    </div>
+    <p><b>Top number = MSL</b> height of the obstacle. <b>Number in parentheses = AGL</b> height. Always check the AGL figure against your 400 ft ceiling and any required clearance.</p>
+  </section>
+
+  <section class="card" id="fronts">
+    <span class="qtag">SURFACE ANALYSIS</span>
+    <h2 class="title">Front symbols</h2>
+    <div class="figure">
+      <svg viewBox="0 0 260 70" width="260">
+        <rect width="260" height="70" fill="#fff"/>
+        <line x1="15" y1="35" x2="245" y2="35" stroke="#1E5AA8" stroke-width="3"/>
+        <polygon points="50,35 63,25 76,35" fill="#1E5AA8"/>
+        <polygon points="120,35 133,25 146,35" fill="#1E5AA8"/>
+        <polygon points="190,35 203,25 216,35" fill="#1E5AA8"/>
+      </svg>
+      <svg viewBox="0 0 260 70" width="260">
+        <rect width="260" height="70" fill="#fff"/>
+        <line x1="15" y1="35" x2="245" y2="35" stroke="#B32E76" stroke-width="3"/>
+        <circle cx="60" cy="25" r="8" fill="none" stroke="#B32E76" stroke-width="3"/>
+        <circle cx="130" cy="25" r="8" fill="none" stroke="#B32E76" stroke-width="3"/>
+        <circle cx="200" cy="25" r="8" fill="none" stroke="#B32E76" stroke-width="3"/>
+      </svg>
+    </div>
+    <div class="key-grid">
+      <div><b>Blue triangles</b> — cold front. Fast-moving; narrow band of gusty wind, towering cumulus, possible thunderstorms.</div>
+      <div><b>Red/magenta half-circles</b> — warm front. Slow-moving; gradually lowering ceilings and stratus well ahead of the line.</div>
+    </div>
+  </section>
+
+  <section class="card" id="skycover">
+    <span class="qtag">STATION MODEL</span>
+    <h2 class="title">Sky cover progression</h2>
+    <div class="figure">
+      <svg viewBox="0 0 340 90" width="340">
+        <rect width="340" height="90" fill="#fff"/>
+        <g font-family="IBM Plex Mono, monospace" font-size="11" fill="#1c2430">
+          <circle cx="40" cy="35" r="20" fill="none" stroke="#1c2430" stroke-width="2"/>
+          <text x="40" y="70" text-anchor="middle">FEW 1-2/8</text>
+          <circle cx="120" cy="35" r="20" fill="none" stroke="#1c2430" stroke-width="2"/>
+          <path d="M120 15 A20 20 0 0 1 136 45 L120 35 Z" fill="#1c2430"/>
+          <text x="120" y="70" text-anchor="middle">SCT 3-4/8</text>
+          <circle cx="200" cy="35" r="20" fill="none" stroke="#1c2430" stroke-width="2"/>
+          <path d="M200 15 A20 20 0 1 1 181 45 L200 35 Z" fill="#1c2430"/>
+          <text x="200" y="70" text-anchor="middle">BKN 5-7/8</text>
+          <circle cx="280" cy="35" r="20" fill="#1c2430" stroke="#1c2430" stroke-width="2"/>
+          <text x="280" y="70" text-anchor="middle">OVC 8/8</text>
+        </g>
+      </svg>
+    </div>
+    <p>A <b>ceiling</b> is defined as the lowest BKN or OVC layer (or vertical visibility into an obscuration) — not any FEW/SCT layer.</p>
+  </section>
+
+  <section class="card" id="clouds">
+    <span class="qtag">CLOUDS</span>
+    <h2 class="title">Two shapes worth recognizing on sight</h2>
+    <div class="figure">
+      <svg viewBox="0 0 200 140" width="200">
+        <rect width="200" height="140" fill="#dceaf5"/>
+        <ellipse cx="100" cy="42" rx="65" ry="13" fill="#e9e4d6"/>
+        <path d="M60 50 Q68 15 100 18 Q108 3 135 14 Q155 18 148 42 Q162 50 142 60 L70 60 Q48 60 60 50 Z" fill="#f2efe6" stroke="#8b8672" stroke-width="1"/>
+      </svg>
+      <svg viewBox="0 0 200 140" width="200">
+        <rect width="200" height="140" fill="#dceaf5"/>
+        <polygon points="0,140 60,45 105,140" fill="#7a8f6b"/>
+        <ellipse cx="125" cy="40" rx="55" ry="14" fill="#f2efe6" stroke="#8b8672" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="key-grid">
+      <div><b>Cumulonimbus (anvil top)</b> — turbulence, lightning, hail, gusty outflow winds extending well beyond the visible cloud.</div>
+      <div><b>Lenticular (lens-shaped)</b> — mountain wave signal; smooth-looking but often masks severe turbulence and rotor winds downwind of terrain.</div>
+    </div>
+  </section>
+
+  <section class="card" id="windsaloft">
+    <span class="qtag">WINDS ALOFT (FD)</span>
+    <h2 class="title">Decoding an FD group</h2>
+    <div class="mono-block">
+      FT &nbsp;3000 &nbsp;6000 &nbsp;9000<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; 2113 &nbsp; 2721+08 &nbsp; 2532+03
+    </div>
+    <p><b>2721+08</b> at 6,000 ft → first two digits (27) = direction ×10 = 270°, next two (21) = speed in knots, last figure = temperature °C (a "+" is shown only below 24,000 ft).</p>
+  </section>
+
+  <section class="card" id="density">
+    <span class="qtag">DENSITY ALTITUDE</span>
+    <h2 class="title">Why hot + high hurts performance</h2>
+    <div class="figure">
+      <svg viewBox="0 0 260 150" width="260">
+        <rect width="260" height="150" fill="#fff"/>
+        <line x1="35" y1="15" x2="35" y2="130" stroke="#1c2430" stroke-width="2"/>
+        <line x1="35" y1="130" x2="240" y2="130" stroke="#1c2430" stroke-width="2"/>
+        <text x="5" y="15" font-size="9" font-family="IBM Plex Mono, monospace">DA(ft)</text>
+        <text x="220" y="145" font-size="9" font-family="IBM Plex Mono, monospace">Temp</text>
+        <polyline points="35,115 95,90 150,60 215,25" fill="none" stroke="#B32E76" stroke-width="3"/>
+      </svg>
+    </div>
+    <p>Higher density altitude = thinner effective air = <b>less lift and thrust</b> for the same rotor RPM, harder-working motors, and shorter available flight time. Worth checking on hot days at higher-elevation sites.</p>
+  </section>
+
+  <section class="card" id="depiction">
+    <span class="qtag">WEATHER DEPICTION CHART</span>
+    <h2 class="title">Smooth vs. scalloped boundaries</h2>
+    <div class="figure">
+      <svg viewBox="0 0 260 100" width="260">
+        <rect width="260" height="100" fill="#fff"/>
+        <path d="M15 30 Q45 8 90 30 T170 30" fill="none" stroke="#1E5AA8" stroke-width="3"/>
+        <path d="M15 75 Q30 60 45 75 T75 75 T105 75 T135 75 T165 75" fill="none" stroke="#B32E76" stroke-width="3"/>
+      </svg>
+    </div>
+    <div class="key-grid">
+      <div><b>Smooth line</b> — marginal VFR (MVFR): ceiling 1,000-3,000 ft and/or visibility 3-5 SM.</div>
+      <div><b>Scalloped line</b> — IFR: ceiling below 1,000 ft and/or visibility under 3 SM.</div>
+    </div>
+  </section>
+
+  <section class="card" id="radar">
+    <span class="qtag">RADAR</span>
+    <h2 class="title">Reflectivity color scale</h2>
+    <div class="figure">
+      <svg viewBox="0 0 200 160" width="200">
+        <rect width="200" height="160" fill="#fff"/>
+        <circle cx="100" cy="80" r="65" fill="#8fd19e"/>
+        <circle cx="100" cy="80" r="45" fill="#f5e07a"/>
+        <circle cx="100" cy="80" r="26" fill="#e08a3c"/>
+        <circle cx="100" cy="80" r="11" fill="#8c1c3f"/>
+      </svg>
+    </div>
+    <p><b>Green</b> (light) → <b>yellow/orange</b> (moderate-heavy) → <b>red/purple</b> (extreme). A dark red/purple core marks the most likely location of severe turbulence, hail, and lightning — stay well clear.</p>
+  </section>
+
+  <section class="card" id="airmet">
+    <span class="qtag">AIRMET / SIGMET</span>
+    <h2 class="title">Which product covers which hazard</h2>
+    <table>
+      <tr><th>Product</th><th>Covers</th></tr>
+      <tr><td>AIRMET Sierra</td><td>Widespread IFR and/or mountain obscuration</td></tr>
+      <tr><td>AIRMET Tango</td><td>Turbulence and sustained strong surface winds</td></tr>
+      <tr><td>AIRMET Zulu</td><td>Icing and freezing levels</td></tr>
+      <tr><td>Convective SIGMET</td><td>Severe thunderstorm lines (60+ mi, 40%+ coverage), 3/4" hail, 50+ kt gusts, or tornadoes</td></tr>
+    </table>
+  </section>
+
+  <section class="card" id="barb">
+    <span class="qtag">WIND BARBS</span>
+    <h2 class="title">Reading speed from a barb</h2>
+    <div class="figure">
+      <svg viewBox="0 0 160 160" width="160">
+        <rect width="160" height="160" fill="#fff"/>
+        <line x1="80" y1="140" x2="80" y2="25" stroke="#1c2430" stroke-width="3"/>
+        <polygon points="80,25 80,40 98,33" fill="#1c2430"/>
+        <line x1="80" y1="42" x2="98" y2="35" stroke="#1c2430" stroke-width="3"/>
+        <line x1="80" y1="58" x2="98" y2="51" stroke="#1c2430" stroke-width="3"/>
+        <line x1="80" y1="74" x2="90" y2="70" stroke="#1c2430" stroke-width="3"/>
+      </svg>
+    </div>
+    <div class="key-grid">
+      <div><b>Filled pennant (triangle)</b> = 50 kt</div>
+      <div><b>Full-length barb</b> = 10 kt</div>
+      <div><b>Half-length barb</b> = 5 kt</div>
+      <div>Example shown: 50 + 10 + 10 + 5 = <b>75 kt</b></div>
+    </div>
+  </section>
+
+  <section class="card" id="tfr">
+    <span class="qtag">TFR / NOTAM</span>
+    <h2 class="title">Temporary Flight Restrictions</h2>
+    <div class="mono-block">FLIGHT RESTRICTIONS ... WITHIN A 3 NM RADIUS OF 351200N/0783100W, SFC-3000FT AGL</div>
+    <p>TFRs apply to <b>all aircraft, including sUAS</b>, within the stated lateral radius and vertical limits during the effective window — flying inside without specific authorization is a violation no matter how low you stay. Always check NOTAMs (e.g. via B4UFLY or the FAA's TFR list) before flying.</p>
+  </section>
+
+  <section class="card" id="moa">
+    <span class="qtag">MOA</span>
+    <h2 class="title">Military Operations Areas</h2>
+    <div class="figure">
+      <svg viewBox="0 0 220 130" width="220">
+        <rect width="220" height="130" fill="#fff"/>
+        <path d="M20 25 L200 15 L180 110 L40 118 Z" fill="none" stroke="#B32E76" stroke-width="3" stroke-dasharray="4 4"/>
+        <text x="110" y="65" text-anchor="middle" font-size="11" fill="#1c2430" font-family="IBM Plex Mono, monospace">MOA 8000-FL180</text>
+      </svg>
+    </div>
+    <p>Magenta hatched boundary. MOAs don't require ATC authorization by regulation, but they carry high-speed military traffic — check the charted floor against your altitude and scan NOTAMs for exceptions.</p>
+  </section>
+
+  <section class="card" id="remarks">
+    <span class="qtag">METAR REMARKS</span>
+    <h2 class="title">The RMK section can hide the real story</h2>
+    <div class="mono-block">RMK AO2 PK WND 25045/1638 SLP132 T02220189</div>
+    <p><b>PK WND 25045/1638</b> — a peak wind of 250° at 45 kt occurred at 1638Z, even if the main body's wind group looks calm. Always scan remarks for peak wind, pressure tendency, and precipitation notes before trusting the headline numbers.</p>
+  </section>
+
+  <section class="card" id="vor">
+    <span class="qtag">VOR SYMBOL</span>
+    <h2 class="title">Compass rose with ID box</h2>
+    <div class="figure">
+      <svg viewBox="0 0 160 160" width="160">
+        <rect width="160" height="160" fill="#fff"/>
+        <circle cx="80" cy="80" r="55" fill="none" stroke="#1c2430" stroke-width="1.5"/>
+        <rect x="48" y="65" width="64" height="34" fill="#fff" stroke="#1c2430" stroke-width="2"/>
+        <text x="80" y="82" text-anchor="middle" font-size="12" font-family="IBM Plex Mono, monospace" fill="#1c2430">RDU</text>
+        <text x="80" y="95" text-anchor="middle" font-size="10" font-family="IBM Plex Mono, monospace" fill="#1c2430">116.9</text>
+      </svg>
+    </div>
+    <p>Marks a VOR ground station and frequency. sUAS don't navigate by VOR, but recognizing the symbol helps you understand where manned traffic concentrates along victor airways.</p>
+  </section>
+
+  <section class="card" id="inversion">
+    <span class="qtag">TEMPERATURE INVERSION</span>
+    <h2 class="title">Trapped air near the surface</h2>
+    <div class="figure">
+      <svg viewBox="0 0 220 140" width="220">
+        <rect width="220" height="140" fill="#fff"/>
+        <line x1="45" y1="125" x2="45" y2="15" stroke="#1c2430" stroke-width="2"/>
+        <line x1="45" y1="125" x2="195" y2="125" stroke="#1c2430" stroke-width="2"/>
+        <polyline points="55,125 85,95 70,60 105,20" fill="none" stroke="#B32E76" stroke-width="3"/>
+      </svg>
+    </div>
+    <p>A surface-based inversion (temperature rising with height near the ground) caps vertical mixing, trapping haze, fog, or smoke close to the surface — often clearing once the sun heats the ground and breaks the cap. Visibility can erode even when the METAR still looks workable.</p>
+  </section>
+
+  <a class="backtotop" href="#top">↑ Back to top</a>
+  <footer>FIELD LABORATORY SEVEN · STUDY REFERENCE, NOT AN OFFICIAL FAA PRODUCT · VERIFY AGAINST CURRENT AIM / 14 CFR PART 107</footer>
+</div>
+</body>
+</html>
