@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Part 107 — Lesson 6: Crew Resource Management &amp; Radio Communications</title>
+<style>
+  :root {
+    --amber: #f2a71b;
+    --amber-soft: #ffcf6b;
+    --green: #3ddc97;
+    --red: #ff5c5c;
+    --bg-deep: #0d1013;
+    --bg-panel: #171c22;
+    --bg-card: #12161a;
+    --border: #2a3138;
+    --text-main: #dfe6ec;
+    --text-bright: #f4f7fa;
+    --text-dim: #7a8590;
+    --text-mid: #9aa5b0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at top, var(--bg-panel) 0%, var(--bg-deep) 70%);
+    color: var(--text-main);
+    font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+    min-height: 100vh;
+  }
+  body { display: flex; justify-content: center; padding: 24px 12px; }
+  .scanlines {
+    position: fixed; inset: 0; pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    z-index: 0;
+  }
+  .frame {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 640px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(13,16,19,0.6);
+    box-shadow: 0 0 0 1px rgba(242,167,27,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    height: fit-content;
+  }
+  .top-bar {
+    display: flex; justify-content: space-between;
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    font-size: 11px; letter-spacing: 0.08em; color: var(--text-dim);
+    background: #12161a;
+  }
+  .top-bar b { color: var(--amber); }
+
+  .tab-strip {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    background: #101418;
+  }
+  .tab-pill {
+    font-size: 10.5px; letter-spacing: 0.03em;
+    padding: 6px 10px; border-radius: 20px;
+    border: 1px solid var(--border);
+    background: #171c22; color: var(--text-dim);
+    cursor: pointer; font-family: inherit;
+    white-space: nowrap;
+  }
+  .tab-pill:hover { border-color: var(--amber); color: var(--amber-soft); }
+  .tab-pill.active { background: rgba(242,167,27,0.12); border-color: var(--amber); color: var(--amber); font-weight: 700; }
+  .tab-pill.done::before { content: "✓ "; color: var(--green); }
+  .tab-pill.quiz-pill { border-style: dashed; }
+
+  .center {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 40px 28px 36px;
+  }
+  h1 {
+    font-size: 20px; font-weight: 600; margin: 0 0 12px; color: var(--text-bright);
+    letter-spacing: 0.01em; font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  }
+  .subtext { font-size: 13.5px; line-height: 1.6; color: var(--text-mid); max-width: 460px; margin: 0 0 20px; }
+
+  .primary-button {
+    background: var(--amber); color: #171200; border: none; padding: 14px 32px;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.08em; border-radius: 3px;
+    cursor: pointer; font-family: inherit;
+  }
+  .primary-button:hover { background: var(--amber-soft); }
+  .primary-button:disabled { opacity: 0.35; cursor: default; }
+
+  .ghost-button {
+    background: transparent; color: var(--amber); border: 1px solid var(--amber);
+    padding: 10px 18px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+    border-radius: 3px; cursor: pointer; font-family: inherit;
+  }
+  .ghost-button:hover { background: rgba(242,167,27,0.08); }
+  .ghost-button:disabled { opacity: 0.3; cursor: default; }
+
+  .topic-wrap { display: none; padding: 22px 22px 20px; }
+  .topic-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .topic-num { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; }
+  .topic-time { font-size: 11px; color: var(--text-dim); }
+  .topic-title { font-size: 19px; color: var(--text-bright); margin: 4px 0 14px; font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif; font-weight: 600; }
+  .topic-body {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+    padding: 18px 20px; text-align: left; font-size: 13.5px; line-height: 1.65; color: var(--text-main);
+    max-height: 48vh; overflow-y: auto;
+  }
+  .topic-body h4 { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--amber); margin: 16px 0 6px; }
+  .topic-body h4:first-child { margin-top: 0; }
+  .topic-body p { margin: 0 0 10px; }
+  .topic-body ul { margin: 0 0 10px; padding-left: 18px; }
+  .topic-body li { margin-bottom: 5px; }
+  .topic-body ol { margin: 0 0 10px; padding-left: 18px; }
+  .topic-body table { width: 100%; border-collapse: collapse; margin: 6px 0 14px; font-size: 12.5px; }
+  .topic-body th, .topic-body td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+  .topic-body th { color: var(--amber-soft); background: #171c22; font-size: 11px; letter-spacing: 0.03em; }
+  .topic-body code { background: #1c2127; border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-size: 12px; color: var(--amber-soft); }
+
+  .read-block { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+  .read-label { font-size: 10px; letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .reg-chip {
+    font-family: inherit; font-size: 11px; letter-spacing: 0.02em;
+    color: var(--amber-soft); background: rgba(242,167,27,0.08);
+    border: 1px solid rgba(242,167,27,0.35); border-radius: 3px;
+    padding: 4px 9px; cursor: pointer;
+  }
+  .reg-chip:hover { background: rgba(242,167,27,0.18); border-color: var(--amber); }
+  .reg-chip::before { content: "📖 "; }
+
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; gap: 10px; }
+  .dot-row { display: flex; gap: 5px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .dot.active { background: var(--amber); }
+  .dot.done { background: var(--green); }
+
+  .quiz-wrap { padding: 20px 20px 24px; display: none; }
+  .status-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin: 10px 2px 18px; letter-spacing: 0.06em; }
+  .status-row b { color: var(--amber); }
+  .gauge-track { position: relative; height: 6px; background: #1c2127; border-radius: 3px; }
+  .gauge-fill { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--amber), var(--amber-soft)); border-radius: 3px; transition: width 0.3s ease; width: 0%; }
+  .gauge-ticks { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
+  .tick { flex: 1 0 2%; height: 3px; border-radius: 1px; background: rgba(255,255,255,0.08); min-width: 3px; }
+  .tick.filled { background: var(--amber); }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; padding: 20px 20px 22px; }
+  .q-label { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .q-text { font-size: 16px; line-height: 1.5; color: var(--text-bright); margin-bottom: 18px; font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif; font-weight: 500; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-button {
+    display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px;
+    border-radius: 3px; font-size: 13.5px; line-height: 1.4; font-family: inherit;
+    transition: all 0.15s ease; background: #171c22; border: 1px solid var(--border);
+    color: var(--text-main); cursor: pointer; width: 100%;
+  }
+  .option-button:disabled { cursor: default; }
+  .option-button.correct-choice { background: rgba(61, 220, 151, 0.12); border: 1px solid var(--green); color: var(--green); }
+  .option-button.wrong-choice { background: rgba(255, 92, 92, 0.12); border: 1px solid var(--red); color: var(--red); }
+  .option-letter {
+    font-weight: 700; font-size: 12px; width: 18px; height: 18px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid currentColor; border-radius: 3px; opacity: 0.8;
+  }
+  .correct-banner {
+    margin-top: 16px; padding: 10px 14px; background: rgba(61,220,151,0.1);
+    border: 1px solid var(--green); color: var(--green); border-radius: 3px;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-align: center;
+  }
+  .correct-banner .chip-row { justify-content: center; margin-top: 8px; }
+  .correct-banner .next-button { margin-top: 12px; border-color: var(--green); color: var(--green); }
+  .correct-banner .next-button:hover { background: rgba(61,220,151,0.1); }
+  .incorrect-panel {
+    margin-top: 16px; padding: 14px 16px; background: rgba(255,92,92,0.06);
+    border: 1px solid rgba(255,92,92,0.4); border-radius: 3px; display: none;
+  }
+  .incorrect-header { color: var(--red); font-weight: 700; font-size: 13px; margin-bottom: 8px; letter-spacing: 0.04em; }
+  .incorrect-body { font-size: 13px; line-height: 1.55; color: #c7cdd3; }
+  .incorrect-body p { margin: 8px 0 10px; }
+  .next-button {
+    margin-top: 14px; width: 100%; background: transparent; border: 1px solid var(--amber);
+    color: var(--amber); padding: 11px 14px; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.06em; border-radius: 3px; cursor: pointer; font-family: inherit;
+  }
+  .next-button:hover { background: rgba(242,167,27,0.08); }
+
+  .end-wrap { display: none; }
+  .result-dial {
+    width: 130px; height: 130px; border-radius: 50%; border: 3px solid var(--green);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    margin-bottom: 22px; background: var(--bg-card);
+  }
+  .result-pct { font-size: 30px; font-weight: 800; line-height: 1.1; color: var(--green); }
+  .result-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  /* Regulation / reference text modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(5,7,9,0.75);
+    z-index: 50; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--bg-panel); border: 1px solid var(--amber); border-radius: 4px;
+    max-width: 480px; width: 100%; max-height: 80vh; display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .modal-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid var(--border); background: #12161a;
+  }
+  .modal-head-title { font-size: 12.5px; color: var(--amber); letter-spacing: 0.05em; font-weight: 700; }
+  .modal-close {
+    background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+    width: 24px; height: 24px; border-radius: 3px; cursor: pointer; font-family: inherit;
+    font-size: 13px; line-height: 1;
+  }
+  .modal-close:hover { color: var(--red); border-color: var(--red); }
+  .modal-body { padding: 16px 18px; overflow-y: auto; font-size: 13px; line-height: 1.65; color: var(--text-main); text-align: left; }
+  .modal-body p { margin: 0 0 10px; }
+  .modal-body .reg-name { color: var(--text-bright); font-weight: 700; display: block; margin-bottom: 8px; font-size: 13.5px; }
+  .modal-foot {
+    padding: 10px 16px; border-top: 1px solid var(--border); font-size: 10.5px; color: var(--text-dim);
+    background: #101418;
+  }
+  .modal-foot a { color: var(--amber-soft); }
+
+  .sync-note {
+    margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border);
+    font-size: 10.5px; color: var(--text-dim); letter-spacing: 0.03em;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .reset-link {
+    background: transparent; border: none; color: var(--text-dim);
+    font-family: inherit; font-size: 10.5px; letter-spacing: 0.04em;
+    text-decoration: underline; cursor: pointer; padding: 2px;
+  }
+  .reset-link:hover { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="frame">
+  <div class="top-bar">
+    <span>PART 107 · LESSON 6 CRM &amp; RADIO</span>
+    <span id="topBarRight">TOPIC 1 / 4</span>
+  </div>
+
+  <div class="tab-strip" id="tabStrip"></div>
+
+  <!-- INTRO -->
+  <div class="center" id="introScreen">
+    <h1>Lesson 6: Crew Resource Management &amp; Radio Communications</h1>
+    <p class="subtext">Time: 2.5 hours · 4 topics, then an 8-question knowledge check. Every 📖 tag opens the reference text right here — no need to leave the page. Use the tabs above to jump to any topic.</p>
+    <button class="primary-button" id="beginBtn">BEGIN TOPIC 1</button>
+  </div>
+
+  <!-- TOPIC READING VIEW -->
+  <div class="topic-wrap" id="topicWrap">
+    <div class="topic-head">
+      <span class="topic-num" id="topicNum">TOPIC 1 / 4</span>
+      <span class="topic-time" id="topicTime"></span>
+    </div>
+    <div class="topic-title" id="topicTitle"></div>
+    <div class="topic-body" id="topicBody"></div>
+    <div class="nav-row">
+      <button class="ghost-button" id="prevBtn">← PREV</button>
+      <div class="dot-row" id="dotRow"></div>
+      <button class="ghost-button" id="nextBtn">NEXT →</button>
+    </div>
+  </div>
+
+  <!-- QUIZ INTRO -->
+  <div class="center" id="quizIntro" style="display:none;">
+    <h1>Knowledge Check</h1>
+    <p class="subtext">8 questions covering everything in Lesson 6 — crew roles, CRM principles, and radio phraseology. Every answer — right or wrong — links to a 📖 tag with reference text, so you can confirm it on the spot. 70% (6/8) matches the FAA's real passing threshold.</p>
+    <button class="primary-button" id="startQuizBtn">START KNOWLEDGE CHECK</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="quiz-wrap" id="quizScreen">
+    <div class="gauge-track"><div class="gauge-fill" id="gaugeFill"></div></div>
+    <div class="gauge-ticks" id="gaugeTicks"></div>
+    <div class="status-row">
+      <span>SCORE <b id="scoreDisplay">0</b> / <span id="totalDisplay">8</span></span>
+      <span id="itemDisplay">ITEM 01</span>
+    </div>
+    <div class="card">
+      <div class="q-label"><span id="qLabel">QUESTION 1</span></div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="optionsWrap"></div>
+      <div class="correct-banner" id="correctBanner" style="display:none;">
+        ✓ CORRECT
+        <div class="chip-row" id="correctChipRow"></div>
+        <button class="next-button" id="nextCorrectBtn">NEXT QUESTION →</button>
+      </div>
+      <div class="incorrect-panel" id="incorrectPanel">
+        <div class="incorrect-header">✕ INCORRECT</div>
+        <div class="incorrect-body">
+          <b>Correct answer:</b> <span id="correctAnswerText"></span>
+          <p id="explainText"></p>
+          <div class="chip-row" id="incorrectChipRow"></div>
+        </div>
+        <button class="next-button" id="nextQBtn">NEXT QUESTION →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="center end-wrap" id="endScreen">
+    <div class="result-dial" id="resultDial">
+      <span class="result-pct" id="resultPct">0%</span>
+      <span class="result-sub" id="resultSub">0 / 8 correct</span>
+    </div>
+    <h1 id="endHeading">Strong Run</h1>
+    <p class="subtext" id="endSubtext"></p>
+    <button class="ghost-button" id="reviewTopicsBtn">REVIEW TOPICS</button>
+    <button class="primary-button" id="restartQuizBtn" style="margin-top:12px;">RETAKE KNOWLEDGE CHECK</button>
+    <div class="sync-note">
+      <span id="progressSavedNote"></span>
+      <button class="reset-link" id="resetProgressBtn" type="button">RESET SAVED RESULT</button>
+    </div>
+  </div>
+</div>
+
+<!-- REFERENCE TEXT MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-head-title" id="modalTitle">14 CFR §107.19</span>
+      <button class="modal-close" id="modalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot">Text of the current 14 CFR as codified in the eCFR. Not the official published edition — see ecfr.gov for that.</div>
+  </div>
+</div>
+
+<script src="progress.js"></script>
+<script>
+// ---------------------------------------------------------------------------
+// Reference text library — keyed by section/topic. Shown in the in-page
+// modal whenever a 📖 chip is clicked, so the reader never has to leave the site.
+// Keys starting with a digit are codified 14 CFR sections; all other keys are
+// FAA guidance/reference material (Advisory Circular, AIM) and are labeled as such.
+// ---------------------------------------------------------------------------
+const REGTEXT = {
+  "107.19": { name: "§ 107.19 — Remote pilot in command", text: [
+    "(a) A remote pilot in command is directly responsible for and is the final authority as to the operation of the small unmanned aircraft system.",
+    "(b) The remote pilot in command must ensure that the small unmanned aircraft system will pose no undue hazard to other people, other aircraft, or other property in the event of loss of control of the aircraft.",
+    "(c) The remote pilot in command must ensure that the small UAS operation complies with all applicable provisions of this part.",
+    "(d) The remote pilot in command must have the ability to direct the small unmanned aircraft to ensure compliance with the applicable provisions of this part.",
+    "(e) A remote pilot in command may deviate from any provision related to visual observers if that deviation is necessary to meet an in-flight emergency."
+  ]},
+  "107.41": { name: "§ 107.41 — Operation in certain airspace", text: [
+    "No person may operate a small unmanned aircraft in Class B, C, or D airspace, or within the lateral boundaries of the surface area of Class E airspace designated for an airport, unless that person has prior authorization from Air Traffic Control (most often obtained through LAANC)."
+  ]},
+  "AC 107-2A": { name: "Advisory Circular 107-2A — Small Unmanned Aircraft Systems (sUAS), Crew Roles & Coordination", text: [
+    "The Advisory Circular accompanying the Part 107 rule describes the role of a visual observer (VO) as an individual who assists the remote pilot in command and/or the person manipulating the controls in maintaining awareness of the aircraft's position, altitude, and the surrounding airspace and traffic.",
+    "A VO is not required to hold a remote pilot certificate, but must be positioned so as to effectively observe the aircraft and the airspace around it, and must maintain effective communication with the remote pilot in command at all times during flight.",
+    "The AC recommends that all crew members involved in an operation be briefed before flight on their roles, expected hazards, communication protocols, and emergency procedures, and that crews adopt standardized, closed-loop communication (state, acknowledge, repeat back) to reduce the risk of miscommunication during time-critical moments.",
+    "This is FAA guidance material accompanying the Part 107 rule — it is not itself a codified regulation, but it directly informs how the RPIC's compliance and safety-of-operation responsibilities under § 107.19 are expected to be met with a multi-person crew."
+  ]},
+  "AIM 4-2": { name: "AIM Chapter 4, Section 2 — Radio Communications Phraseology and Technique", text: [
+    "The Aeronautical Information Manual establishes standard phraseology for aviation radio communications, including the use of the ICAO/NATO phonetic alphabet (Alpha, Bravo, Charlie, Delta, Echo, Foxtrot, Golf, Hotel, India, Juliett, Kilo, Lima, Mike, November, Oscar, Papa, Quebec, Romeo, Sierra, Tango, Uniform, Victor, Whiskey, X-ray, Yankee, Zulu) for spelling out letters and identifiers clearly.",
+    "Standard terms include 'Roger' (message received and understood, not an acknowledgment of compliance), 'Wilco' (will comply), 'Say again' (repeat the last transmission), 'Standby' (a brief pause is needed before responding), and 'Negative' (no, or permission not granted).",
+    "At non-towered airports, pilots self-announce on the Common Traffic Advisory Frequency (CTAF), typically stating the airport name, aircraft identification, position, and intentions, and repeating the airport name at the end of the call so it is caught even if a listener missed the beginning of the transmission.",
+    "This is FAA guidance material describing standard radio phraseology — it is not a codified regulation."
+  ]},
+};
+
+function normalizeKey(raw) {
+  return raw.replace(/^\s*(14 CFR\s*)?§?\s*/i, '').replace(/\(.*$/, '').trim();
+}
+
+function regChip(ref) {
+  // ref can contain multiple citations separated by ; or ,
+  const parts = ref.split(/;|(?<=\d)\s*,\s*(?=§)/).map(s => s.trim()).filter(Boolean);
+  return parts.map(p => {
+    const key = normalizeKey(p);
+    const label = p.replace(/^14 CFR\s*/i, '');
+    if (REGTEXT[key]) {
+      return `<button class="reg-chip" onclick="openReg('${key}')">${label}</button>`;
+    }
+    return `<span class="reg-chip" style="cursor:default;opacity:0.6;">${label}</span>`;
+  }).join('');
+}
+
+function openReg(key) {
+  const entry = REGTEXT[key];
+  if (!entry) return;
+  const isCfr = /^\d/.test(key);
+  document.getElementById('modalTitle').textContent = isCfr ? '14 CFR §' + key : key;
+  document.getElementById('modalBody').innerHTML =
+    `<span class="reg-name">${entry.name}</span>` + entry.text.map(p => `<p>${p}</p>`).join('');
+  document.getElementById('modalFoot').textContent = isCfr
+    ? "Text of the current 14 CFR as codified in the eCFR. Not the official published edition — see ecfr.gov for that."
+    : "FAA guidance material (Advisory Circular / AIM), not a codified regulation. See faa.gov for the official current edition.";
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeReg() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+// ---------------------------------------------------------------------------
+// Topic content — Lesson 6: Crew Resource Management & Radio Communications
+// ---------------------------------------------------------------------------
+const TOPICS = [
+  {
+    title: "Roles in Multi-Person UAS Operations",
+    time: "≈35 min",
+    body: `
+      <p>Part 107 operations are often flown by more than one person, and each role has a distinct function and set of responsibilities.</p>
+      <h4>Remote Pilot in Command (RPIC)</h4>
+      <ul>
+        <li>Directly responsible for, and the final authority regarding, the operation of the small UAS</li>
+        <li>Must ensure the operation complies with all applicable Part 107 provisions</li>
+        <li>Must have the ability to direct the aircraft to ensure regulatory compliance, even if someone else is physically manipulating the controls</li>
+        <li>Remains accountable for the safety of the operation regardless of how many other crew members are present</li>
+      </ul>
+      <h4>Person Manipulating the Controls</h4>
+      <ul>
+        <li>The individual physically operating the flight controls, which may or may not be the RPIC</li>
+        <li>Can be a visual observer, second remote pilot, or other individual acting under the RPIC's direction</li>
+        <li>The RPIC may permit another qualified person to fly, but retains overall responsibility and must be able to take direct control if needed</li>
+      </ul>
+      <h4>Visual Observer (VO)</h4>
+      <ul>
+        <li>Assists the RPIC and/or the person manipulating the controls in maintaining awareness of the aircraft's position and surrounding airspace</li>
+        <li>Communicates relevant information (traffic, obstacles, aircraft attitude/position) to the RPIC and/or the person at the controls</li>
+        <li>Does not have to hold a remote pilot certificate, but must be positioned to effectively see the aircraft and surrounding airspace</li>
+        <li>Can support VLOS compliance when the RPIC's own view is temporarily obstructed or divided (e.g., between the aircraft and the controller/display)</li>
+      </ul>
+      <h4>Why Defined Roles Matter</h4>
+      <p>Clear role definition prevents a common failure mode in multi-person operations: <b>diffusion of responsibility</b>, where each person assumes someone else is watching a specific hazard, and as a result no one is.</p>
+      <div class="read-block">
+        <div class="read-label">Suggested read</div>
+        <div class="chip-row">${regChip("§107.19")}${regChip("AC 107-2A")}</div>
+      </div>
+    `
+  },
+  {
+    title: "Communication & Coordination Best Practices",
+    time: "≈35 min",
+    body: `
+      <p>Effective Crew Resource Management (CRM) — a concept adapted from manned aviation — emphasizes clear, structured communication among all crew members.</p>
+      <h4>Core CRM Principles Applied to UAS Crews</h4>
+      <ul>
+        <li><b>Closed-loop communication:</b> a crew member states information, the receiving crew member acknowledges and repeats back the key content (e.g., "Traffic, 2 o'clock, descending" → "Copy, traffic 2 o'clock, descending")</li>
+        <li><b>Standardized callouts:</b> consistent, agreed-upon terms for common situations (e.g., "Aircraft in sight," "Lost sight of aircraft," "Battery at [X]%") reduce ambiguity under time pressure</li>
+        <li><b>Briefing before flight:</b> the RPIC should brief all crew on roles, expected hazards, lost-link/emergency procedures, and communication protocols before the operation begins</li>
+        <li><b>Sterile cockpit-style discipline:</b> during critical phases of flight (takeoff, landing, close-proximity operations), crew communication should be limited to operationally relevant information only</li>
+        <li><b>Speaking up culture:</b> any crew member — regardless of role or seniority — should be empowered and expected to voice a safety concern immediately, without waiting for the RPIC to ask</li>
+      </ul>
+      <h4>Common CRM Failure Patterns to Avoid</h4>
+      <ul>
+        <li>Assuming another crew member has visual contact with the aircraft without confirming it verbally</li>
+        <li>Failing to communicate a battery or system warning promptly because it seems like a minor issue</li>
+        <li>A VO providing vague information ("it's over there somewhere") instead of clear, standardized callouts</li>
+      </ul>
+      <div class="read-block">
+        <div class="read-label">Suggested read</div>
+        <div class="chip-row">${regChip("AC 107-2A")}</div>
+      </div>
+    `
+  },
+  {
+    title: "Standard Aviation Phraseology",
+    time: "≈30 min",
+    body: `
+      <p>Part 107 crews often operate at or near airports shared with manned aircraft, so understanding standard phraseology helps a crew monitor radio traffic and communicate clearly if the situation calls for it.</p>
+      <h4>Numbers and Letters</h4>
+      <ul>
+        <li>Numbers are typically spoken digit-by-digit (e.g., "one two zero" for 120), except for whole hundreds/thousands in some contexts (e.g., altitudes)</li>
+        <li>The <b>NATO phonetic alphabet</b> spells out letters clearly: Alpha, Bravo, Charlie, Delta, Echo, Foxtrot, Golf, Hotel, India, Juliett, Kilo, Lima, Mike, November, Oscar, Papa, Quebec, Romeo, Sierra, Tango, Uniform, Victor, Whiskey, X-ray, Yankee, Zulu</li>
+      </ul>
+      <h4>Common Terms</h4>
+      <table>
+        <tr><th>Term</th><th>Meaning</th></tr>
+        <tr><td>Traffic in sight</td><td>The reporting party has visually acquired the traffic in question</td></tr>
+        <tr><td>Say again</td><td>Request to repeat the last transmission</td></tr>
+        <tr><td>Standby</td><td>The receiving party needs a moment before responding</td></tr>
+        <tr><td>Roger</td><td>Message received and understood (NOT "yes" or "I will comply")</td></tr>
+        <tr><td>Wilco</td><td>"Will comply" — received, understood, and will be complied with</td></tr>
+        <tr><td>Negative</td><td>No, or "permission not granted," depending on context</td></tr>
+      </table>
+      <h4>CTAF</h4>
+      <p><b>Common Traffic Advisory Frequency</b> — the frequency used at non-towered airports for pilots to self-announce position and intentions.</p>
+      <div class="read-block">
+        <div class="read-label">Suggested read</div>
+        <div class="chip-row">${regChip("AIM 4-2")}</div>
+      </div>
+    `
+  },
+  {
+    title: "Radio Procedures at Towered & Non-Towered Airports",
+    time: "≈30 min",
+    body: `
+      <h4>Towered Airports</h4>
+      <ul>
+        <li>Communication with ATC (ground, tower, or approach control) is required before entering the relevant airspace, per Part 107's authorization requirements</li>
+        <li>Standard call structure: who you're calling, who you are, your position/intentions, then wait for a response</li>
+        <li>A remote pilot operating near a towered airport should monitor the appropriate frequency if not in direct contact, to build situational awareness of manned traffic</li>
+      </ul>
+      <h4>Non-Towered Airports</h4>
+      <ul>
+        <li>Pilots self-announce on the CTAF, typically stating: airport name, aircraft identification, position/altitude, intentions, and airport name again (bookending the call helps others catch the airport name even if they missed the first mention)</li>
+        <li>Standard practice includes announcing on downwind, base, final, and clear-of-runway for manned traffic — a UAS operation near such an airport should monitor this frequency for situational awareness, and per FAA guidance, self-announcing a UAS operation on CTAF is recommended, though small UAS are not required to carry two-way radios under Part 107</li>
+      </ul>
+      <h4>Why This Matters for Remote Pilots</h4>
+      <p>Even though Part 107 doesn't require a remote pilot to hold a radio license or transmit on aviation frequencies in most operations, understanding this phraseology helps a crew:</p>
+      <ul>
+        <li>Monitor nearby manned traffic and anticipate potential conflicts</li>
+        <li>Communicate effectively with airport personnel, ATC, or other pilots if a situation requires direct coordination</li>
+        <li>Correctly interpret information relayed by a visual observer who may be monitoring a radio</li>
+      </ul>
+      <div class="read-block">
+        <div class="read-label">Suggested read</div>
+        <div class="chip-row">${regChip("§107.41")}${regChip("AIM 4-2")}</div>
+      </div>
+    `
+  }
+];
+
+// ---------------------------------------------------------------------------
+// Knowledge check questions — every answer links to reference text
+// ---------------------------------------------------------------------------
+const QUESTIONS = [
+  { q: "Who retains final authority and responsibility for a Part 107 operation, regardless of who is physically manipulating the controls?", options: ["The remote pilot in command (RPIC)", "The visual observer", "Whoever holds the controller at the moment", "The FAA regional office"], correct: 0, explain: "The RPIC is directly responsible for, and the final authority over, the operation — even when someone else is flying the aircraft under their direction.", ref: "§107.19" },
+  { q: "What is \"closed-loop communication,\" and why is it important in a multi-person UAS crew?", options: ["A radio that only transmits, never receives", "A crew member states information, and the receiving crew member acknowledges and repeats back the key content to confirm it was heard correctly", "A rule that crew members may not speak during flight", "A requirement that only the RPIC may speak on the radio"], correct: 1, explain: "Closed-loop communication (state, acknowledge, repeat back) confirms information was correctly received, reducing the risk of miscommunication.", ref: "AC 107-2A" },
+  { q: "Does a visual observer need to hold a remote pilot certificate?", options: ["Yes, always", "Only at night", "No — but the VO must be positioned to effectively see the aircraft and surrounding airspace, and maintain communication with the RPIC", "Only at towered airports"], correct: 2, explain: "A VO isn't required to hold a remote pilot certificate, but must be positioned to observe the aircraft/airspace and stay in communication with the RPIC.", ref: "AC 107-2A" },
+  { q: "What is \"diffusion of responsibility,\" and how does clear role definition help prevent it?", options: ["A legal term with no safety relevance", "A term for battery voltage drop under load", "A requirement to have exactly one crew member at all times", "Each crew member assumes someone else is watching a hazard, so no one actually is — clear roles ensure specific responsibilities are assigned and owned"], correct: 3, explain: "Diffusion of responsibility happens when everyone assumes someone else has a hazard covered; defined roles assign clear ownership to prevent that gap.", ref: "§107.19" },
+  { q: "In standard aviation phraseology, what is the difference between \"Roger\" and \"Wilco\"?", options: ["\"Roger\" means the message was received and understood; \"Wilco\" means received, understood, AND will be complied with", "They mean the exact same thing", "\"Roger\" is used only at towered airports", "\"Wilco\" means the message was not understood"], correct: 0, explain: "Roger only confirms receipt/understanding — it does not imply compliance. Wilco explicitly means the sender will comply.", ref: "AIM 4-2" },
+  { q: "What does CTAF stand for, and when is it used?", options: ["Controlled Traffic Approach Frequency, used only in Class B airspace", "Common Traffic Advisory Frequency, used at non-towered airports for pilots to self-announce position and intentions", "Certified Tower Aviation Frequency, used only by certificated dispatchers", "Cross-Traffic Alert Frequency, used only during emergencies"], correct: 1, explain: "CTAF is the Common Traffic Advisory Frequency, used at non-towered airports so pilots can self-announce their position and intentions.", ref: "AIM 4-2" },
+  { q: "Why is a \"sterile cockpit\" style of communication discipline recommended during critical phases of flight?", options: ["To prevent any communication at all during flight", "It's only a manned-aviation concept with no UAS relevance", "To limit crew communication to operationally relevant information during high-workload phases like takeoff, landing, and close-proximity operations", "To reduce radio frequency congestion for other pilots"], correct: 2, explain: "Sterile cockpit discipline reduces distraction during high-workload phases by limiting chatter to operationally relevant information only.", ref: "AC 107-2A" },
+  { q: "Even though small UAS aren't required to carry two-way radios under Part 107, why is understanding standard aviation phraseology still valuable?", options: ["It isn't valuable, since UAS never operate near manned aircraft", "It's required to obtain a remote pilot certificate exam question bonus", "It only matters for fixed-wing UAS", "It helps a crew monitor nearby manned traffic, coordinate with ATC/airport personnel if needed, and correctly interpret information from a VO monitoring a radio"], correct: 3, explain: "Even without a radio requirement, understanding phraseology helps a crew build situational awareness of manned traffic and communicate clearly if coordination becomes necessary.", ref: "§107.41" }
+];
+
+// ---------------------------------------------------------------------------
+// State & navigation
+// ---------------------------------------------------------------------------
+let topicIndex = 0;
+let qIndex = 0;
+let score = 0;
+let selected = null;
+const visitedTopics = new Set();
+
+// Unique id this lesson's knowledge check is saved under — read back by
+// index.html to show pass/fail status on the Mission Hub.
+const PROGRESS_ITEM_ID = 'Lesson-6-CRM-Radio-test';
+
+let tabStrip, introScreen, topicWrap, quizIntro, quizScreen, endScreen, topBarRight, gaugeTicks, dotRow;
+
+function init() {
+  tabStrip = document.getElementById('tabStrip');
+  introScreen = document.getElementById('introScreen');
+  topicWrap = document.getElementById('topicWrap');
+  quizIntro = document.getElementById('quizIntro');
+  quizScreen = document.getElementById('quizScreen');
+  endScreen = document.getElementById('endScreen');
+  topBarRight = document.getElementById('topBarRight');
+  gaugeTicks = document.getElementById('gaugeTicks');
+  dotRow = document.getElementById('dotRow');
+
+  TOPICS.forEach((t, i) => {
+    const pill = document.createElement('button');
+    pill.className = 'tab-pill';
+    pill.textContent = (i + 1) + '. ' + t.title;
+    pill.addEventListener('click', () => goToTopic(i));
+    tabStrip.appendChild(pill);
+  });
+  const quizPill = document.createElement('button');
+  quizPill.className = 'tab-pill quiz-pill';
+  quizPill.textContent = 'Knowledge Check';
+  quizPill.addEventListener('click', showQuizIntro);
+  tabStrip.appendChild(quizPill);
+
+  TOPICS.forEach(() => {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    dotRow.appendChild(d);
+  });
+
+  for (let i = 0; i < QUESTIONS.length; i++) {
+    const d = document.createElement('div');
+    d.className = 'tick';
+    gaugeTicks.appendChild(d);
+  }
+  document.getElementById('totalDisplay').textContent = QUESTIONS.length;
+
+  document.getElementById('beginBtn').addEventListener('click', () => goToTopic(0));
+  document.getElementById('prevBtn').addEventListener('click', () => goToTopic(topicIndex - 1));
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if (topicIndex + 1 >= TOPICS.length) { showQuizIntro(); } else { goToTopic(topicIndex + 1); }
+  });
+  document.getElementById('startQuizBtn').addEventListener('click', beginQuiz);
+  document.getElementById('restartQuizBtn').addEventListener('click', beginQuiz);
+  document.getElementById('nextQBtn').addEventListener('click', advanceQuestion);
+  document.getElementById('nextCorrectBtn').addEventListener('click', advanceQuestion);
+  document.getElementById('reviewTopicsBtn').addEventListener('click', () => goToTopic(0));
+  document.getElementById('modalCloseBtn').addEventListener('click', closeReg);
+  document.getElementById('modalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'modalOverlay') closeReg();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeReg(); });
+
+  document.getElementById('resetProgressBtn').addEventListener('click', () => {
+    if (confirm("Reset your saved result for this lesson's knowledge check?")) {
+      Part107Progress.reset(PROGRESS_ITEM_ID);
+      document.getElementById('progressSavedNote').textContent = 'Saved result cleared.';
+    }
+  });
+
+  updateTabs();
+}
+
+function hideAllScreens() {
+  introScreen.style.display = 'none';
+  topicWrap.style.display = 'none';
+  quizIntro.style.display = 'none';
+  quizScreen.style.display = 'none';
+  endScreen.style.display = 'none';
+}
+
+function updateTabs() {
+  const pills = tabStrip.querySelectorAll('.tab-pill');
+  pills.forEach((p, i) => {
+    p.classList.remove('active');
+    if (i < TOPICS.length) p.classList.toggle('done', visitedTopics.has(i) && i !== topicIndex);
+  });
+}
+
+function goToTopic(i) {
+  if (i < 0 || i >= TOPICS.length) return;
+  topicIndex = i;
+  visitedTopics.add(i);
+  hideAllScreens();
+  topicWrap.style.display = 'block';
+
+  const t = TOPICS[i];
+  document.getElementById('topicNum').textContent = `TOPIC ${i + 1} / ${TOPICS.length}`;
+  document.getElementById('topicTime').textContent = t.time;
+  document.getElementById('topicTitle').textContent = t.title;
+  document.getElementById('topicBody').innerHTML = t.body;
+  document.getElementById('topicBody').scrollTop = 0;
+  document.getElementById('prevBtn').disabled = (i === 0);
+  document.getElementById('nextBtn').textContent = (i === TOPICS.length - 1) ? 'KNOWLEDGE CHECK →' : 'NEXT →';
+  topBarRight.textContent = `TOPIC ${i + 1} / ${TOPICS.length}`;
+
+  const dots = dotRow.children;
+  for (let d = 0; d < dots.length; d++) {
+    dots[d].className = 'dot' + (d === i ? ' active' : (visitedTopics.has(d) ? ' done' : ''));
+  }
+
+  const pills = tabStrip.querySelectorAll('.tab-pill');
+  updateTabs();
+  pills[i].classList.add('active');
+}
+
+function showQuizIntro() {
+  hideAllScreens();
+  quizIntro.style.display = 'flex';
+  topBarRight.textContent = 'KNOWLEDGE CHECK';
+  const pills = tabStrip.querySelectorAll('.tab-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  pills[pills.length - 1].classList.add('active');
+}
+
+function beginQuiz() {
+  qIndex = 0; score = 0; selected = null;
+  hideAllScreens();
+  quizScreen.style.display = 'block';
+  topBarRight.textContent = `Q 1 / ${QUESTIONS.length}`;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  selected = null;
+  const current = QUESTIONS[qIndex];
+  document.getElementById('qLabel').textContent = `QUESTION ${qIndex + 1}`;
+  document.getElementById('qText').textContent = current.q;
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('itemDisplay').textContent = `ITEM ${String(qIndex + 1).padStart(2, '0')}`;
+  topBarRight.textContent = `Q ${qIndex + 1} / ${QUESTIONS.length}`;
+
+  const pct = (qIndex / QUESTIONS.length) * 100;
+  document.getElementById('gaugeFill').style.width = pct + '%';
+  const ticks = gaugeTicks.children;
+  for (let i = 0; i < ticks.length; i++) ticks[i].className = 'tick' + (i < qIndex ? ' filled' : '');
+
+  const optionsWrap = document.getElementById('optionsWrap');
+  optionsWrap.innerHTML = '';
+  current.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-button';
+    btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => choose(i));
+    optionsWrap.appendChild(btn);
+  });
+
+  document.getElementById('correctBanner').style.display = 'none';
+  document.getElementById('incorrectPanel').style.display = 'none';
+}
+
+function choose(i) {
+  if (selected !== null) return;
+  selected = i;
+  const current = QUESTIONS[qIndex];
+  const buttons = document.querySelectorAll('#optionsWrap .option-button');
+  buttons.forEach(b => b.disabled = true);
+
+  const isCorrect = i === current.correct;
+
+  if (isCorrect) {
+    score++;
+    document.getElementById('scoreDisplay').textContent = score;
+    buttons[i].classList.add('correct-choice');
+    document.getElementById('correctChipRow').innerHTML = regChip(current.ref);
+    document.getElementById('correctBanner').style.display = 'block';
+  } else {
+    buttons[i].classList.add('wrong-choice');
+    buttons[current.correct].classList.add('correct-choice');
+    document.getElementById('correctAnswerText').textContent = current.options[current.correct];
+    document.getElementById('explainText').textContent = current.explain;
+    document.getElementById('incorrectChipRow').innerHTML = regChip(current.ref);
+    document.getElementById('incorrectPanel').style.display = 'block';
+  }
+}
+
+function advanceQuestion() {
+  if (qIndex + 1 >= QUESTIONS.length) {
+    showEnd();
+  } else {
+    qIndex++;
+    renderQuestion();
+  }
+}
+
+function showEnd() {
+  hideAllScreens();
+  endScreen.style.display = 'flex';
+  topBarRight.textContent = 'DEBRIEF';
+
+  const pct = Math.round((score / QUESTIONS.length) * 100);
+  const passed = pct >= 70;
+
+  document.getElementById('resultPct').textContent = pct + '%';
+  document.getElementById('resultSub').textContent = `${score} / ${QUESTIONS.length} correct`;
+  document.getElementById('resultDial').style.borderColor = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('resultPct').style.color = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('endHeading').textContent = passed ? 'Strong Run' : 'Keep Studying';
+  document.getElementById('endSubtext').textContent = passed
+    ? 'You cleared 70%, matching the FAA passing threshold. Revisit any topic above to lock in the details before Lesson 7.'
+    : 'This run fell below the 70% benchmark used on the real FAA Part 107 test. Review the topics above — especially the ones tied to any missed question\'s reference — then retake the check.';
+  // Share this result with the Mission Hub (index.html). Every run overwrites
+  // the previous one, so the number shown there always reflects the latest attempt.
+  Part107Progress.recordResult(PROGRESS_ITEM_ID, {
+    score: score,
+    total: QUESTIONS.length,
+    passThreshold: 0.7
+  });
+  document.getElementById('progressSavedNote').textContent =
+    `Saved to Mission Hub — ${passed ? 'PASSED' : 'NOT PASSED'} (${score}/${QUESTIONS.length}).`;
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>

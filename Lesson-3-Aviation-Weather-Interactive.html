@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Part 107 — Lesson 3: Aviation Weather</title>
+<style>
+  :root {
+    --amber: #f2a71b;
+    --amber-soft: #ffcf6b;
+    --green: #3ddc97;
+    --red: #ff5c5c;
+    --bg-deep: #0d1013;
+    --bg-panel: #171c22;
+    --bg-card: #12161a;
+    --border: #2a3138;
+    --text-main: #dfe6ec;
+    --text-bright: #f4f7fa;
+    --text-dim: #7a8590;
+    --text-mid: #9aa5b0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at top, var(--bg-panel) 0%, var(--bg-deep) 70%);
+    color: var(--text-main);
+    font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+    min-height: 100vh;
+  }
+  body { display: flex; justify-content: center; padding: 24px 12px; }
+  .scanlines {
+    position: fixed; inset: 0; pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    z-index: 0;
+  }
+  .frame {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 640px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(13,16,19,0.6);
+    box-shadow: 0 0 0 1px rgba(242,167,27,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    height: fit-content;
+  }
+  .top-bar {
+    display: flex; justify-content: space-between;
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    font-size: 11px; letter-spacing: 0.08em; color: var(--text-dim);
+    background: #12161a;
+  }
+  .top-bar b { color: var(--amber); }
+
+  .tab-strip {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    background: #101418;
+  }
+  .tab-pill {
+    font-size: 10.5px; letter-spacing: 0.03em;
+    padding: 6px 10px; border-radius: 20px;
+    border: 1px solid var(--border);
+    background: #171c22; color: var(--text-dim);
+    cursor: pointer; font-family: inherit;
+    white-space: nowrap;
+  }
+  .tab-pill:hover { border-color: var(--amber); color: var(--amber-soft); }
+  .tab-pill.active { background: rgba(242,167,27,0.12); border-color: var(--amber); color: var(--amber); font-weight: 700; }
+  .tab-pill.done::before { content: "✓ "; color: var(--green); }
+  .tab-pill.quiz-pill { border-style: dashed; }
+
+  .center {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 40px 28px 36px;
+  }
+  h1 {
+    font-size: 20px; font-weight: 600; margin: 0 0 12px; color: var(--text-bright);
+    letter-spacing: 0.01em; font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  }
+  .subtext { font-size: 13.5px; line-height: 1.6; color: var(--text-mid); max-width: 460px; margin: 0 0 20px; }
+
+  .primary-button {
+    background: var(--amber); color: #171200; border: none; padding: 14px 32px;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.08em; border-radius: 3px;
+    cursor: pointer; font-family: inherit;
+  }
+  .primary-button:hover { background: var(--amber-soft); }
+  .primary-button:disabled { opacity: 0.35; cursor: default; }
+
+  .ghost-button {
+    background: transparent; color: var(--amber); border: 1px solid var(--amber);
+    padding: 10px 18px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+    border-radius: 3px; cursor: pointer; font-family: inherit;
+  }
+  .ghost-button:hover { background: rgba(242,167,27,0.08); }
+  .ghost-button:disabled { opacity: 0.3; cursor: default; }
+
+  .topic-wrap { display: none; padding: 22px 22px 20px; }
+  .topic-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .topic-num { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; }
+  .topic-time { font-size: 11px; color: var(--text-dim); }
+  .topic-title { font-size: 19px; color: var(--text-bright); margin: 4px 0 14px; font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif; font-weight: 600; }
+  .topic-body {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+    padding: 18px 20px; text-align: left; font-size: 13.5px; line-height: 1.65; color: var(--text-main);
+    max-height: 48vh; overflow-y: auto;
+  }
+  .topic-body h4 { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--amber); margin: 16px 0 6px; }
+  .topic-body h4:first-child { margin-top: 0; }
+  .topic-body p { margin: 0 0 10px; }
+  .topic-body ul { margin: 0 0 10px; padding-left: 18px; }
+  .topic-body li { margin-bottom: 5px; }
+  .topic-body table { width: 100%; border-collapse: collapse; margin: 6px 0 14px; font-size: 12.5px; }
+  .topic-body th, .topic-body td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+  .topic-body th { color: var(--amber-soft); background: #171c22; font-size: 11px; letter-spacing: 0.03em; }
+  .topic-body code { background: #1c2127; border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-size: 12px; color: var(--amber-soft); }
+  .topic-body pre { background: #1c2127; border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; overflow-x: auto; font-size: 12px; color: var(--text-bright); margin: 0 0 12px; }
+
+  .read-block { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+  .read-label { font-size: 10px; letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .reg-chip {
+    font-family: inherit; font-size: 11px; letter-spacing: 0.02em;
+    color: var(--amber-soft); background: rgba(242,167,27,0.08);
+    border: 1px solid rgba(242,167,27,0.35); border-radius: 3px;
+    padding: 4px 9px; cursor: pointer;
+  }
+  .reg-chip:hover { background: rgba(242,167,27,0.18); border-color: var(--amber); }
+  .reg-chip::before { content: "📖 "; }
+
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; gap: 10px; }
+  .dot-row { display: flex; gap: 5px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .dot.active { background: var(--amber); }
+  .dot.done { background: var(--green); }
+
+  .quiz-wrap { padding: 20px 20px 24px; display: none; }
+  .status-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin: 10px 2px 18px; letter-spacing: 0.06em; }
+  .status-row b { color: var(--amber); }
+  .gauge-track { position: relative; height: 6px; background: #1c2127; border-radius: 3px; }
+  .gauge-fill { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--amber), var(--amber-soft)); border-radius: 3px; transition: width 0.3s ease; width: 0%; }
+  .gauge-ticks { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
+  .tick { flex: 1 0 2%; height: 3px; border-radius: 1px; background: rgba(255,255,255,0.08); min-width: 3px; }
+  .tick.filled { background: var(--amber); }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; padding: 20px 20px 22px; }
+  .q-label { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .q-text { font-size: 16px; line-height: 1.5; color: var(--text-bright); margin-bottom: 18px; font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif; font-weight: 500; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-button {
+    display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px;
+    border-radius: 3px; font-size: 13.5px; line-height: 1.4; font-family: inherit;
+    transition: all 0.15s ease; background: #171c22; border: 1px solid var(--border);
+    color: var(--text-main); cursor: pointer; width: 100%;
+  }
+  .option-button:disabled { cursor: default; }
+  .option-button.correct-choice { background: rgba(61, 220, 151, 0.12); border: 1px solid var(--green); color: var(--green); }
+  .option-button.wrong-choice { background: rgba(255, 92, 92, 0.12); border: 1px solid var(--red); color: var(--red); }
+  .option-letter {
+    font-weight: 700; font-size: 12px; width: 18px; height: 18px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid currentColor; border-radius: 3px; opacity: 0.8;
+  }
+  .correct-banner {
+    margin-top: 16px; padding: 10px 14px; background: rgba(61,220,151,0.1);
+    border: 1px solid var(--green); color: var(--green); border-radius: 3px;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-align: center;
+  }
+  .correct-banner .chip-row { justify-content: center; margin-top: 8px; }
+  .correct-banner .next-button { margin-top: 12px; border-color: var(--green); color: var(--green); }
+  .correct-banner .next-button:hover { background: rgba(61,220,151,0.1); }
+  .incorrect-panel {
+    margin-top: 16px; padding: 14px 16px; background: rgba(255,92,92,0.06);
+    border: 1px solid rgba(255,92,92,0.4); border-radius: 3px; display: none;
+  }
+  .incorrect-header { color: var(--red); font-weight: 700; font-size: 13px; margin-bottom: 8px; letter-spacing: 0.04em; }
+  .incorrect-body { font-size: 13px; line-height: 1.55; color: #c7cdd3; }
+  .incorrect-body p { margin: 8px 0 10px; }
+  .next-button {
+    margin-top: 14px; width: 100%; background: transparent; border: 1px solid var(--amber);
+    color: var(--amber); padding: 11px 14px; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.06em; border-radius: 3px; cursor: pointer; font-family: inherit;
+  }
+  .next-button:hover { background: rgba(242,167,27,0.08); }
+
+  .end-wrap { display: none; }
+  .result-dial {
+    width: 130px; height: 130px; border-radius: 50%; border: 3px solid var(--green);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    margin-bottom: 22px; background: var(--bg-card);
+  }
+  .result-pct { font-size: 30px; font-weight: 800; line-height: 1.1; color: var(--green); }
+  .result-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  /* Regulation / reference text modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(5,7,9,0.75);
+    z-index: 50; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--bg-panel); border: 1px solid var(--amber); border-radius: 4px;
+    max-width: 480px; width: 100%; max-height: 80vh; display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .modal-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid var(--border); background: #12161a;
+  }
+  .modal-head-title { font-size: 12.5px; color: var(--amber); letter-spacing: 0.05em; font-weight: 700; }
+  .modal-close {
+    background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+    width: 24px; height: 24px; border-radius: 3px; cursor: pointer; font-family: inherit;
+    font-size: 13px; line-height: 1;
+  }
+  .modal-close:hover { color: var(--red); border-color: var(--red); }
+  .modal-body { padding: 16px 18px; overflow-y: auto; font-size: 13px; line-height: 1.65; color: var(--text-main); text-align: left; }
+  .modal-body p { margin: 0 0 10px; }
+  .modal-body .reg-name { color: var(--text-bright); font-weight: 700; display: block; margin-bottom: 8px; font-size: 13.5px; }
+  .modal-foot {
+    padding: 10px 16px; border-top: 1px solid var(--border); font-size: 10.5px; color: var(--text-dim);
+    background: #101418;
+  }
+  .modal-foot a { color: var(--amber-soft); }
+
+  .sync-note {
+    margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border);
+    font-size: 10.5px; color: var(--text-dim); letter-spacing: 0.03em;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .reset-link {
+    background: transparent; border: none; color: var(--text-dim);
+    font-family: inherit; font-size: 10.5px; letter-spacing: 0.04em;
+    text-decoration: underline; cursor: pointer; padding: 2px;
+  }
+  .reset-link:hover { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="frame">
+  <div class="top-bar">
+    <span>PART 107 · LESSON 3 WEATHER</span>
+    <span id="topBarRight">TOPIC 1 / 5</span>
+  </div>
+
+  <div class="tab-strip" id="tabStrip"></div>
+
+  <!-- INTRO -->
+  <div class="center" id="introScreen">
+    <h1>Lesson 3: Aviation Weather</h1>
+    <p class="subtext">Time: 2 hours · 5 topics, then a 10-question knowledge check. Every 📖 tag opens the reference text right here — no need to leave the page. Use the tabs above to jump to any topic.</p>
+    <button class="primary-button" id="beginBtn">BEGIN TOPIC 1</button>
+  </div>
+
+  <!-- TOPIC READING VIEW -->
+  <div class="topic-wrap" id="topicWrap">
+    <div class="topic-head">
+      <span class="topic-num" id="topicNum">TOPIC 1 / 5</span>
+      <span class="topic-time" id="topicTime"></span>
+    </div>
+    <div class="topic-title" id="topicTitle"></div>
+    <div class="topic-body" id="topicBody"></div>
+    <div class="nav-row">
+      <button class="ghost-button" id="prevBtn">← PREV</button>
+      <div class="dot-row" id="dotRow"></div>
+      <button class="ghost-button" id="nextBtn">NEXT →</button>
+    </div>
+  </div>
+
+  <!-- QUIZ INTRO -->
+  <div class="center" id="quizIntro" style="display:none;">
+    <h1>Knowledge Check</h1>
+    <p class="subtext">10 questions covering everything in Lesson 3 — METAR/TAF decoding, weather sources, and hazardous weather phenomena. Every answer — right or wrong — links to a 📖 tag with reference text, so you can confirm it on the spot. 70% (7/10) matches the FAA's real passing threshold.</p>
+    <button class="primary-button" id="startQuizBtn">START KNOWLEDGE CHECK</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="quiz-wrap" id="quizScreen">
+    <div class="gauge-track"><div class="gauge-fill" id="gaugeFill"></div></div>
+    <div class="gauge-ticks" id="gaugeTicks"></div>
+    <div class="status-row">
+      <span>SCORE <b id="scoreDisplay">0</b> / <span id="totalDisplay">10</span></span>
+      <span id="itemDisplay">ITEM 01</span>
+    </div>
+    <div class="card">
+      <div class="q-label"><span id="qLabel">QUESTION 1</span></div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="optionsWrap"></div>
+      <div class="correct-banner" id="correctBanner" style="display:none;">
+        ✓ CORRECT
+        <div class="chip-row" id="correctChipRow"></div>
+        <button class="next-button" id="nextCorrectBtn">NEXT QUESTION →</button>
+      </div>
+      <div class="incorrect-panel" id="incorrectPanel">
+        <div class="incorrect-header">✕ INCORRECT</div>
+        <div class="incorrect-body">
+          <b>Correct answer:</b> <span id="correctAnswerText"></span>
+          <p id="explainText"></p>
+          <div class="chip-row" id="incorrectChipRow"></div>
+        </div>
+        <button class="next-button" id="nextQBtn">NEXT QUESTION →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="center end-wrap" id="endScreen">
+    <div class="result-dial" id="resultDial">
+      <span class="result-pct" id="resultPct">0%</span>
+      <span class="result-sub" id="resultSub">0 / 10 correct</span>
+    </div>
+    <h1 id="endHeading">Strong Run</h1>
+    <p class="subtext" id="endSubtext"></p>
+    <button class="ghost-button" id="reviewTopicsBtn">REVIEW TOPICS</button>
+    <button class="primary-button" id="restartQuizBtn" style="margin-top:12px;">RETAKE KNOWLEDGE CHECK</button>
+    <div class="sync-note">
+      <span id="progressSavedNote"></span>
+      <button class="reset-link" id="resetProgressBtn" type="button">RESET SAVED RESULT</button>
+    </div>
+  </div>
+</div>
+
+<!-- REFERENCE TEXT MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-head-title" id="modalTitle">14 CFR §107.51</span>
+      <button class="modal-close" id="modalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot">Text of the current 14 CFR as codified in the eCFR. Not the official published edition — see ecfr.gov for that.</div>
+  </div>
+</div>
+
+<script src="progress.js"></script>
+<script>
+// ---------------------------------------------------------------------------
+// Reference text library — keyed by section/topic. Shown in the in-page
+// modal whenever a 📖 chip is clicked, so the reader never has to leave the site.
+// Keys starting with a digit are codified 14 CFR sections; all other keys are
+// FAA guidance/reference material (AIM, Weather Handbook) and are labeled as such.
+// ---------------------------------------------------------------------------
+const REGTEXT = {
+  "107.51": { name: "§ 107.51 — Operating limitations for small unmanned aircraft", text: [
+    "(a) Groundspeed may not exceed 87 knots (100 mph).",
+    "(b) Altitude cannot be higher than 400 feet AGL, unless the aircraft is flown within a 400-foot radius of a structure and does not fly higher than 400 feet above that structure's immediate uppermost limit.",
+    "(c) Minimum flight visibility, observed from the control station, must be no less than 3 statute miles — the average slant distance at which prominent unlighted objects may be seen by day and lighted objects by night.",
+    "(d) Minimum distance from clouds: 500 feet below the cloud, and 2,000 feet horizontally from the cloud."
+  ]},
+  "AIM 7-1": { name: "AIM Chapter 7, Section 1 — Meteorology: Sources of Weather Information", text: [
+    "The National Weather Service's Aviation Weather Center (aviationweather.gov) is the primary source of aviation weather products, including METARs, TAFs, area forecasts, prognostic charts, AIRMETs, and SIGMETs.",
+    "Pilots may also obtain a standard weather briefing from Leidos Flight Service by phone (1-800-WX-BRIEF) or online (1800wxbrief.com). A standard briefing includes current conditions, applicable forecasts, and any advisories relevant to the planned area of operation.",
+    "This is FAA/NWS guidance material describing where to obtain weather products — it is not a codified regulation."
+  ]},
+  "FAA Weather Handbook": { name: "FAA Aviation Weather Handbook (FAA-H-8083-28) — METAR and TAF Coding", text: [
+    "A METAR is a routine, hourly (or special, as-needed) surface observation report at an airport, coded in a standardized international format covering wind, visibility, weather phenomena, sky condition, temperature/dew point, and altimeter setting.",
+    "A TAF is a scheduled forecast for conditions at an airport over a 24 to 30 hour period, issued four times daily and amended as conditions warrant. TAFs use change indicators — FM (from, a rapid significant change), BECMG (becoming, a gradual change over a time range), TEMPO (temporary fluctuations lasting under an hour at a time), and PROB30/PROB40 (probability of a forecast condition, usually thunderstorms) — to describe how conditions are expected to evolve across the valid period.",
+    "Sky cover is reported in eighths of the sky: FEW (1–2/8), SCT (3–4/8), BKN (5–7/8), and OVC (8/8), with the height given in hundreds of feet AGL. Visibility is reported in statute miles; P6SM means visibility is greater than 6 statute miles. Weather phenomena use standard two-letter codes (RA = rain, SN = snow, BR = mist, FG = fog, TS = thunderstorm) with intensity prefixes: '-' for light, no prefix for moderate, '+' for heavy.",
+    "This is FAA guidance material describing the METAR/TAF coding standard — it is not a codified regulation."
+  ]},
+  "AIM 7-1-11": { name: "AIM Chapter 7, Section 1 — Wind Shear and Microbursts", text: [
+    "A microburst is a small-scale, intense downdraft that, upon reaching the surface, spreads outward in all directions, producing a rapid and severe change in wind speed and direction over a very short distance and time. Microbursts are frequently associated with convective activity (thunderstorms) and are hazardous to all aircraft, including small UAS, due to the abrupt and extreme wind shifts they produce.",
+    "Wind shear is any sudden change in wind speed and/or direction over a short distance, occurring horizontally or vertically. It is commonly found near thunderstorms, frontal boundaries, and low-level temperature inversions.",
+    "This is FAA guidance material describing hazardous weather phenomena — it is not a codified regulation."
+  ]},
+};
+
+function normalizeKey(raw) {
+  return raw.replace(/^\s*(14 CFR\s*)?§?\s*/i, '').replace(/\(.*$/, '').trim();
+}
+
+function regChip(ref) {
+  // ref can contain multiple citations separated by ; or ,
+  const parts = ref.split(/;|(?<=\d)\s*,\s*(?=§)/).map(s => s.trim()).filter(Boolean);
+  return parts.map(p => {
+    const key = normalizeKey(p);
+    const label = p.replace(/^14 CFR\s*/i, '');
+    if (REGTEXT[key]) {
+      return `<button class="reg-chip" onclick="openReg('${key}')">${label}</button>`;
+    }
+    return `<span class="reg-chip" style="cursor:default;opacity:0.6;">${label}</span>`;
+  }).join('');
+}
+
+function openReg(key) {
+  const entry = REGTEXT[key];
+  if (!entry) return;
+  const isCfr = /^\d/.test(key);
+  document.getElementById('modalTitle').textContent = isCfr ? '14 CFR §' + key : key;
+  document.getElementById('modalBody').innerHTML =
+    `<span class="reg-name">${entry.name}</span>` + entry.text.map(p => `<p>${p}</p>`).join('');
+  document.getElementById('modalFoot').textContent = isCfr
+    ? "Text of the current 14 CFR as codified in the eCFR. Not the official published edition — see ecfr.gov for that."
+    : "FAA guidance material (Aeronautical Information Manual / Weather Handbook), not a codified regulation. See faa.gov for the official current edition.";
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeReg() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+// ---------------------------------------------------------------------------
+// Topic content — Lesson 3: Aviation Weather
+// ---------------------------------------------------------------------------
+const TOPICS = [
+  {
+    title: "Weather Information Sources",
+    time: "≈20 min",
+    body: `
+      <p>Before decoding any report, know where official aviation weather comes from.</p>
+      <h4>Aviation Weather Center</h4>
+      <p><b>aviationweather.gov</b> is the National Weather Service's primary source for aviation weather products — METARs, TAFs, prog charts, AIRMETs/SIGMETs, and area forecasts.</p>
+      <h4>FAA Weather Briefings</h4>
+      <p>Available through <b>Leidos Flight Service</b> (1-800-WX-BRIEF or 1800wxbrief.com). A standard briefing includes current conditions, forecasts, and any advisories relevant to a route or area.</p>
+      <h4>UAS-Specific Apps</h4>
+      <p>Apps like B4UFLY pull in relevant airspace and weather-adjacent data, though the underlying weather products still come from the sources above.</p>
+      <p>For the exam: know that METARs and TAFs are the two core text products, and both use a shared, internationally standardized coded format.</p>
+      <div class="read-block">
+        <div class="read-label">Suggested read</div>
+        <div class="chip-row">${regChip("AIM 7-1")}</div>
+      </div>
+    `
+  },
+  {
+    title: "Reading METARs",
+    time: "≈40 min",
+    body: `
+      <p>A <b>METAR</b> (Meteorological Aerodrome Report) is an hourly (or special, as-needed) snapshot of actual conditions at an airport, in a compact coded format.</p>
+      <h4>Sample METAR</h4>
+      <pre>METAR KRDU 281851Z 04008KT 10SM FEW250 24/12 A3012 RMK AO2 SLP198</pre>
+      <table>
+        <tr><th>Field</th><th>Meaning</th></tr>
+        <tr><td><code>METAR</code></td><td>Report type (routine); SPECI = special/unscheduled</td></tr>
+        <tr><td><code>KRDU</code></td><td>ICAO station identifier (Raleigh-Durham)</td></tr>
+        <tr><td><code>281851Z</code></td><td>Day of month (28th), time in Zulu/UTC: 1851Z</td></tr>
+        <tr><td><code>04008KT</code></td><td>Wind 040° true at 8 knots</td></tr>
+        <tr><td><code>10SM</code></td><td>Visibility: 10 statute miles</td></tr>
+        <tr><td><code>FEW250</code></td><td>Few clouds at 25,000 ft AGL</td></tr>
+        <tr><td><code>24/12</code></td><td>Temperature 24°C / dew point 12°C</td></tr>
+        <tr><td><code>A3012</code></td><td>Altimeter setting: 30.12 inHg</td></tr>
+        <tr><td><code>RMK AO2 SLP198</code></td><td>Remarks: automated station w/ precip sensor, sea-level pressure 1019.8 hPa</td></tr>
+      </table>
+      <h4>Sky Condition Codes</h4>
+      <table>
+        <tr><th>Code</th><th>Meaning</th><th>Coverage</th></tr>
+        <tr><td>SKC / CLR</td><td>Sky clear</td><td>0/8</td></tr>
+        <tr><td>FEW</td><td>Few clouds</td><td>1–2/8</td></tr>
+        <tr><td>SCT</td><td>Scattered</td><td>3–4/8</td></tr>
+        <tr><td>BKN</td><td>Broken</td><td>5–7/8</td></tr>
+        <tr><td>OVC</td><td>Overcast</td><td>8/8</td></tr>
+      </table>
+      <h4>Wind &amp; Weather Phenomena</h4>
+      <ul>
+        <li>Wind direction is always in degrees <b>true</b>; <code>00000KT</code> = calm; <code>04008G20KT</code> = 8 kt sustained, gusting to 20; <code>VRB</code> = variable direction</li>
+        <li>Common phenomena codes: RA (rain), SN (snow), BR (mist), FG (fog), TS (thunderstorm), HZ (haze)</li>
+        <li>Intensity prefixes: <code>-</code> light, none = moderate, <code>+</code> heavy</li>
+      </ul>
+      <div class="read-block">
+        <div class="read-label">Suggested read</div>
+        <div class="chip-row">${regChip("FAA Weather Handbook")}${regChip("§107.51")}</div>
+      </div>
+    `
+  },
+  {
+    title: "Reading TAFs",
+    time: "≈30 min",
+    body: `
+      <p>A <b>TAF</b> (Terminal Aerodrome Forecast) predicts conditions at an airport for a 24–30 hour period, issued four times daily and amended as needed.</p>
+      <h4>Sample TAF</h4>
+      <pre>TAF KRDU 281740Z 2818/2924 05010KT 8SM BKN020
+  FM282000 07012G18KT P6SM SCT030
+  FM290200 VRB03KT 6SM BR OVC008</pre>
+      <h4>Structure</h4>
+      <ul>
+        <li><b>Header:</b> station, issuance time, valid period (<code>2818/2924</code> = valid from the 28th at 1800Z to the 29th at 2400Z)</li>
+        <li><b>Initial conditions line:</b> wind, visibility, sky condition expected at the start of the valid period</li>
+        <li><b><code>FM</code> (from) groups:</b> mark a significant, rapid change starting at the stated time — each stands alone describing the new prevailing conditions</li>
+        <li><b><code>P6SM</code>:</b> visibility greater than 6 statute miles</li>
+        <li>Other change groups: <code>TEMPO</code> (temporary fluctuations under an hour at a time), <code>BECMG</code> (gradual change over a time range), <code>PROB30/PROB40</code> (probability of a forecast condition, usually thunderstorms)</li>
+      </ul>
+      <h4>Why This Matters for UAS Ops</h4>
+      <p>TAFs let a remote pilot check forecast conditions across a whole flight window rather than just the current hour. Watch ceiling/visibility trends into <code>FM</code>, <code>BECMG</code>, and <code>TEMPO</code> groups — a flight planned for the current METAR's clear skies can still fly into a forecast deterioration later in the day.</p>
+      <div class="read-block">
+        <div class="read-label">Suggested read</div>
+        <div class="chip-row">${regChip("FAA Weather Handbook")}${regChip("AIM 7-1")}</div>
+      </div>
+    `
+  },
+  {
+    title: "Wind, Visibility & Density Altitude Basics",
+    time: "≈20 min",
+    body: `
+      <h4>Density Altitude</h4>
+      <p>Pressure altitude corrected for non-standard temperature. Higher density altitude (hot, humid, high-elevation conditions) means "thinner" effective air — reducing propeller/rotor efficiency and lift, which matters directly for small UAS performance (covered in depth in Lesson 4).</p>
+      <h4>Wind</h4>
+      <p>Affects both control authority and battery consumption — a headwind on the return leg of a flight can consume significantly more battery than the outbound leg.</p>
+      <h4>Visibility Minimums</h4>
+      <p>Part 107 requires at least 3 statute miles of flight visibility, validated against the current METAR (or personal observation) before flight — not the forecast alone.</p>
+      <div class="read-block">
+        <div class="read-label">Suggested read</div>
+        <div class="chip-row">${regChip("§107.51")}${regChip("AIM 7-1")}</div>
+      </div>
+    `
+  },
+  {
+    title: "Microbursts, Thermals & Wind Shear",
+    time: "≈10 min",
+    body: `
+      <p>Mostly background from powered-flight meteorology, but useful for recognizing hazardous conditions a remote pilot should avoid.</p>
+      <h4>Microburst</h4>
+      <p>A small, localized column of sinking air that spreads out violently upon reaching the ground, producing sudden and severe wind shifts. Often associated with thunderstorms. Extremely hazardous to any aircraft, including small UAS, if operating nearby.</p>
+      <h4>Thermals</h4>
+      <p>Columns of rising warm air, common on sunny days over dark or paved surfaces. Can cause unexpected altitude gain or instability in small, light aircraft.</p>
+      <h4>Wind Shear</h4>
+      <p>A sudden change in wind speed and/or direction over a short distance, horizontally or vertically. Common near thunderstorms, frontal boundaries, and low-level temperature inversions.</p>
+      <div class="read-block">
+        <div class="read-label">Suggested read</div>
+        <div class="chip-row">${regChip("AIM 7-1-11")}</div>
+      </div>
+    `
+  }
+];
+
+// ---------------------------------------------------------------------------
+// Knowledge check questions — every answer links to reference text
+// ---------------------------------------------------------------------------
+const QUESTIONS = [
+  { q: "In the METAR wind group 04008G20KT, what does the 'G20' indicate?", options: ["Gusting to 20 knots", "Wind direction of 20°", "20 statute miles visibility", "A 20-minute observation delay"], correct: 0, explain: "G20 means the wind is gusting to 20 knots, on top of the sustained speed given earlier in the group.", ref: "FAA Weather Handbook" },
+  { q: "What does BKN020 mean in a sky condition report?", options: ["Broken clouds at 20,000 ft AGL", "Broken clouds at 2,000 ft AGL", "20% cloud coverage", "A ceiling of 20 statute miles"], correct: 1, explain: "BKN means broken (5–7/8 coverage), and the height is given in hundreds of feet AGL, so 020 = 2,000 ft AGL.", ref: "FAA Weather Handbook" },
+  { q: "What's the key difference between a METAR and a TAF?", options: ["They cover the same thing but in different languages", "A TAF is only used at night", "A METAR reports actual current conditions (hourly/as-needed); a TAF is a forecast covering 24–30 hours", "A METAR only applies to Class B airports"], correct: 2, explain: "METARs are observed, current-conditions reports; TAFs are forecasts covering a 24–30 hour valid period.", ref: "FAA Weather Handbook" },
+  { q: "In a TAF, what does an FM group indicate?", options: ["The forecast is now final", "The report was filed from a mobile station", "A gradual change over several hours", "A significant, rapid change in conditions starting at the stated time"], correct: 3, explain: "FM (from) marks a rapid, significant change — a gradual change instead uses BECMG.", ref: "FAA Weather Handbook" },
+  { q: "What does P6SM mean in a TAF?", options: ["Visibility greater than 6 statute miles", "Precipitation expected within 6 hours", "Pressure at 6 millibars above standard", "Position 6 on the sequence of reports"], correct: 0, explain: "P6SM is the TAF-specific way of expressing visibility greater than 6 statute miles.", ref: "FAA Weather Handbook" },
+  { q: "In a METAR, what do the two values in a field like 24/12 represent?", options: ["Wind direction and speed", "Temperature (24°C) and dew point (12°C)", "Ceiling and visibility", "Altimeter setting components"], correct: 1, explain: "The temperature/dew point group is always temperature first, dew point second, in Celsius.", ref: "FAA Weather Handbook" },
+  { q: "What is the standard reporting unit for visibility in U.S. METARs and TAFs?", options: ["Nautical miles", "Kilometers", "Statute miles", "Meters"], correct: 2, explain: "U.S. aviation weather reports use statute miles for visibility.", ref: "FAA Weather Handbook" },
+  { q: "What does the intensity prefix '-' mean when attached to a weather phenomenon code (e.g., -RA)?", options: ["Heavy", "Moderate", "Ending soon", "Light"], correct: 3, explain: "A '-' prefix indicates light intensity; no prefix means moderate, and '+' means heavy.", ref: "FAA Weather Handbook" },
+  { q: "What is a microburst, and why is it hazardous to small UAS?", options: ["A localized, intense downdraft that spreads out violently at the surface, causing sudden severe wind shifts", "A gentle upward breeze that increases lift smoothly", "A type of cloud with no wind effects", "A slow-moving high-pressure system"], correct: 0, explain: "Microbursts produce abrupt, severe wind shifts at the surface and are hazardous to any aircraft nearby, including small UAS.", ref: "AIM 7-1-11" },
+  { q: "Where can a remote pilot obtain an official FAA aviation weather briefing?", options: ["Only by calling the nearest control tower", "Leidos Flight Service, by phone (1-800-WX-BRIEF) or online (1800wxbrief.com)", "Only through a paid third-party subscription", "The FCC's public weather line"], correct: 1, explain: "Leidos Flight Service provides standard FAA weather briefings by phone or online.", ref: "AIM 7-1" }
+];
+
+// ---------------------------------------------------------------------------
+// State & navigation
+// ---------------------------------------------------------------------------
+let topicIndex = 0;
+let qIndex = 0;
+let score = 0;
+let selected = null;
+const visitedTopics = new Set();
+
+// Unique id this lesson's knowledge check is saved under — read back by
+// index.html to show pass/fail status on the Mission Hub.
+const PROGRESS_ITEM_ID = 'Lesson-3-Aviation-Weather-test';
+
+let tabStrip, introScreen, topicWrap, quizIntro, quizScreen, endScreen, topBarRight, gaugeTicks, dotRow;
+
+function init() {
+  tabStrip = document.getElementById('tabStrip');
+  introScreen = document.getElementById('introScreen');
+  topicWrap = document.getElementById('topicWrap');
+  quizIntro = document.getElementById('quizIntro');
+  quizScreen = document.getElementById('quizScreen');
+  endScreen = document.getElementById('endScreen');
+  topBarRight = document.getElementById('topBarRight');
+  gaugeTicks = document.getElementById('gaugeTicks');
+  dotRow = document.getElementById('dotRow');
+
+  TOPICS.forEach((t, i) => {
+    const pill = document.createElement('button');
+    pill.className = 'tab-pill';
+    pill.textContent = (i + 1) + '. ' + t.title;
+    pill.addEventListener('click', () => goToTopic(i));
+    tabStrip.appendChild(pill);
+  });
+  const quizPill = document.createElement('button');
+  quizPill.className = 'tab-pill quiz-pill';
+  quizPill.textContent = 'Knowledge Check';
+  quizPill.addEventListener('click', showQuizIntro);
+  tabStrip.appendChild(quizPill);
+
+  TOPICS.forEach(() => {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    dotRow.appendChild(d);
+  });
+
+  for (let i = 0; i < QUESTIONS.length; i++) {
+    const d = document.createElement('div');
+    d.className = 'tick';
+    gaugeTicks.appendChild(d);
+  }
+  document.getElementById('totalDisplay').textContent = QUESTIONS.length;
+
+  document.getElementById('beginBtn').addEventListener('click', () => goToTopic(0));
+  document.getElementById('prevBtn').addEventListener('click', () => goToTopic(topicIndex - 1));
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if (topicIndex + 1 >= TOPICS.length) { showQuizIntro(); } else { goToTopic(topicIndex + 1); }
+  });
+  document.getElementById('startQuizBtn').addEventListener('click', beginQuiz);
+  document.getElementById('restartQuizBtn').addEventListener('click', beginQuiz);
+  document.getElementById('nextQBtn').addEventListener('click', advanceQuestion);
+  document.getElementById('nextCorrectBtn').addEventListener('click', advanceQuestion);
+  document.getElementById('reviewTopicsBtn').addEventListener('click', () => goToTopic(0));
+  document.getElementById('modalCloseBtn').addEventListener('click', closeReg);
+  document.getElementById('modalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'modalOverlay') closeReg();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeReg(); });
+
+  document.getElementById('resetProgressBtn').addEventListener('click', () => {
+    if (confirm("Reset your saved result for this lesson's knowledge check?")) {
+      Part107Progress.reset(PROGRESS_ITEM_ID);
+      document.getElementById('progressSavedNote').textContent = 'Saved result cleared.';
+    }
+  });
+
+  updateTabs();
+}
+
+function hideAllScreens() {
+  introScreen.style.display = 'none';
+  topicWrap.style.display = 'none';
+  quizIntro.style.display = 'none';
+  quizScreen.style.display = 'none';
+  endScreen.style.display = 'none';
+}
+
+function updateTabs() {
+  const pills = tabStrip.querySelectorAll('.tab-pill');
+  pills.forEach((p, i) => {
+    p.classList.remove('active');
+    if (i < TOPICS.length) p.classList.toggle('done', visitedTopics.has(i) && i !== topicIndex);
+  });
+}
+
+function goToTopic(i) {
+  if (i < 0 || i >= TOPICS.length) return;
+  topicIndex = i;
+  visitedTopics.add(i);
+  hideAllScreens();
+  topicWrap.style.display = 'block';
+
+  const t = TOPICS[i];
+  document.getElementById('topicNum').textContent = `TOPIC ${i + 1} / ${TOPICS.length}`;
+  document.getElementById('topicTime').textContent = t.time;
+  document.getElementById('topicTitle').textContent = t.title;
+  document.getElementById('topicBody').innerHTML = t.body;
+  document.getElementById('topicBody').scrollTop = 0;
+  document.getElementById('prevBtn').disabled = (i === 0);
+  document.getElementById('nextBtn').textContent = (i === TOPICS.length - 1) ? 'KNOWLEDGE CHECK →' : 'NEXT →';
+  topBarRight.textContent = `TOPIC ${i + 1} / ${TOPICS.length}`;
+
+  const dots = dotRow.children;
+  for (let d = 0; d < dots.length; d++) {
+    dots[d].className = 'dot' + (d === i ? ' active' : (visitedTopics.has(d) ? ' done' : ''));
+  }
+
+  const pills = tabStrip.querySelectorAll('.tab-pill');
+  updateTabs();
+  pills[i].classList.add('active');
+}
+
+function showQuizIntro() {
+  hideAllScreens();
+  quizIntro.style.display = 'flex';
+  topBarRight.textContent = 'KNOWLEDGE CHECK';
+  const pills = tabStrip.querySelectorAll('.tab-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  pills[pills.length - 1].classList.add('active');
+}
+
+function beginQuiz() {
+  qIndex = 0; score = 0; selected = null;
+  hideAllScreens();
+  quizScreen.style.display = 'block';
+  topBarRight.textContent = `Q 1 / ${QUESTIONS.length}`;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  selected = null;
+  const current = QUESTIONS[qIndex];
+  document.getElementById('qLabel').textContent = `QUESTION ${qIndex + 1}`;
+  document.getElementById('qText').textContent = current.q;
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('itemDisplay').textContent = `ITEM ${String(qIndex + 1).padStart(2, '0')}`;
+  topBarRight.textContent = `Q ${qIndex + 1} / ${QUESTIONS.length}`;
+
+  const pct = (qIndex / QUESTIONS.length) * 100;
+  document.getElementById('gaugeFill').style.width = pct + '%';
+  const ticks = gaugeTicks.children;
+  for (let i = 0; i < ticks.length; i++) ticks[i].className = 'tick' + (i < qIndex ? ' filled' : '');
+
+  const optionsWrap = document.getElementById('optionsWrap');
+  optionsWrap.innerHTML = '';
+  current.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-button';
+    btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => choose(i));
+    optionsWrap.appendChild(btn);
+  });
+
+  document.getElementById('correctBanner').style.display = 'none';
+  document.getElementById('incorrectPanel').style.display = 'none';
+}
+
+function choose(i) {
+  if (selected !== null) return;
+  selected = i;
+  const current = QUESTIONS[qIndex];
+  const buttons = document.querySelectorAll('#optionsWrap .option-button');
+  buttons.forEach(b => b.disabled = true);
+
+  const isCorrect = i === current.correct;
+
+  if (isCorrect) {
+    score++;
+    document.getElementById('scoreDisplay').textContent = score;
+    buttons[i].classList.add('correct-choice');
+    document.getElementById('correctChipRow').innerHTML = regChip(current.ref);
+    document.getElementById('correctBanner').style.display = 'block';
+  } else {
+    buttons[i].classList.add('wrong-choice');
+    buttons[current.correct].classList.add('correct-choice');
+    document.getElementById('correctAnswerText').textContent = current.options[current.correct];
+    document.getElementById('explainText').textContent = current.explain;
+    document.getElementById('incorrectChipRow').innerHTML = regChip(current.ref);
+    document.getElementById('incorrectPanel').style.display = 'block';
+  }
+}
+
+function advanceQuestion() {
+  if (qIndex + 1 >= QUESTIONS.length) {
+    showEnd();
+  } else {
+    qIndex++;
+    renderQuestion();
+  }
+}
+
+function showEnd() {
+  hideAllScreens();
+  endScreen.style.display = 'flex';
+  topBarRight.textContent = 'DEBRIEF';
+
+  const pct = Math.round((score / QUESTIONS.length) * 100);
+  const passed = pct >= 70;
+
+  document.getElementById('resultPct').textContent = pct + '%';
+  document.getElementById('resultSub').textContent = `${score} / ${QUESTIONS.length} correct`;
+  document.getElementById('resultDial').style.borderColor = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('resultPct').style.color = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('endHeading').textContent = passed ? 'Strong Run' : 'Keep Studying';
+  document.getElementById('endSubtext').textContent = passed
+    ? 'You cleared 70%, matching the FAA passing threshold. Revisit any topic above to lock in the details before Lesson 4.'
+    : 'This run fell below the 70% benchmark used on the real FAA Part 107 test. Review the topics above — especially the ones tied to any missed question\'s reference — then retake the check.';
+  // Share this result with the Mission Hub (index.html). Every run overwrites
+  // the previous one, so the number shown there always reflects the latest attempt.
+  Part107Progress.recordResult(PROGRESS_ITEM_ID, {
+    score: score,
+    total: QUESTIONS.length,
+    passThreshold: 0.7
+  });
+  document.getElementById('progressSavedNote').textContent =
+    `Saved to Mission Hub — ${passed ? 'PASSED' : 'NOT PASSED'} (${score}/${QUESTIONS.length}).`;
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
