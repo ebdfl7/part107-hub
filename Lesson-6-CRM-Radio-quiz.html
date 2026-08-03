@@ -347,6 +347,18 @@
     max-width: 380px;
     line-height: 1.5;
   }
+
+  .sync-note {
+    margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border);
+    font-size: 10.5px; color: var(--text-dim); letter-spacing: 0.03em;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .reset-link {
+    background: transparent; border: none; color: var(--text-dim);
+    font-family: inherit; font-size: 10.5px; letter-spacing: 0.04em;
+    text-decoration: underline; cursor: pointer; padding: 2px;
+  }
+  .reset-link:hover { color: var(--red); }
 </style>
 </head>
 <body>
@@ -461,9 +473,14 @@
     </div>
 
     <button class="primary-button" id="restartBtn" style="margin-top: 20px;">RESTART QUIZ</button>
+    <div class="sync-note">
+      <span id="progressSavedNote"></span>
+      <button class="reset-link" id="resetProgressBtn" type="button">RESET SAVED RESULT</button>
+    </div>
   </div>
 </div>
 
+<script src="progress.js"></script>
 <script>
 // ---------------------------------------------------------------------------
 // Question bank — Part 107 Lesson 6: Crew Resource Management & Radio Comms
@@ -512,22 +529,26 @@ let selected = null;
 let missed = [];
 let sessionCatStats = {};
 
+// Unique id this quiz's results are saved under — read back by
+// index.html to show pass/fail status on the Mission Hub.
+const PROGRESS_ITEM_ID = 'Lesson-6-CRM-Radio-quiz';
+
 const STORAGE_KEY = 'part107_lesson6_stats_v1';
 
-async function loadLifetimeStats() {
+function loadLifetimeStats() {
   try {
-    const result = await window.storage.get(STORAGE_KEY, false);
-    return result ? JSON.parse(result.value) : {};
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
   } catch (e) {
     return {};
   }
 }
 
-async function saveLifetimeStats(stats) {
+function saveLifetimeStats(stats) {
   try {
-    await window.storage.set(STORAGE_KEY, JSON.stringify(stats), false);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
   } catch (e) {
-    // storage unavailable — stats just won't persist between sessions
+    // storage unavailable (private mode, quota, etc.) — stats just won't persist
   }
 }
 
@@ -579,9 +600,15 @@ function init() {
   document.getElementById('startBtn').addEventListener('click', beginTest);
   document.getElementById('restartBtn').addEventListener('click', beginTest);
   document.getElementById('nextBtn').addEventListener('click', advance);
-  document.getElementById('resetStatsBtn').addEventListener('click', async () => {
-    try { await window.storage.delete(STORAGE_KEY, false); } catch (e) {}
+  document.getElementById('resetStatsBtn').addEventListener('click', () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
     renderLifetimeBreakdown();
+  });
+  document.getElementById('resetProgressBtn').addEventListener('click', () => {
+    if (confirm("Reset your saved result for this lesson's quiz?")) {
+      Part107Progress.reset(PROGRESS_ITEM_ID);
+      document.getElementById('progressSavedNote').textContent = 'Saved result cleared.';
+    }
   });
   document.getElementById('refToggleBtn').addEventListener('click', () => {
     const panel = document.getElementById('refPanel');
@@ -736,6 +763,16 @@ function showEnd() {
 
   renderBreakdown(document.getElementById('sessionBreakdown'), sessionCatStats);
   renderLifetimeBreakdown();
+
+  // Share this result with the Mission Hub (index.html). Every run overwrites
+  // the previous one, so the number shown there always reflects the latest attempt.
+  Part107Progress.recordResult(PROGRESS_ITEM_ID, {
+    score: score,
+    total: TOTAL,
+    passThreshold: 0.7
+  });
+  document.getElementById('progressSavedNote').textContent =
+    `Saved to Mission Hub — ${passed ? 'PASSED' : 'NOT PASSED'} (${score}/${TOTAL}).`;
 }
 </script>
 </body>
