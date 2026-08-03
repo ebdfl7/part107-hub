@@ -284,6 +284,18 @@
     font-family: inherit;
   }
   .reset-stats-button:hover { color: var(--red); border-color: var(--red); }
+
+  .sync-note {
+    margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border);
+    font-size: 10.5px; color: var(--text-dim); letter-spacing: 0.03em;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .reset-link {
+    background: transparent; border: none; color: var(--text-dim);
+    font-family: inherit; font-size: 10.5px; letter-spacing: 0.04em;
+    text-decoration: underline; cursor: pointer; padding: 2px;
+  }
+  .reset-link:hover { color: var(--red); }
 </style>
 </head>
 <body>
@@ -364,9 +376,14 @@
     </div>
 
     <button class="primary-button" id="restartBtn" style="margin-top: 20px;">RESTART TEST</button>
+    <div class="sync-note">
+      <span id="progressSavedNote"></span>
+      <button class="reset-link" id="resetProgressBtn" type="button">RESET SAVED RESULT</button>
+    </div>
   </div>
 </div>
 
+<script src="progress.js"></script>
 <script>
 // ---------------------------------------------------------------------------
 // Question bank — 60 original questions covering the FAA Part 107 (sUAS)
@@ -465,6 +482,10 @@ let selected = null;
 let missed = [];
 let sessionCatStats = {}; // { "Regulations": { correct: 0, total: 0 }, ... }
 
+// Unique id this test's results are saved under — read back by index.html
+// to show pass/fail status on the Mission Hub.
+const PROGRESS_ITEM_ID = 'practice-test-1';
+
 const STORAGE_KEY = 'part107_lifetime_stats_v1';
 
 function loadLifetimeStats() {
@@ -537,6 +558,12 @@ function init() {
   document.getElementById('resetStatsBtn').addEventListener('click', () => {
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
     renderLifetimeBreakdown();
+  });
+  document.getElementById('resetProgressBtn').addEventListener('click', () => {
+    if (confirm('Reset your saved result for this practice test?')) {
+      Part107Progress.reset(PROGRESS_ITEM_ID);
+      document.getElementById('progressSavedNote').textContent = 'Saved result cleared.';
+    }
   });
 }
 
@@ -680,6 +707,16 @@ function showEnd() {
 
   renderBreakdown(document.getElementById('sessionBreakdown'), sessionCatStats);
   renderLifetimeBreakdown();
+
+  // Share this result with the Mission Hub (index.html). Every run overwrites
+  // the previous one, so the number shown there always reflects the latest attempt.
+  Part107Progress.recordResult(PROGRESS_ITEM_ID, {
+    score: score,
+    total: TOTAL,
+    passThreshold: 0.7
+  });
+  document.getElementById('progressSavedNote').textContent =
+    `Saved to Mission Hub — ${passed ? 'PASSED' : 'NOT PASSED'} (${score}/${TOTAL}).`;
 }
 </script>
 </body>

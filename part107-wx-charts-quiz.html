@@ -133,6 +133,18 @@
   @media (prefers-reduced-motion: reduce){
     #progress-bar{transition:none;}
   }
+
+  .sync-note{
+    margin-top:18px; padding-top:14px; border-top:1px dashed var(--tan-line);
+    font-family:'IBM Plex Mono',monospace; font-size:.68rem; color:#7a7259;
+    letter-spacing:.03em; display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .reset-link{
+    background:transparent; border:none; color:#7a7259;
+    font-family:'IBM Plex Mono',monospace; font-size:.68rem; letter-spacing:.03em;
+    text-decoration:underline; cursor:pointer; padding:2px;
+  }
+  .reset-link:hover{ color:var(--magenta); }
 </style>
 </head>
 <body>
@@ -168,7 +180,12 @@
   <footer>FIELD LABORATORY SEVEN · STUDY TOOL, NOT AN OFFICIAL FAA PRODUCT · VERIFY AGAINST CURRENT AIM / 14 CFR PART 107</footer>
 </div>
 
+<script src="progress.js"></script>
 <script>
+// Unique id this drill's results are saved under — read back by index.html
+// to show pass/fail status on the Mission Hub.
+const PROGRESS_ITEM_ID = 'wx-challenge';
+
 const QUESTIONS = [
 
 {
@@ -752,6 +769,10 @@ function showResults(){
       <div class="navrow" style="justify-content:center; margin-top:22px;">
         <button class="btn" id="retry-btn">Retake drill</button>
       </div>
+      <div class="sync-note">
+        <span id="progressSavedNote"></span>
+        <button class="reset-link" id="resetProgressBtn" type="button">RESET SAVED RESULT</button>
+      </div>
     </div>
   `;
 
@@ -760,6 +781,22 @@ function showResults(){
     quizArea.style.display = 'block';
     resultsArea.style.display = 'none';
     renderQuestion(0);
+  });
+
+  // Share this result with the Mission Hub (index.html). Every run overwrites
+  // the previous one, so the number shown there always reflects the latest attempt.
+  Part107Progress.recordResult(PROGRESS_ITEM_ID, {
+    score: score,
+    total: QUESTIONS.length,
+    passThreshold: 0.7
+  });
+  document.getElementById('progressSavedNote').textContent =
+    `Saved to Mission Hub — ${pass ? 'PASSED' : 'NOT PASSED'} (${score}/${QUESTIONS.length}).`;
+  document.getElementById('resetProgressBtn').addEventListener('click', () => {
+    if (confirm('Reset your saved result for the Weather & Charts Briefing Challenge?')) {
+      Part107Progress.reset(PROGRESS_ITEM_ID);
+      document.getElementById('progressSavedNote').textContent = 'Saved result cleared.';
+    }
   });
 }
 
