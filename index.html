@@ -147,6 +147,7 @@
     background: #171c22; color: var(--text-main); border: 1px solid var(--border);
     padding: 9px 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
     border-radius: 3px; cursor: pointer; font-family: inherit; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   }
   .mini-btn:hover { border-color: var(--amber); color: var(--amber-soft); }
 
@@ -296,8 +297,8 @@
     </div>
     <div class="btn-row">
       <a class="link-btn" href="part107-wx-charts-cheatsheet.html">Weather &amp; Charts Cheat Sheet</a>
-      <a class="link-btn" href="part107-wx-charts-quiz.html">Weather &amp; Charts Briefing Challenge Quiz</a>
-      <a class="link-btn" href="part107-practice-test-1.html">Simulated Test 1</a>
+      <a class="link-btn" href="part107-wx-charts-quiz.html">Weather &amp; Charts Briefing Challenge Quiz<span class="status-dot" id="dot-wx-challenge" title="Weather & Charts Briefing Challenge: not attempted"></span></a>
+      <a class="link-btn" href="part107-practice-test-1.html">Simulated Test 1<span class="status-dot" id="dot-practice-test-1" title="Simulated Test 1: not attempted"></span></a>
     </div>
   </div>
 
@@ -349,9 +350,9 @@
         <span class="lesson-name">${l.title}</span>
       </div>
       <div class="lesson-btns">
-        <a class="mini-btn lesson" href="${l.slug}-Interactive.html">LESSON</a>
+        <a class="mini-btn lesson" href="${l.slug}-Interactive.html">LESSON<span class="status-dot" id="dot-btn-${l.slug}-test"></span></a>
         <a class="mini-btn flash" href="${l.slug}-flashcards.html">FLASH CARDS</a>
-        <a class="mini-btn quiz" href="${l.slug}-quiz.html">QUIZ</a>
+        <a class="mini-btn quiz" href="${l.slug}-quiz.html">QUIZ<span class="status-dot" id="dot-btn-${l.slug}-quiz"></span></a>
       </div>
     `;
     listEl.appendChild(card);
@@ -401,6 +402,8 @@
       setStatusDot(`dot-${l.slug}-test`, data[`${l.slug}-test`], `Lesson ${l.n} knowledge check`);
       setStatusDot(`dot-${l.slug}-quiz`, data[`${l.slug}-quiz`], `Lesson ${l.n} quiz`);
     });
+    setStatusDot('dot-wx-challenge', data['wx-challenge'], 'Weather & Charts Briefing Challenge');
+    setStatusDot('dot-practice-test-1', data['practice-test-1'], 'Simulated Test 1');
   }
 
   refreshProgress();
