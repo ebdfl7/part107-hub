@@ -233,6 +233,14 @@
     text-decoration: underline; cursor: pointer; padding: 2px;
   }
   .reset-link:hover { color: var(--red); }
+
+  .top-bar-status { display: inline-flex; align-items: center; gap: 6px; }
+  .status-dot {
+    width: 9px; height: 9px; border-radius: 50%; background: #1c2127;
+    border: 1px solid var(--border); display: inline-block;
+  }
+  .status-dot.passed { background: var(--green); border-color: var(--green); }
+  .status-dot.failed { background: var(--amber); border-color: var(--amber); }
 </style>
 </head>
 <body>
@@ -240,7 +248,7 @@
 <div class="frame">
   <div class="top-bar">
     <span>PART 107 · LESSON 4 PERFORMANCE</span>
-    <span id="topBarRight">TOPIC 1 / 3</span>
+    <span class="top-bar-status"><span id="topBarRight">TOPIC 1 / 3</span><span class="status-dot" id="dot-self"></span></span>
   </div>
 
   <div class="tab-strip" id="tabStrip"></div>
@@ -505,6 +513,16 @@ const visitedTopics = new Set();
 // index.html to show pass/fail status on the Mission Hub.
 const PROGRESS_ITEM_ID = 'Lesson-4-Weather-Effects-test';
 
+function refreshSelfDot() {
+  const dot = document.getElementById('dot-self');
+  if (!dot) return;
+  const rec = Part107Progress.getItem(PROGRESS_ITEM_ID);
+  dot.className = 'status-dot' + (rec ? ' ' + rec.status : '');
+  dot.title = rec
+    ? `Knowledge check: ${rec.status === 'passed' ? 'Passed' : 'Not passed'} (${rec.score}/${rec.total})`
+    : 'Knowledge check: not attempted';
+}
+
 let tabStrip, introScreen, topicWrap, quizIntro, quizScreen, endScreen, topBarRight, gaugeTicks, dotRow;
 
 function init() {
@@ -566,6 +584,8 @@ function init() {
       document.getElementById('progressSavedNote').textContent = 'Saved result cleared.';
     }
   });
+  Part107Progress.onChange(refreshSelfDot);
+  refreshSelfDot();
 
   updateTabs();
 }
