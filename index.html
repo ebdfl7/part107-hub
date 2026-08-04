@@ -401,6 +401,8 @@
     LESSONS.forEach(l => {
       setStatusDot(`dot-${l.slug}-test`, data[`${l.slug}-test`], `Lesson ${l.n} knowledge check`);
       setStatusDot(`dot-${l.slug}-quiz`, data[`${l.slug}-quiz`], `Lesson ${l.n} quiz`);
+      setStatusDot(`dot-btn-${l.slug}-test`, data[`${l.slug}-test`], `Lesson ${l.n} knowledge check`);
+      setStatusDot(`dot-btn-${l.slug}-quiz`, data[`${l.slug}-quiz`], `Lesson ${l.n} quiz`);
     });
     setStatusDot('dot-wx-challenge', data['wx-challenge'], 'Weather & Charts Briefing Challenge');
     setStatusDot('dot-practice-test-1', data['practice-test-1'], 'Simulated Test 1');
