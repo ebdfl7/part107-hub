@@ -96,10 +96,35 @@
     text-align:center; margin-top:30px; font-family:'IBM Plex Mono',monospace;
     font-size:.68rem; color:var(--tan-line); opacity:.6;
   }
+
+  .back-nav {
+    display: flex;
+    align-items: center;
+    padding: 10px 0 14px;
+  }
+  .back-nav a {
+    color: var(--tan-line);
+    text-decoration: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .back-nav a:hover { color: var(--magenta); }
+  .back-nav svg { width: 11px; height: 11px; flex-shrink: 0; }
 </style>
 </head>
 <body>
 <div class="wrap">
+
+  <div class="back-nav">
+    <a href="index.html">
+      <svg viewBox="0 0 8 8" fill="none"><path d="M6 1L2 4l4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      MISSION HUB
+    </a>
+  </div>
 
   <header>
     <svg class="rose" viewBox="0 0 100 100">
