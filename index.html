@@ -252,10 +252,29 @@
     </div>
   </div>
 
-  <!-- Progress -->
+  <!-- AIRMET / SIGMET -->
   <div class="section">
     <div class="section-head">
       <span class="section-num">01</span>
+      <h2 class="section-title">AIRMETs / SIGMETs Near Station</h2>
+      <span class="section-rule"></span>
+    </div>
+
+    <div class="wx-card">
+      <div class="wx-meta" id="asStatus">loading…</div>
+      <div id="asList"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:12px;">
+      <a class="link-btn" href="https://www.aviationweather.gov/gairmet" target="_blank" rel="noopener">G-AIRMET MAP (full)</a>
+      <a class="link-btn" href="https://www.aviationweather.gov/sigmet" target="_blank" rel="noopener">SIGMET MAP (full)</a>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
       <h2 class="section-title">Training Progress</h2>
       <span class="section-rule"></span>
     </div>
@@ -278,7 +297,7 @@
   <!-- Lessons -->
   <div class="section">
     <div class="section-head">
-      <span class="section-num">02</span>
+      <span class="section-num">03</span>
       <h2 class="section-title">Lessons</h2>
       <span class="section-rule"></span>
     </div>
@@ -292,7 +311,7 @@
   <!-- Practice / resources -->
   <div class="section">
     <div class="section-head">
-      <span class="section-num">03</span>
+      <span class="section-num">04</span>
       <h2 class="section-title">Practice &amp; Review</h2>
       <span class="section-rule"></span>
     </div>
@@ -306,7 +325,7 @@
   <!-- External resources -->
   <div class="section">
     <div class="section-head">
-      <span class="section-num">04</span>
+      <span class="section-num">05</span>
       <h2 class="section-title">Official FAA References</h2>
       <span class="section-rule"></span>
     </div>
@@ -323,7 +342,7 @@
   <!-- Flight apps -->
   <div class="section">
     <div class="section-head">
-      <span class="section-num">05</span>
+      <span class="section-num">06</span>
       <h2 class="section-title">Flight Apps</h2>
       <span class="section-rule"></span>
     </div>
@@ -353,7 +372,7 @@
   <!-- Next Steps -->
   <div class="section">
     <div class="section-head">
-      <span class="section-num">06</span>
+      <span class="section-num">07</span>
       <h2 class="section-title">Next Steps: Get Certified</h2>
       <span class="section-rule"></span>
     </div>
@@ -517,6 +536,8 @@
   const wxMeta = document.getElementById('wxMeta');
   const skyvectorBtn = document.getElementById('skyvectorBtn');
   const metarTafBtn = document.getElementById('metarTafBtn');
+  const asStatus = document.getElementById('asStatus');
+  const asList = document.getElementById('asList');
 
   let currentStation = 'KHKY';
   let autoRefreshTimer = null;
@@ -843,6 +864,79 @@
     }
   }
 
+  // ---- AIRMET / SIGMET near station -----------------------------------
+  // Looks up the station's lat/lon, builds a bounding box around it, and
+  // pulls any AIRMETs/SIGMETs whose area intersects that box. The AWC
+  // airsigmet endpoint returns both product types together.
+  const AS_BOX_DEG = { lat: 3, lon: 4 }; // roughly a 200-ish nm pad at mid-latitudes
+
+  async function getStationLatLon(station) {
+    const url = `https://aviationweather.gov/api/data/stationinfo?ids=${station}&format=json`;
+    const text = await corsGet(url);
+    const data = JSON.parse(text);
+    const rec = Array.isArray(data) ? data[0] : data;
+    if (!rec) return null;
+    const lat = rec.lat ?? rec.latitude;
+    const lon = rec.lon ?? rec.longitude;
+    if (typeof lat !== 'number' || typeof lon !== 'number') return null;
+    return { lat, lon };
+  }
+
+  function fmtValidUntil(iso) {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (isNaN(d)) return null;
+    return d.toUTCString().replace('GMT', 'UTC');
+  }
+
+  function renderAirSigmets(items, station) {
+    asList.innerHTML = '';
+    if (!items.length) {
+      asStatus.textContent = `No AIRMETs/SIGMETs currently active within ~200 nm of ${station}.`;
+      return;
+    }
+    asStatus.textContent = `${items.length} active within ~200 nm of ${station}:`;
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'lesson-card';
+      const type = item.airSigmetType || item.type || 'ADVISORY';
+      const hazard = item.hazard || '';
+      const until = fmtValidUntil(item.validTimeTo);
+      const raw = item.rawText || item.rawAirSigmet || '';
+      card.innerHTML = `
+        <div class="lesson-top">
+          <span class="lesson-name">${type}${hazard ? ' — ' + hazard : ''}</span>
+        </div>
+        ${until ? `<p class="wx-meta" style="margin:2px 0 6px; font-size:11px;">Valid until ${until}</p>` : ''}
+        ${raw ? `<div class="wx-raw" style="font-size:11px; line-height:1.5;">${raw}</div>` : ''}
+      `;
+      asList.appendChild(card);
+    });
+  }
+
+  async function loadAirSigmets(station) {
+    asStatus.textContent = 'loading…';
+    asList.innerHTML = '';
+    try {
+      const loc = await getStationLatLon(station);
+      if (!loc) {
+        asStatus.textContent = `Could not locate station ${station} — showing full national list instead.`;
+        return false;
+      }
+      const lat0 = loc.lat - AS_BOX_DEG.lat, lat1 = loc.lat + AS_BOX_DEG.lat;
+      const lon0 = loc.lon - AS_BOX_DEG.lon, lon1 = loc.lon + AS_BOX_DEG.lon;
+      const url = `https://aviationweather.gov/api/data/airsigmet?format=json&bbox=${lat0},${lon0},${lat1},${lon1}`;
+      const text = await corsGet(url);
+      const items = JSON.parse(text);
+      renderAirSigmets(Array.isArray(items) ? items : [], station);
+      return true;
+    } catch (e) {
+      asStatus.textContent = 'Could not reach the weather service. Use the map links below.';
+      return false;
+    }
+  }
+  // ---------------------------------------------------------------------
+
   function fetchWx({ manual = true } = {}) {
     let station = stationInput.value.trim().toUpperCase();
     if (!station) station = 'KHKY';
@@ -865,8 +959,9 @@
     metarTafBtn.href = `https://aviationweather.gov/data/metar/?ids=${station}&hours=0&metar=1&taf=1`;
     skyvectorBtn.href = `https://skyvector.com/airport/${station}`;
 
-    // Fire both requests at once; each updates the page as soon as it lands,
-    // independently of the other.
+    // Fire all requests at once; each updates the page as soon as it lands,
+    // independently of the others.
+    loadAirSigmets(station);
     Promise.allSettled([loadMetar(station), loadTaf(station)]).then(results => {
       const anyOk = results.some(r => r.status === 'fulfilled' && r.value === true);
       if (anyOk) {
