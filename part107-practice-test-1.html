@@ -296,11 +296,35 @@
     text-decoration: underline; cursor: pointer; padding: 2px;
   }
   .reset-link:hover { color: var(--red); }
+  .back-nav {
+    display: flex;
+    align-items: center;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    background: #0d1013;
+  }
+  .back-nav a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .back-nav a:hover { color: var(--amber-soft); }
+  .back-nav svg { width: 11px; height: 11px; flex-shrink: 0; }
 </style>
 </head>
 <body>
 <div class="scanlines"></div>
 <div class="frame">
+  <div class="back-nav">
+    <a href="index.html">
+      <svg viewBox="0 0 8 8" fill="none"><path d="M6 1L2 4l4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      MISSION HUB
+    </a>
+  </div>
   <div class="top-bar">
     <span>PART 107 · KNOWLEDGE TEST SIM</span>
     <span id="topBarRight">READY</span>
