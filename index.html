@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Part 107 — Mission Hub</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Field Lab 7">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root {
+    --amber: #f2a71b;
+    --amber-soft: #ffcf6b;
+    --green: #3ddc97;
+    --red: #ff5c5c;
+    --bg-deep: #0d1013;
+    --bg-panel: #171c22;
+    --bg-card: #12161a;
+    --border: #2a3138;
+    --text-main: #dfe6ec;
+    --text-bright: #f4f7fa;
+    --text-dim: #7a8590;
+    --text-mid: #9aa5b0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at top, var(--bg-panel) 0%, var(--bg-deep) 70%);
+    color: var(--text-main);
+    font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+    min-height: 100vh;
+  }
+  body { display: flex; justify-content: center; padding: 24px 12px; }
+  .scanlines {
+    position: fixed; inset: 0; pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    z-index: 0;
+  }
+  .frame {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 760px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(13,16,19,0.6);
+    box-shadow: 0 0 0 1px rgba(242,167,27,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    height: fit-content;
+  }
+  .top-bar {
+    display: flex; justify-content: space-between;
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    font-size: 11px; letter-spacing: 0.08em; color: var(--text-dim);
+    background: #12161a;
+  }
+  .top-bar b { color: var(--amber); }
+
+  .hero {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  h1 {
+    font-size: 22px; font-weight: 600; margin: 0 0 8px; color: var(--text-bright);
+    letter-spacing: 0.01em; font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  }
+  .subtext { font-size: 13px; line-height: 1.6; color: var(--text-mid); max-width: 520px; margin: 0 auto; }
+
+  .section { padding: 22px 22px 6px; }
+  .section-head {
+    display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px;
+  }
+  .section-num { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; }
+  .section-title {
+    font-size: 15px; color: var(--text-bright); font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+    font-weight: 600; letter-spacing: 0.02em; margin: 0;
+  }
+  .section-title::after { content: ""; }
+  .section-rule { flex: 1; height: 1px; background: var(--border); }
+
+  /* METAR/TAF panel */
+  .wx-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+    padding: 16px 18px 18px; margin-bottom: 6px;
+  }
+  .wx-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .wx-controls label { font-size: 10.5px; letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase; }
+  .wx-input {
+    background: #171c22; border: 1px solid var(--border); color: var(--amber-soft);
+    font-family: inherit; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 8px 10px; border-radius: 3px; width: 90px; font-weight: 700;
+  }
+  .wx-input:focus { outline: none; border-color: var(--amber); }
+  .wx-go {
+    background: var(--amber); color: #171200; border: none; padding: 8px 16px;
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; border-radius: 3px;
+    cursor: pointer; font-family: inherit;
+  }
+  .wx-go:hover { background: var(--amber-soft); }
+  .wx-status { font-size: 10.5px; color: var(--text-dim); letter-spacing: 0.04em; margin-left: auto; }
+  .wx-status.ok { color: var(--green); }
+  .wx-status.err { color: var(--red); }
+  .wx-block { margin-bottom: 12px; }
+  .wx-block:last-child { margin-bottom: 0; }
+  .wx-label { font-size: 10px; letter-spacing: 0.1em; color: var(--amber); text-transform: uppercase; margin-bottom: 5px; }
+  .wx-raw {
+    font-size: 13px; line-height: 1.55; color: var(--text-main); word-break: break-word;
+    background: #0d1013; border: 1px solid var(--border); border-radius: 3px; padding: 10px 12px;
+    white-space: pre-wrap;
+  }
+  .wx-raw.dim { color: var(--text-dim); font-style: italic; }
+  .wx-decoded {
+    font-size: 12.5px; line-height: 1.6; color: var(--text-mid);
+    margin-top: 6px; padding: 8px 10px; border-left: 2px solid var(--amber);
+    background: rgba(242,167,27,0.04);
+  }
+  .wx-decoded.dim { color: var(--text-dim); font-style: italic; border-left-color: var(--border); background: none; padding-left: 8px; }
+  .wx-decoded.wx-hidden { display: none; }
+  .wx-meta { font-size: 10px; color: var(--text-dim); margin-top: 6px; letter-spacing: 0.02em; }
+
+  /* generic button rows */
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+  .link-btn {
+    background: transparent; color: var(--amber); border: 1px solid var(--amber);
+    padding: 9px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+    border-radius: 3px; cursor: pointer; font-family: inherit; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .link-btn:hover { background: rgba(242,167,27,0.1); }
+  .link-btn.solid { background: var(--amber); color: #171200; }
+  .link-btn.solid:hover { background: var(--amber-soft); }
+  .link-btn.subtle { color: var(--text-mid); border-color: var(--border); }
+  .link-btn.subtle:hover { color: var(--amber-soft); border-color: var(--amber); }
+
+  /* lesson cards */
+  .lesson-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+    padding: 14px 16px 16px; margin-bottom: 12px;
+  }
+  .lesson-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 10px; }
+  .lesson-num { font-size: 10.5px; color: var(--amber); letter-spacing: 0.1em; white-space: nowrap; }
+  .lesson-name { font-size: 13.5px; color: var(--text-bright); font-weight: 600; text-align: right; }
+  .lesson-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mini-btn {
+    flex: 1 1 0; min-width: 90px; text-align: center; white-space: nowrap;
+    background: #171c22; color: var(--text-main); border: 1px solid var(--border);
+    padding: 9px 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+    border-radius: 3px; cursor: pointer; font-family: inherit; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .mini-btn:hover { border-color: var(--amber); color: var(--amber-soft); }
+
+  .footer-note {
+    padding: 16px 22px 24px; font-size: 11px; color: var(--text-dim); line-height: 1.6;
+    border-top: 1px solid var(--border); margin-top: 8px;
+  }
+  .footer-note code {
+    background: #1c2127; border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; color: var(--amber-soft);
+  }
+
+  /* progress tracker */
+  .progress-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+    padding: 16px 18px 14px; margin-bottom: 6px;
+  }
+  .progress-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
+  .progress-label { font-size: 10.5px; letter-spacing: 0.1em; color: var(--text-dim); text-transform: uppercase; }
+  .progress-count { font-size: 11.5px; color: var(--amber-soft); font-weight: 700; letter-spacing: 0.03em; }
+  .progress-track { display: flex; gap: 4px; flex-wrap: wrap; }
+  .progress-box {
+    flex: 1 1 0; min-width: 14px; height: 16px; border-radius: 3px;
+    background: #1c2127; border: 1px solid var(--border);
+  }
+  .progress-box.passed { background: var(--green); border-color: var(--green); }
+  .progress-box.failed { background: var(--amber); border-color: var(--amber); }
+  .progress-legend {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    margin-top: 12px; font-size: 10.5px; color: var(--text-dim);
+  }
+  .dot-legend {
+    display: inline-block; width: 8px; height: 8px; border-radius: 2px;
+    margin-right: 5px; vertical-align: middle; background: #1c2127; border: 1px solid var(--border);
+  }
+  .dot-legend.passed { background: var(--green); border-color: var(--green); }
+  .dot-legend.failed { background: var(--amber); border-color: var(--amber); }
+  .progress-reset {
+    margin-left: auto; color: var(--text-dim); text-decoration: underline;
+    cursor: pointer; background: none; border: none; font-family: inherit; font-size: 10.5px; letter-spacing: 0.04em;
+  }
+  .progress-reset:hover { color: var(--red); }
+
+  /* lesson status dots */
+  .lesson-status { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }
+  .status-dot {
+    width: 9px; height: 9px; border-radius: 50%; background: #1c2127;
+    border: 1px solid var(--border); display: inline-block;
+  }
+  .status-dot.passed { background: var(--green); border-color: var(--green); }
+  .status-dot.failed { background: var(--amber); border-color: var(--amber); }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="frame">
+
+  <div class="top-bar">
+    <span>PART 107 · MISSION HUB</span>
+    <b id="clockOut">—</b>
+  </div>
+
+  <div class="hero">
+    <img src="logo-badge.png" alt="Part 107" style="width:150px; height:auto; margin-bottom:14px;" />
+    <h1>Part 107</h1>
+    <p class="subtext">Study smarter. Fly prepared. A self-paced FAA Part 107 course designed with guided lessons, live weather tools, practice exams, and essential FAA references.</p>
+  </div>
+
+  <!-- METAR / TAF -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">00</span>
+      <h2 class="section-title">Current METAR / TAF</h2>
+      <span class="section-rule"></span>
+    </div>
+
+    <div class="wx-card">
+      <div class="wx-controls">
+        <label for="stationInput">Station</label>
+        <input type="text" id="stationInput" class="wx-input" value="KHKY" maxlength="4" autocomplete="off" spellcheck="false" />
+        <button class="wx-go" id="fetchBtn">UPDATE ▸</button>
+        <span class="wx-status" id="wxStatus">loading…</span>
+      </div>
+
+      <div class="wx-block">
+        <div class="wx-label">METAR</div>
+        <div class="wx-raw dim" id="metarRaw">—</div>
+        <div class="wx-decoded dim wx-hidden" id="metarDecoded">—</div>
+      </div>
+      <div class="wx-block">
+        <div class="wx-label">TAF</div>
+        <div class="wx-raw dim" id="tafRaw">—</div>
+        <div class="wx-decoded dim wx-hidden" id="tafDecoded">—</div>
+      </div>
+      <button class="wx-go" id="translateBtn" style="margin-top:4px;">TRANSLATE ▸</button>
+      <div class="wx-meta" id="wxMeta"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:12px;">
+      <a class="link-btn solid" id="skyvectorBtn" href="https://skyvector.com" target="_blank" rel="noopener">SKYVECTOR</a>
+      <a class="link-btn" id="metarTafBtn" href="https://aviationweather.gov/data/metar/?ids=KHKY&hours=0&metar=1&taf=1" target="_blank" rel="noopener">METAR/TAF (full page)</a>
+      <a class="link-btn" href="https://tfr.faa.gov/tfr3/?page=tfr" target="_blank" rel="noopener">FULL TFR LIST (official)</a>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Training Progress</h2>
+      <span class="section-rule"></span>
+    </div>
+    <div class="progress-card">
+      <div class="progress-top">
+        <span class="progress-label">Overall</span>
+        <span class="progress-count" id="progressCount">0 / 18 passed</span>
+      </div>
+      <div class="progress-track" id="progressTrack"></div>
+      <div class="progress-legend">
+        <span><i class="dot-legend passed"></i>Passed</span>
+        <span><i class="dot-legend failed"></i>Not passed</span>
+        <span><i class="dot-legend"></i>Not attempted</span>
+        <button class="progress-reset" id="resetAllBtn" type="button">RESET ALL PROGRESS</button>
+      </div>
+    </div>
+    <p class="wx-meta" style="margin:10px 0 0; font-size:11px; line-height:1.5;">Pass a lesson's knowledge check and quiz to mark it complete — progress saves automatically and follows you across every page.</p>
+  </div>
+
+  <!-- Lessons -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Lessons</h2>
+      <span class="section-rule"></span>
+    </div>
+
+    <div id="lessonList"></div>
+
+    <br >
+    <a class="link-btn" allflash" href="part107-all-lessons-flashcards.html">ALL FLASH CARDS</a>
+  </div>
+
+  <!-- Practice / resources -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Practice &amp; Review</h2>
+      <span class="section-rule"></span>
+    </div>
+    <div class="btn-row">
+      <a class="link-btn" href="part107-wx-charts-cheatsheet.html">Weather &amp; Charts Cheat Sheet</a>
+      <a class="link-btn" href="part107-wx-charts-quiz.html">Weather &amp; Charts Briefing Challenge Quiz<span class="status-dot" id="dot-wx-challenge" title="Weather & Charts Briefing Challenge: not attempted"></span></a>
+      <a class="link-btn" href="part107-practice-test-1.html">Simulated Test 1<span class="status-dot" id="dot-practice-test-1" title="Simulated Test 1: not attempted"></span></a>
+    </div>
+  </div>
+
+  <!-- External resources -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Official FAA References</h2>
+      <span class="section-rule"></span>
+    </div>
+    <div class="btn-row" style="margin-bottom: 18px;">
+      <a class="link-btn subtle" href="https://www.faa.gov/sites/faa.gov/files/training_testing/testing/acs/uas_acs.pdf" target="_blank" rel="noopener">Remote Pilot ACS (sUAS)</a>
+      <a class="link-btn subtle" href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/remote_pilot_study_guide.pdf" target="_blank" rel="noopener">Remote Pilot Study Guide</a>
+      <a class="link-btn subtle" href="https://www.faa.gov/regulationspolicies/handbooksmanuals/aviation/faa-h-8083-28b-aviation-weather-handbook" target="_blank" rel="noopener">Aviation Weather Handbook</a>
+      <a class="link-btn subtle" href="https://tfr.faa.gov/tfr3/?page=tfr" target="_blank" rel="noopener">Full TFR List (official)</a>
+      <a class="link-btn subtle" href="https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/aero_guide/" target="_blank" rel="noopener">FAA Aeronautical Chart User's Guide</a>
+      <a class="link-btn subtle" href="https://www.1800wxbrief.com/" target="_blank" rel="noopener">Leidos Flight Service (1800wxbrief.com)</a>
+    </div>
+  </div>
+
+  <!-- Flight apps -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Flight Apps</h2>
+      <span class="section-rule"></span>
+    </div>
+    <p class="subtext" style="text-align:left; margin:0 0 14px; max-width:none;">Get airspace awareness and flight authorization on your phone before you fly.</p>
+
+    <div class="lesson-card" style="margin-bottom:0;">
+      <div class="lesson-top">
+        <span class="lesson-name">LAANC</span>
+      </div>
+      <p class="wx-meta" style="margin-top:0; font-size:11.5px; line-height:1.6;">Low Altitude Authorization and Notification Capability — request near-real-time airspace authorizations in controlled airspace through an FAA-approved provider app.</p>
+      <div class="btn-row" style="margin:10px 0 0;">
+        <a class="link-btn solid" href="https://www.faa.gov/uas/getting_started/laanc" target="_blank" rel="noopener">LAANC OVERVIEW ▸</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Next Steps -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <h2 class="section-title">Next Steps: Get Certified</h2>
+      <span class="section-rule"></span>
+    </div>
+    <p class="subtext" style="text-align:left; margin:0 0 14px; max-width:none;">Once you're working through lessons and passing practice tests consistently, here's how to actually get your Remote Pilot Certificate.</p>
+
+    <div class="lesson-card">
+      <div class="lesson-top">
+        <span class="lesson-num">STEP 1</span>
+        <span class="lesson-name">Get your FTN (FAA Tracking Number)</span>
+      </div>
+      <p class="wx-meta" style="margin-top:0; font-size:11.5px; line-height:1.6;">Create a free account at IACRA — select "Applicant," agree to the terms, and fill in your info. Your FTN appears on your account home screen. Write it down; you'll need it to schedule the test.</p>
+      <div class="btn-row" style="margin:10px 0 0;">
+        <a class="link-btn solid" href="https://iacra.faa.gov/IACRA/Default.aspx" target="_blank" rel="noopener">CREATE IACRA ACCOUNT ▸</a>
+      </div>
+    </div>
+
+    <div class="lesson-card">
+      <div class="lesson-top">
+        <span class="lesson-num">STEP 2</span>
+        <span class="lesson-name">Find a test center &amp; schedule</span>
+      </div>
+      <p class="wx-meta" style="margin-top:0; font-size:11.5px; line-height:1.6;">The Part 107 knowledge test ("Unmanned Aircraft General – Small," UAG) is given at PSI-authorized centers, not FAA offices. Create a PSI account, search centers near you by zip code, and book a seat. Make sure your name matches exactly across your FTN, PSI account, and photo ID.</p>
+      <div class="btn-row" style="margin:10px 0 0;">
+        <a class="link-btn solid" href="https://faa.psiexams.com/faa/login" target="_blank" rel="noopener">FIND A TEST CENTER ▸</a>
+      </div>
+    </div>
+
+    <div class="lesson-card">
+      <div class="lesson-top">
+        <span class="lesson-num">STEP 3</span>
+        <span class="lesson-name">Test day</span>
+      </div>
+      <p class="wx-meta" style="margin-top:0; font-size:11.5px; line-height:1.6;">Bring a valid government-issued photo ID. The exam is 60 questions, 2 hours, $175 (paid to PSI).</p>
+    </div>
+
+    <div class="lesson-card" style="margin-bottom:0;">
+      <div class="lesson-top">
+        <span class="lesson-num">STEP 4</span>
+        <span class="lesson-name">After passing</span>
+      </div>
+      <p class="wx-meta" style="margin-top:0; font-size:11.5px; line-height:1.6;">Log back into IACRA, click "Register," fill out the application (leave "Certificate Information" blank), and submit. You'll get a temporary certificate to print immediately — the permanent one arrives by mail.</p>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Developed by the Children's Supervillain Science Workshop as part of our ongoing plan to raise a generation of extremely well-regulated, FAA-compliant supervillains.
+    <br><br>
+    &copy; 2026 Field Laboratory Seven. All rights reserved.
+  </div>
+
+</div>
+
+<!-- Shared cross-page progress tracker — also included on each lesson page -->
+<script src="progress.js"></script>
+<script>
+  const LESSONS = [
+    { n: 1, title: "Regulations (Part 107)", slug: "Lesson-1-Regulations" },
+    { n: 2, title: "Airspace Classification & Operating Requirements", slug: "Lesson-2-Airspace" },
+    { n: 3, title: "Aviation Weather", slug: "Lesson-3-Aviation-Weather" },
+    { n: 4, title: "Weather Effects on UAS Performance", slug: "Lesson-4-Weather-Effects" },
+    { n: 5, title: "Loading, Performance & Emergency Procedures", slug: "Lesson-5-Loading-Performance" },
+    { n: 6, title: "Crew Resource Management & Radio Communications", slug: "Lesson-6-CRM-Radio" },
+    { n: 7, title: "Aeronautical Decision-Making & Physiological Factors", slug: "Lesson-7-ADM-Physiological" },
+    { n: 8, title: "Airport Operations & Maintenance", slug: "Lesson-8-Airport-Ops" },
+  ];
+
+  const listEl = document.getElementById('lessonList');
+  LESSONS.forEach(l => {
+    const card = document.createElement('div');
+    card.className = 'lesson-card';
+    card.innerHTML = `
+      <div class="lesson-top">
+        <span class="lesson-num">LESSON ${l.n}<span class="lesson-status">
+          <span class="status-dot" id="dot-${l.slug}-test" title="Knowledge check: not attempted"></span>
+          <span class="status-dot" id="dot-${l.slug}-quiz" title="Quiz: not attempted"></span>
+        </span></span>
+        <span class="lesson-name">${l.title}</span>
+      </div>
+      <div class="lesson-btns">
+        <a class="mini-btn lesson" href="${l.slug}-Interactive.html">LESSON<span class="status-dot" id="dot-btn-${l.slug}-test"></span></a>
+        <a class="mini-btn flash" href="${l.slug}-flashcards.html">FLASH CARDS</a>
+        <a class="mini-btn quiz" href="${l.slug}-quiz.html">QUIZ<span class="status-dot" id="dot-btn-${l.slug}-quiz"></span></a>
+      </div>
+    `;
+    listEl.appendChild(card);
+  });
+
+  // ---- Training progress (shared with each lesson page via progress.js) ----
+  // Sequential order matches how the site is worked through: each lesson's
+  // knowledge check, then its quiz, then the weather challenge and practice test.
+  const PROGRESS_ITEMS = [];
+  LESSONS.forEach(l => {
+    PROGRESS_ITEMS.push({ id: `${l.slug}-test`, label: `Lesson ${l.n} knowledge check` });
+    PROGRESS_ITEMS.push({ id: `${l.slug}-quiz`, label: `Lesson ${l.n} quiz` });
+  });
+  PROGRESS_ITEMS.push({ id: 'wx-challenge', label: 'Weather & Charts Briefing Challenge' });
+  PROGRESS_ITEMS.push({ id: 'practice-test-1', label: 'Simulated Test 1' });
+
+  const progressTrack = document.getElementById('progressTrack');
+  const progressCount = document.getElementById('progressCount');
+
+  function setStatusDot(id, rec, label) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'status-dot' + (rec ? ' ' + rec.status : '');
+    el.title = rec
+      ? `${label}: ${rec.status === 'passed' ? 'Passed' : 'Not passed'} (${rec.score}/${rec.total})`
+      : `${label}: not attempted`;
+  }
+
+  function refreshProgress() {
+    const data = Part107Progress.getAll();
+
+    progressTrack.innerHTML = '';
+    let passedCount = 0;
+    PROGRESS_ITEMS.forEach(item => {
+      const rec = data[item.id];
+      if (rec && rec.status === 'passed') passedCount++;
+      const box = document.createElement('div');
+      box.className = 'progress-box' + (rec ? ' ' + rec.status : '');
+      box.title = rec
+        ? `${item.label}: ${rec.status === 'passed' ? 'Passed' : 'Not passed'} (${rec.score}/${rec.total})`
+        : `${item.label}: not attempted`;
+      progressTrack.appendChild(box);
+    });
+    progressCount.textContent = `${passedCount} / ${PROGRESS_ITEMS.length} passed`;
+
+    LESSONS.forEach(l => {
+      setStatusDot(`dot-${l.slug}-test`, data[`${l.slug}-test`], `Lesson ${l.n} knowledge check`);
+      setStatusDot(`dot-${l.slug}-quiz`, data[`${l.slug}-quiz`], `Lesson ${l.n} quiz`);
+      setStatusDot(`dot-btn-${l.slug}-test`, data[`${l.slug}-test`], `Lesson ${l.n} knowledge check`);
+      setStatusDot(`dot-btn-${l.slug}-quiz`, data[`${l.slug}-quiz`], `Lesson ${l.n} quiz`);
+    });
+    setStatusDot('dot-wx-challenge', data['wx-challenge'], 'Weather & Charts Briefing Challenge');
+    setStatusDot('dot-practice-test-1', data['practice-test-1'], 'Simulated Test 1');
+  }
+
+  refreshProgress();
+  Part107Progress.onChange(refreshProgress);
+
+  document.getElementById('resetAllBtn').addEventListener('click', () => {
+    if (confirm('Reset all saved lesson, quiz, and test progress? This cannot be undone.')) {
+      Part107Progress.resetAll();
+    }
+  });
+
+  // clock
+  function tick() {
+    const now = new Date();
+    document.getElementById('clockOut').textContent = now.toUTCString().slice(17, 25) + ' UTC';
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // METAR / TAF fetch
+  const stationInput = document.getElementById('stationInput');
+  const fetchBtn = document.getElementById('fetchBtn');
+  const wxStatus = document.getElementById('wxStatus');
+  const metarRaw = document.getElementById('metarRaw');
+  const tafRaw = document.getElementById('tafRaw');
+  const metarDecoded = document.getElementById('metarDecoded');
+  const tafDecoded = document.getElementById('tafDecoded');
+  const wxMeta = document.getElementById('wxMeta');
+  const skyvectorBtn = document.getElementById('skyvectorBtn');
+  const metarTafBtn = document.getElementById('metarTafBtn');
+
+  let currentStation = 'KHKY';
+  let autoRefreshTimer = null;
+  const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
+
+  // Persist the last valid station the same way progress.js persists grades —
+  // a plain localStorage key, read on load and written only after a
+  // successful (valid) weather response.
+  const STATION_STORAGE_KEY = 'part107_station';
+  try {
+    const savedStation = localStorage.getItem(STATION_STORAGE_KEY);
+    if (savedStation) {
+      stationInput.value = savedStation;
+      currentStation = savedStation;
+    }
+  } catch (e) { /* localStorage unavailable (private mode, etc.) — fall back to default */ }
+
+  // aviationweather.gov's API does not send Access-Control-Allow-Origin, so a
+  // direct browser fetch() is blocked by CORS no matter how it's scheduled.
+  // We try a direct fetch first (in case that ever changes), then fall back
+  // through a short list of public CORS proxies — if one is down or rate-
+  // limited, the next one is tried automatically.
+  function proxyUrls(url) {
+    const enc = encodeURIComponent(url);
+    return [
+      `https://api.allorigins.win/raw?url=${enc}`,
+      `https://corsproxy.io/?url=${enc}`,
+      `https://api.codetabs.com/v1/proxy?quest=${enc}`,
+    ];
+  }
+
+  async function corsGet(url) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const text = (await res.text()).trim();
+        if (text) return text;
+      }
+    } catch (e) { /* blocked by CORS or offline — fall through to proxies */ }
+
+    let lastErr = null;
+    for (const proxied of proxyUrls(url)) {
+      try {
+        const res = await fetch(proxied);
+        if (!res.ok) { lastErr = new Error('proxy returned ' + res.status); continue; }
+        const text = (await res.text()).trim();
+        if (text) return text;
+        lastErr = new Error('proxy returned empty body');
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    throw lastErr || new Error('all fetch attempts failed');
+  }
+
+  // ---- Plain-English METAR/TAF decoder ------------------------------
+  const CARDINALS = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  function cardinal(deg) { return CARDINALS[Math.round(deg / 22.5) % 16]; }
+
+  const WX_DESCRIPTOR = { MI:'shallow', PR:'partial', BC:'patches of', DR:'drifting', BL:'blowing', SH:'showers of', TS:'thunderstorm with', FZ:'freezing' };
+  const WX_PRECIP = { DZ:'drizzle', RA:'rain', SN:'snow', SG:'snow grains', IC:'ice crystals', PL:'ice pellets', GR:'hail', GS:'small hail/snow pellets', UP:'unknown precipitation' };
+  const WX_OBSCUR = { BR:'mist', FG:'fog', FU:'smoke', VA:'volcanic ash', DU:'widespread dust', SA:'sand', HZ:'haze', PY:'spray' };
+  const WX_OTHER = { PO:'dust/sand whirls', SQ:'squalls', FC:'funnel cloud (possible tornado/waterspout)', SS:'sandstorm', DS:'duststorm' };
+  const WX_KNOWN = new Set([...Object.keys(WX_DESCRIPTOR), ...Object.keys(WX_PRECIP), ...Object.keys(WX_OBSCUR), ...Object.keys(WX_OTHER)]);
+
+  function isWxToken(token) {
+    if (!token || token === 'RMK') return false;
+    let t = token;
+    if (t.startsWith('VC')) t = t.slice(2);
+    if (t[0] === '-' || t[0] === '+') t = t.slice(1);
+    if (!t || t.length % 2 !== 0) return false;
+    const codes = t.match(/.{2}/g);
+    return codes.every(c => WX_KNOWN.has(c));
+  }
+
+  function decodeWxToken(token) {
+    let t = token;
+    let vicinity = false;
+    if (t.startsWith('VC')) { vicinity = true; t = t.slice(2); }
+    let intensity = '';
+    if (t[0] === '-' ) { intensity = 'Light'; t = t.slice(1); }
+    else if (t[0] === '+') { intensity = 'Heavy'; t = t.slice(1); }
+    const codes = t.match(/.{2}/g) || [];
+    const parts = codes.map(c => WX_DESCRIPTOR[c] || WX_PRECIP[c] || WX_OBSCUR[c] || WX_OTHER[c] || c);
+    let phrase = parts.join(' ');
+    if (intensity) phrase = `${intensity} ${phrase}`;
+    if (vicinity) phrase += ' in the vicinity';
+    return phrase.charAt(0).toUpperCase() + phrase.slice(1);
+  }
+
+  function decodeWind(token) {
+    const m = token && token.match(/^(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?(KT|MPS)$/);
+    if (!m) return null;
+    const [, dirRaw, spdRaw, , gustRaw, unit] = m;
+    const spd = parseInt(spdRaw, 10);
+    const gust = gustRaw ? parseInt(gustRaw, 10) : null;
+    const unitText = unit === 'KT' ? 'kt' : 'm/s';
+    if (spd === 0) return 'Calm winds.';
+    const dirText = dirRaw === 'VRB' ? 'variable direction' : `from the ${cardinal(parseInt(dirRaw, 10))} (${parseInt(dirRaw, 10)}°)`;
+    let s = `Wind ${dirText} at ${spd} ${unitText}`;
+    if (gust) s += `, gusting to ${gust} ${unitText}`;
+    return s + '.';
+  }
+
+  function decodeVisibility(token) {
+    if (!token) return null;
+    if (/SM$/.test(token)) {
+      let vis = token.replace('SM', '');
+      let prefix = '';
+      if (vis.startsWith('M')) { prefix = 'less than '; vis = vis.slice(1); }
+      else if (vis.startsWith('P')) { prefix = 'greater than '; vis = vis.slice(1); }
+      return `Visibility ${prefix}${vis} statute mile${vis === '1' ? '' : 's'}.`;
+    }
+    if (/^\d{4}$/.test(token)) {
+      const m = parseInt(token, 10);
+      return m >= 9999 ? 'Visibility 10 kilometers or more.' : `Visibility ${m} meters.`;
+    }
+    return null;
+  }
+
+  function decodeSky(token) {
+    const m = token && token.match(/^(SKC|CLR|FEW|SCT|BKN|OVC|VV)(\d{3})?(CB|TCU)?$/);
+    if (!m) return null;
+    const [, cover, heightCode, type] = m;
+    const coverText = { SKC:'Sky clear', CLR:'Clear below 12,000 ft', FEW:'Few clouds', SCT:'Scattered clouds', BKN:'Broken clouds', OVC:'Overcast', VV:'Indefinite ceiling (vertical visibility)' }[cover];
+    if (cover === 'SKC' || cover === 'CLR') return coverText + '.';
+    const height = heightCode ? parseInt(heightCode, 10) * 100 : null;
+    let s = `${coverText}${height ? ` at ${height.toLocaleString()} ft` : ''}`;
+    if (type === 'CB') s += ' (cumulonimbus)';
+    if (type === 'TCU') s += ' (towering cumulus)';
+    return s + '.';
+  }
+
+  function decodeTempDew(token) {
+    const m = token && token.match(/^(M?\d{2})\/(M?\d{2})$/);
+    if (!m) return null;
+    const parse = v => v.startsWith('M') ? -parseInt(v.slice(1), 10) : parseInt(v, 10);
+    const t = parse(m[1]), d = parse(m[2]);
+    const toF = c => Math.round(c * 9 / 5 + 32);
+    return `Temperature ${t}°C (${toF(t)}°F), dew point ${d}°C (${toF(d)}°F).`;
+  }
+
+  function decodeAltimeter(token) {
+    if (!token) return null;
+    let m = token.match(/^A(\d{4})$/);
+    if (m) return `Altimeter ${(parseInt(m[1], 10) / 100).toFixed(2)} inHg.`;
+    m = token.match(/^Q(\d{4})$/);
+    if (m) return `Altimeter ${parseInt(m[1], 10)} hPa.`;
+    return null;
+  }
+
+  function decodeObsTime(token) {
+    const m = token && token.match(/^(\d{2})(\d{2})(\d{2})Z$/);
+    if (!m) return null;
+    return `Observed on day ${parseInt(m[1], 10)} at ${m[2]}:${m[3]} UTC.`;
+  }
+
+  function decodeMetar(raw) {
+    if (!raw) return '';
+    const tokens = raw.trim().split(/\s+/);
+    let i = 0;
+    const s = [];
+    if (tokens[i] === 'METAR' || tokens[i] === 'SPECI') i++;
+    const station = tokens[i]; i++;
+    s.push(`Station ${station}.`);
+    const time = decodeObsTime(tokens[i]);
+    if (time) { s.push(time); i++; }
+    if (tokens[i] === 'AUTO') { s.push('Automated observation.'); i++; }
+    if (tokens[i] === 'COR') { s.push('Corrected observation.'); i++; }
+    const wind = decodeWind(tokens[i]);
+    if (wind) { s.push(wind); i++; }
+    if (tokens[i] && /^\d{3}V\d{3}$/.test(tokens[i])) {
+      const [lo, hi] = tokens[i].split('V');
+      s.push(`Wind direction varying between ${lo}° and ${hi}°.`);
+      i++;
+    }
+    const vis = decodeVisibility(tokens[i]);
+    if (vis) { s.push(vis); i++; }
+    while (tokens[i] && /^R\d{2}[LRC]?\//.test(tokens[i])) i++; // skip runway visual range
+    const wxParts = [];
+    while (tokens[i] && isWxToken(tokens[i])) { wxParts.push(decodeWxToken(tokens[i])); i++; }
+    if (wxParts.length) s.push(wxParts.join(', ') + '.');
+    const skyParts = [];
+    while (tokens[i] && /^(SKC|CLR|FEW|SCT|BKN|OVC|VV)/.test(tokens[i])) {
+      const sk = decodeSky(tokens[i]); if (sk) skyParts.push(sk); i++;
+    }
+    if (skyParts.length) s.push(skyParts.join(' '));
+    const temp = decodeTempDew(tokens[i]);
+    if (temp) { s.push(temp); i++; }
+    const alt = decodeAltimeter(tokens[i]);
+    if (alt) { s.push(alt); i++; }
+    return s.join(' ');
+  }
+
+  function decodeTafSegment(tokens) {
+    let i = 0;
+    const parts = [];
+    const wind = decodeWind(tokens[i]);
+    if (wind) { parts.push(wind); i++; }
+    const vis = decodeVisibility(tokens[i]);
+    if (vis) { parts.push(vis); i++; }
+    const wxParts = [];
+    while (tokens[i] && isWxToken(tokens[i])) { wxParts.push(decodeWxToken(tokens[i])); i++; }
+    if (wxParts.length) parts.push(wxParts.join(', ') + '.');
+    const skyParts = [];
+    while (tokens[i] && /^(SKC|CLR|FEW|SCT|BKN|OVC|VV)/.test(tokens[i])) {
+      const sk = decodeSky(tokens[i]); if (sk) skyParts.push(sk); i++;
+    }
+    if (skyParts.length) parts.push(skyParts.join(' '));
+    if (tokens[i] && /^WS/.test(tokens[i])) { parts.push('Wind shear reported.'); i++; }
+    return parts.join(' ') || '(no significant change specified)';
+  }
+
+  function decodeTaf(raw) {
+    if (!raw) return '';
+    const tokens = raw.trim().split(/\s+/);
+    let i = 0;
+    const lines = [];
+    if (tokens[i] === 'TAF') i++;
+    if (tokens[i] === 'AMD' || tokens[i] === 'COR') i++;
+    const station = tokens[i]; i++;
+    let header = `TAF for ${station}.`;
+    const issued = decodeObsTime(tokens[i]);
+    if (issued) { header += ' Issued: ' + issued; i++; }
+    const valid = tokens[i] && tokens[i].match(/^(\d{2})(\d{2})\/(\d{2})(\d{2})$/);
+    if (valid) {
+      header += ` Valid from day ${valid[1]} ${valid[2]}:00Z to day ${valid[3]} ${valid[4]}:00Z.`;
+      i++;
+    }
+    lines.push(header);
+
+    let label = 'Initial conditions:';
+    let seg = [];
+    const flush = () => { if (seg.length) { lines.push(`${label} ${decodeTafSegment(seg)}`); seg = []; } };
+
+    while (i < tokens.length) {
+      const t = tokens[i];
+      if (t === 'RMK') break;
+      if (/^FM\d{6}$/.test(t)) {
+        flush();
+        const m = t.match(/^FM(\d{2})(\d{2})(\d{2})$/);
+        label = `From day ${m[1]} ${m[2]}:${m[3]}Z:`;
+        i++; continue;
+      }
+      if (t === 'BECMG' || t === 'TEMPO') {
+        flush();
+        i++;
+        let periodText = '';
+        const pm = tokens[i] && tokens[i].match(/^(\d{2})(\d{2})\/(\d{2})(\d{2})$/);
+        if (pm) { periodText = ` (day ${pm[1]} ${pm[2]}:00Z to day ${pm[3]} ${pm[4]}:00Z)`; i++; }
+        label = (t === 'BECMG' ? 'Becoming' : 'Temporarily') + periodText + ':';
+        continue;
+      }
+      if (/^PROB\d{2}$/.test(t)) {
+        flush();
+        const prob = t.slice(4);
+        i++;
+        let periodText = '';
+        const pm = tokens[i] && tokens[i].match(/^(\d{2})(\d{2})\/(\d{2})(\d{2})$/);
+        if (pm) { periodText = ` (day ${pm[1]} ${pm[2]}:00Z to day ${pm[3]} ${pm[4]}:00Z)`; i++; }
+        label = `${prob}% probability${periodText}:`;
+        continue;
+      }
+      seg.push(t);
+      i++;
+    }
+    flush();
+    return lines.join(' ');
+  }
+  // ---------------------------------------------------------------------
+
+  // Each of these resolves on its own — they don't wait on each other.
+  async function loadMetar(station) {
+    const metarUrl = `https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&hours=0`;
+    try {
+      const text = await corsGet(metarUrl);
+      if (text) {
+        metarRaw.textContent = text;
+        metarRaw.classList.remove('dim');
+        try {
+          metarDecoded.textContent = decodeMetar(text);
+          metarDecoded.classList.remove('dim');
+        } catch (e) {
+          metarDecoded.textContent = 'Could not decode this report.';
+        }
+        return true;
+      }
+      metarRaw.textContent = 'No recent METAR for this station.';
+      metarDecoded.textContent = '—';
+      metarDecoded.classList.add('dim');
+      return false;
+    } catch (e) {
+      metarRaw.textContent = 'Could not reach the weather service. Use the METAR/TAF button below.';
+      metarDecoded.textContent = '—';
+      metarDecoded.classList.add('dim');
+      return false;
+    }
+  }
+
+  async function loadTaf(station) {
+    const tafUrl = `https://aviationweather.gov/api/data/taf?ids=${station}&format=raw`;
+    try {
+      const text = await corsGet(tafUrl);
+      if (text) {
+        tafRaw.textContent = text;
+        tafRaw.classList.remove('dim');
+        try {
+          tafDecoded.textContent = decodeTaf(text);
+          tafDecoded.classList.remove('dim');
+        } catch (e) {
+          tafDecoded.textContent = 'Could not decode this forecast.';
+        }
+        return true;
+      }
+      tafRaw.textContent = 'No current TAF for this station.';
+      tafDecoded.textContent = '—';
+      tafDecoded.classList.add('dim');
+      return false;
+    } catch (e) {
+      tafRaw.textContent = 'Could not reach the weather service. Use the METAR/TAF button below.';
+      tafDecoded.textContent = '—';
+      tafDecoded.classList.add('dim');
+      return false;
+    }
+  }
+
+  function fetchWx({ manual = true } = {}) {
+    let station = stationInput.value.trim().toUpperCase();
+    if (!station) station = 'KHKY';
+    stationInput.value = station;
+    currentStation = station;
+
+    wxStatus.textContent = manual ? 'loading…' : 'refreshing…';
+    wxStatus.className = 'wx-status';
+    if (manual) {
+      metarRaw.textContent = '—';
+      metarRaw.classList.add('dim');
+      tafRaw.textContent = '—';
+      tafRaw.classList.add('dim');
+      metarDecoded.textContent = '—';
+      metarDecoded.classList.add('dim');
+      tafDecoded.textContent = '—';
+      tafDecoded.classList.add('dim');
+    }
+
+    metarTafBtn.href = `https://aviationweather.gov/data/metar/?ids=${station}&hours=0&metar=1&taf=1`;
+    skyvectorBtn.href = `https://skyvector.com/airport/${station}`;
+
+    // Fire both requests at once; each updates the page as soon as it lands,
+    // independently of the other.
+    Promise.allSettled([loadMetar(station), loadTaf(station)]).then(results => {
+      const anyOk = results.some(r => r.status === 'fulfilled' && r.value === true);
+      if (anyOk) {
+        wxStatus.textContent = 'updated ' + new Date().toLocaleTimeString();
+        wxStatus.className = 'wx-status ok';
+        wxMeta.textContent = `Source: aviationweather.gov · Station: ${station} · auto-refreshes every 5 min`;
+        try { localStorage.setItem(STATION_STORAGE_KEY, station); } catch (e) { /* ignore storage errors */ }
+      } else {
+        const inFrame = (() => { try { return window.top !== window.self; } catch (e) { return true; } })();
+        if (inFrame) {
+          wxStatus.textContent = 'blocked by preview sandbox';
+          wxStatus.className = 'wx-status err';
+          wxMeta.textContent = 'Live fetch is blocked inside this in-app preview. Download this file and open it in your browser (Safari/Chrome), or host it on a server — it will fetch normally there.';
+        } else {
+          wxStatus.textContent = 'fetch failed — try the link below';
+          wxStatus.className = 'wx-status err';
+          wxMeta.textContent = `Source: aviationweather.gov · Station: ${station} · auto-refreshes every 5 min`;
+        }
+      }
+    });
+
+    resetAutoRefresh();
+  }
+
+  function resetAutoRefresh() {
+    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(() => fetchWx({ manual: false }), AUTO_REFRESH_MS);
+  }
+
+  fetchBtn.addEventListener('click', () => fetchWx({ manual: true }));
+  stationInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') fetchWx({ manual: true }); });
+
+  const translateBtn = document.getElementById('translateBtn');
+  let translationsShown = false;
+  translateBtn.addEventListener('click', () => {
+    translationsShown = !translationsShown;
+    metarDecoded.classList.toggle('wx-hidden', !translationsShown);
+    tafDecoded.classList.toggle('wx-hidden', !translationsShown);
+    translateBtn.textContent = translationsShown ? 'HIDE TRANSLATION ▾' : 'TRANSLATE ▸';
+  });
+
+  // load on page open
+  fetchWx({ manual: true });
+</script>
+
+</body>
+</html>
