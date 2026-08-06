@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FAA Trust — Recreational UAS Safety Test Hub</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Field Lab 7">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root {
+    --amber: #f2a71b;
+    --amber-soft: #ffcf6b;
+    --green: #3ddc97;
+    --red: #ff5c5c;
+    --bg-deep: #0d1013;
+    --bg-panel: #171c22;
+    --bg-card: #12161a;
+    --border: #2a3138;
+    --text-main: #dfe6ec;
+    --text-bright: #f4f7fa;
+    --text-dim: #7a8590;
+    --text-mid: #9aa5b0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at top, var(--bg-panel) 0%, var(--bg-deep) 70%);
+    color: var(--text-main);
+    font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+    min-height: 100vh;
+  }
+  body { display: flex; justify-content: center; padding: 24px 12px; }
+  .scanlines {
+    position: fixed; inset: 0; pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    z-index: 0;
+  }
+  .frame {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 760px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(13,16,19,0.6);
+    box-shadow: 0 0 0 1px rgba(242,167,27,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    height: fit-content;
+  }
+  .top-bar {
+    display: flex; justify-content: space-between;
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    font-size: 11px; letter-spacing: 0.08em; color: var(--text-dim);
+    background: #12161a;
+  }
+  .top-bar b { color: var(--amber); }
+
+  .hero {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  h1 {
+    font-size: 22px; font-weight: 600; margin: 0 0 8px; color: var(--text-bright);
+    letter-spacing: 0.01em; font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  }
+  .subtext { font-size: 13px; line-height: 1.6; color: var(--text-mid); max-width: 520px; margin: 0 auto; }
+
+  .section { padding: 22px 22px 6px; }
+  .section-head {
+    display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px;
+  }
+  .section-num { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; }
+  .section-title {
+    font-size: 15px; color: var(--text-bright); font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+    font-weight: 600; letter-spacing: 0.02em; margin: 0;
+  }
+  .section-rule { flex: 1; height: 1px; background: var(--border); }
+
+  .wx-meta { font-size: 10px; color: var(--text-dim); margin-top: 6px; letter-spacing: 0.02em; }
+
+  /* generic button rows */
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+  .link-btn {
+    background: transparent; color: var(--amber); border: 1px solid var(--amber);
+    padding: 9px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+    border-radius: 3px; cursor: pointer; font-family: inherit; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .link-btn:hover { background: rgba(242,167,27,0.1); }
+  .link-btn.solid { background: var(--amber); color: #171200; }
+  .link-btn.solid:hover { background: var(--amber-soft); }
+  .link-btn.subtle { color: var(--text-mid); border-color: var(--border); }
+  .link-btn.subtle:hover { color: var(--amber-soft); border-color: var(--amber); }
+
+  /* lesson cards */
+  .lesson-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+    padding: 14px 16px 16px; margin-bottom: 12px;
+  }
+  .lesson-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 10px; }
+  .lesson-num { font-size: 10.5px; color: var(--amber); letter-spacing: 0.1em; white-space: nowrap; }
+  .lesson-name { font-size: 13.5px; color: var(--text-bright); font-weight: 600; text-align: right; }
+  .lesson-meta { font-size: 11.5px; color: var(--text-dim); line-height: 1.6; margin: 0 0 4px; }
+  .lesson-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mini-btn {
+    flex: 1 1 0; min-width: 90px; text-align: center; white-space: nowrap;
+    background: #171c22; color: var(--text-main); border: 1px solid var(--border);
+    padding: 9px 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+    border-radius: 3px; cursor: pointer; font-family: inherit; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .mini-btn:hover { border-color: var(--amber); color: var(--amber-soft); }
+
+  .footer-note {
+    padding: 16px 22px 24px; font-size: 11px; color: var(--text-dim); line-height: 1.6;
+    border-top: 1px solid var(--border); margin-top: 8px;
+  }
+  .footer-note code {
+    background: #1c2127; border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; color: var(--amber-soft);
+  }
+
+  /* progress tracker */
+  .progress-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+    padding: 16px 18px 14px; margin-bottom: 6px;
+  }
+  .progress-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
+  .progress-label { font-size: 10.5px; letter-spacing: 0.1em; color: var(--text-dim); text-transform: uppercase; }
+  .progress-count { font-size: 11.5px; color: var(--amber-soft); font-weight: 700; letter-spacing: 0.03em; }
+  .progress-track { display: flex; gap: 4px; flex-wrap: wrap; }
+  .progress-box {
+    flex: 1 1 0; min-width: 14px; height: 16px; border-radius: 3px;
+    background: #1c2127; border: 1px solid var(--border);
+  }
+  .progress-box.passed { background: var(--green); border-color: var(--green); }
+  .progress-box.failed { background: var(--amber); border-color: var(--amber); }
+  .progress-legend {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    margin-top: 12px; font-size: 10.5px; color: var(--text-dim);
+  }
+  .dot-legend {
+    display: inline-block; width: 8px; height: 8px; border-radius: 2px;
+    margin-right: 5px; vertical-align: middle; background: #1c2127; border: 1px solid var(--border);
+  }
+  .dot-legend.passed { background: var(--green); border-color: var(--green); }
+  .dot-legend.failed { background: var(--amber); border-color: var(--amber); }
+  .progress-reset {
+    margin-left: auto; color: var(--text-dim); text-decoration: underline;
+    cursor: pointer; background: none; border: none; font-family: inherit; font-size: 10.5px; letter-spacing: 0.04em;
+  }
+  .progress-reset:hover { color: var(--red); }
+
+  /* lesson status dots */
+  .lesson-status { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }
+  .status-dot {
+    width: 9px; height: 9px; border-radius: 50%; background: #1c2127;
+    border: 1px solid var(--border); display: inline-block;
+  }
+  .status-dot.passed { background: var(--green); border-color: var(--green); }
+  .status-dot.failed { background: var(--amber); border-color: var(--amber); }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="frame">
+
+  <div class="top-bar">
+    <span>FAA TRUST · RECREATIONAL SAFETY TEST HUB</span>
+    <b id="clockOut">—</b>
+  </div>
+
+  <div class="hero">
+    <img src="logo-badge.png" alt="FAA Trust" style="width:150px; height:auto; margin-bottom:14px;" />
+    <h1>FAA Trust</h1>
+    <p class="subtext">The Recreational UAS Safety Test — free, no-fail, and required before you fly for fun. Work through the four lesson groups below, then take the practice quiz before sitting the real test.</p>
+  </div>
+
+  <!-- Progress -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">00</span>
+      <h2 class="section-title">Training Progress</h2>
+      <span class="section-rule"></span>
+    </div>
+    <div class="progress-card">
+      <div class="progress-top">
+        <span class="progress-label">Overall</span>
+        <span class="progress-count" id="progressCount">0 / 5 passed</span>
+      </div>
+      <div class="progress-track" id="progressTrack"></div>
+      <div class="progress-legend">
+        <span><i class="dot-legend passed"></i>Passed</span>
+        <span><i class="dot-legend failed"></i>Not passed</span>
+        <span><i class="dot-legend"></i>Not attempted</span>
+        <button class="progress-reset" id="resetAllBtn" type="button">RESET ALL PROGRESS</button>
+      </div>
+    </div>
+    <p class="wx-meta" style="margin:10px 0 0; font-size:11px; line-height:1.5;">Pass a lesson's knowledge check and quiz to mark it complete — progress saves automatically and follows you across every page.</p>
+  </div>
+
+  <!-- Lessons -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Lessons</h2>
+      <span class="section-rule"></span>
+    </div>
+    <div id="lessonList"></div>
+  </div>
+
+  <!-- Practice Quiz -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Complete Practice Quiz</h2>
+      <span class="section-rule"></span>
+    </div>
+    <div class="lesson-card" style="margin-bottom:0;">
+      <div class="lesson-top">
+        <span class="lesson-num">FULL REVIEW<span class="lesson-status">
+          <span class="status-dot" id="dot-trust-practice-quiz" title="Practice quiz: not attempted"></span>
+        </span></span>
+        <span class="lesson-name">Practice Quiz — All 4 Sections</span>
+      </div>
+      <p class="lesson-meta">A cumulative quiz pulling from all four lesson groups — use it to confirm you're ready before taking the real TRUST test.</p>
+      <div class="lesson-btns">
+        <a class="mini-btn quiz" href="TRUST-Practice-Quiz.html">TAKE PRACTICE QUIZ<span class="status-dot" id="dot-btn-trust-practice-quiz"></span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Official FAA references -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Official FAA References</h2>
+      <span class="section-rule"></span>
+    </div>
+    <div class="btn-row" style="margin-bottom: 18px;">
+      <a class="link-btn subtle" href="https://www.faa.gov/uas/recreational_flyers/knowledge_test_updates" target="_blank" rel="noopener">TRUST Test Overview</a>
+      <a class="link-btn subtle" href="https://faadronezone.faa.gov/" target="_blank" rel="noopener">FAADroneZone (Registration)</a>
+      <a class="link-btn subtle" href="https://tfr.faa.gov/tfr3/?page=tfr" target="_blank" rel="noopener">Full TFR List (official)</a>
+      <a class="link-btn subtle" href="https://www.faa.gov/uas/getting_started/remote_id" target="_blank" rel="noopener">Remote ID Overview</a>
+    </div>
+  </div>
+
+  <!-- Flight apps -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Flight Apps</h2>
+      <span class="section-rule"></span>
+    </div>
+    <p class="subtext" style="text-align:left; margin:0 0 14px; max-width:none;">Get airspace awareness and flight authorization on your phone before you fly.</p>
+
+    <div class="lesson-card">
+      <div class="lesson-top">
+        <span class="lesson-name">B4UFLY</span>
+      </div>
+      <p class="lesson-meta" style="margin:0;">The FAA retired its single standalone B4UFLY app in 2024. Airspace awareness is now offered through several FAA-approved provider apps (Aloft, AutoPylot, and others) — pick any one from the FAA's official list below.</p>
+      <div class="btn-row" style="margin:10px 0 0;">
+        <a class="link-btn solid" href="https://www.faa.gov/uas/getting_started/b4ufly" target="_blank" rel="noopener">SEE APPROVED B4UFLY PROVIDERS ▸</a>
+      </div>
+    </div>
+
+    <div class="lesson-card" style="margin-bottom:0;">
+      <div class="lesson-top">
+        <span class="lesson-name">LAANC</span>
+      </div>
+      <p class="lesson-meta" style="margin:0;">Low Altitude Authorization and Notification Capability — request near-real-time airspace authorizations in controlled airspace through an FAA-approved provider app.</p>
+      <div class="btn-row" style="margin:10px 0 0;">
+        <a class="link-btn solid" href="https://www.faa.gov/uas/getting_started/laanc" target="_blank" rel="noopener">LAANC OVERVIEW ▸</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Developed by the Children's Supervillain Science Workshop as part of our ongoing plan to raise a generation of extremely well-regulated, FAA-compliant supervillains.
+    <br><br>
+    &copy; 2026 Field Laboratory Seven. All rights reserved.
+  </div>
+
+</div>
+
+<!-- Shared cross-page progress tracker -->
+<script src="progress.js"></script>
+<script>
+  const LESSONS = [
+    { n: 1, title: "Welcome & Why TRUST Exists", slug: "TRUST-1-Welcome" },
+    { n: 2, title: "Registration & Airspace", slug: "TRUST-2-Registration-Airspace" },
+    { n: 3, title: "Operating Rules & Restricted Airspace", slug: "TRUST-3-Operating-Rules" },
+    { n: 4, title: "Remote ID, Reporting & Taking the Test", slug: "TRUST-4-Remote-ID-Reporting" },
+  ];
+
+  const listEl = document.getElementById('lessonList');
+  LESSONS.forEach(l => {
+    const card = document.createElement('div');
+    card.className = 'lesson-card';
+    card.innerHTML = `
+      <div class="lesson-top">
+        <span class="lesson-num">SECTION ${l.n}<span class="lesson-status">
+          <span class="status-dot" id="dot-${l.slug}-quiz" title="Quiz: not attempted"></span>
+        </span></span>
+        <span class="lesson-name">${l.title}</span>
+      </div>
+      <div class="lesson-btns">
+        <a class="mini-btn lesson" href="${l.slug}-Interactive.html">LESSON</a>
+        <a class="mini-btn quiz" href="${l.slug}-quiz.html">QUIZ<span class="status-dot" id="dot-btn-${l.slug}-quiz"></span></a>
+      </div>
+    `;
+    listEl.appendChild(card);
+  });
+
+  // ---- Training progress (shared via progress.js) ----
+  const PROGRESS_ITEMS = [];
+  LESSONS.forEach(l => {
+    PROGRESS_ITEMS.push({ id: `${l.slug}-quiz`, label: `Section ${l.n} quiz` });
+  });
+  PROGRESS_ITEMS.push({ id: 'trust-practice-quiz', label: 'Practice Quiz — All 4 Sections' });
+
+  const progressTrack = document.getElementById('progressTrack');
+  const progressCount = document.getElementById('progressCount');
+
+  function setStatusDot(id, rec, label) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'status-dot' + (rec ? ' ' + rec.status : '');
+    el.title = rec
+      ? `${label}: ${rec.status === 'passed' ? 'Passed' : 'Not passed'} (${rec.score}/${rec.total})`
+      : `${label}: not attempted`;
+  }
+
+  function refreshProgress() {
+    const data = Part107Progress.getAll();
+
+    progressTrack.innerHTML = '';
+    let passedCount = 0;
+    PROGRESS_ITEMS.forEach(item => {
+      const rec = data[item.id];
+      if (rec && rec.status === 'passed') passedCount++;
+      const box = document.createElement('div');
+      box.className = 'progress-box' + (rec ? ' ' + rec.status : '');
+      box.title = rec
+        ? `${item.label}: ${rec.status === 'passed' ? 'Passed' : 'Not passed'} (${rec.score}/${rec.total})`
+        : `${item.label}: not attempted`;
+      progressTrack.appendChild(box);
+    });
+    progressCount.textContent = `${passedCount} / ${PROGRESS_ITEMS.length} passed`;
+
+    LESSONS.forEach(l => {
+      setStatusDot(`dot-${l.slug}-quiz`, data[`${l.slug}-quiz`], `Section ${l.n} quiz`);
+      setStatusDot(`dot-btn-${l.slug}-quiz`, data[`${l.slug}-quiz`], `Section ${l.n} quiz`);
+    });
+    setStatusDot('dot-trust-practice-quiz', data['trust-practice-quiz'], 'Practice Quiz — All 4 Sections');
+    setStatusDot('dot-btn-trust-practice-quiz', data['trust-practice-quiz'], 'Practice Quiz — All 4 Sections');
+  }
+
+  refreshProgress();
+  Part107Progress.onChange(refreshProgress);
+
+  document.getElementById('resetAllBtn').addEventListener('click', () => {
+    if (confirm('Reset all saved lesson, quiz, and test progress? This cannot be undone.')) {
+      Part107Progress.resetAll();
+    }
+  });
+
+  // clock
+  function tick() {
+    const now = new Date();
+    document.getElementById('clockOut').textContent = now.toUTCString().slice(17, 25) + ' UTC';
+  }
+  tick();
+  setInterval(tick, 1000);
+</script>
+
+</body>
+</html>
