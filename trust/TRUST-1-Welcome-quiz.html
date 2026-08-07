@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FAA Trust — Section 1 Quiz: Welcome &amp; Why TRUST Exists</title>
+<style>
+  :root {
+    --amber: #f2a71b;
+    --amber-soft: #ffcf6b;
+    --green: #3ddc97;
+    --red: #ff5c5c;
+    --bg-deep: #0d1013;
+    --bg-panel: #171c22;
+    --bg-card: #12161a;
+    --border: #2a3138;
+    --text-main: #dfe6ec;
+    --text-bright: #f4f7fa;
+    --text-dim: #7a8590;
+    --text-mid: #9aa5b0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at top, var(--bg-panel) 0%, var(--bg-deep) 70%);
+    color: var(--text-main);
+    font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+    min-height: 100vh;
+  }
+  body { display: flex; justify-content: center; padding: 24px 12px; }
+  .scanlines {
+    position: fixed; inset: 0; pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    z-index: 0;
+  }
+  .frame {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 640px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(13,16,19,0.6);
+    box-shadow: 0 0 0 1px rgba(242,167,27,0.05), 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    height: fit-content;
+  }
+  .top-bar {
+    display: flex; justify-content: space-between;
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    font-size: 11px; letter-spacing: 0.08em; color: var(--text-dim);
+    background: #12161a;
+  }
+  .top-bar b { color: var(--amber); }
+
+  .center {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 40px 28px 36px;
+  }
+  h1 {
+    font-size: 20px; font-weight: 600; margin: 0 0 12px; color: var(--text-bright);
+    letter-spacing: 0.01em; font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  }
+  .subtext { font-size: 13.5px; line-height: 1.6; color: var(--text-mid); max-width: 460px; margin: 0 0 20px; }
+
+  .primary-button {
+    background: var(--amber); color: #171200; border: none; padding: 14px 32px;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.08em; border-radius: 3px;
+    cursor: pointer; font-family: inherit;
+  }
+  .primary-button:hover { background: var(--amber-soft); }
+
+  .ghost-button {
+    background: transparent; color: var(--amber); border: 1px solid var(--amber);
+    padding: 10px 18px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+    border-radius: 3px; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-block;
+  }
+  .ghost-button:hover { background: rgba(242,167,27,0.08); }
+
+  .quiz-wrap { padding: 20px 20px 24px; display: none; }
+  .status-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin: 10px 2px 18px; letter-spacing: 0.06em; }
+  .status-row b { color: var(--amber); }
+  .gauge-track { position: relative; height: 6px; background: #1c2127; border-radius: 3px; }
+  .gauge-fill { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--amber), var(--amber-soft)); border-radius: 3px; transition: width 0.3s ease; width: 0%; }
+  .gauge-ticks { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
+  .tick { flex: 1 0 2%; height: 3px; border-radius: 1px; background: rgba(255,255,255,0.08); min-width: 3px; }
+  .tick.filled { background: var(--amber); }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; padding: 20px 20px 22px; }
+  .q-label { font-size: 11px; color: var(--amber); letter-spacing: 0.1em; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .q-text { font-size: 16px; line-height: 1.5; color: var(--text-bright); margin-bottom: 18px; font-family: 'Arial Narrow', 'Helvetica Neue', sans-serif; font-weight: 500; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-button {
+    display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px;
+    border-radius: 3px; font-size: 13.5px; line-height: 1.4; font-family: inherit;
+    transition: all 0.15s ease; background: #171c22; border: 1px solid var(--border);
+    color: var(--text-main); cursor: pointer; width: 100%;
+  }
+  .option-button:disabled { cursor: default; }
+  .option-button.correct-choice { background: rgba(61, 220, 151, 0.12); border: 1px solid var(--green); color: var(--green); }
+  .option-button.wrong-choice { background: rgba(255, 92, 92, 0.12); border: 1px solid var(--red); color: var(--red); }
+  .option-letter {
+    font-weight: 700; font-size: 12px; width: 18px; height: 18px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid currentColor; border-radius: 3px; opacity: 0.8;
+  }
+  .correct-banner {
+    margin-top: 16px; padding: 10px 14px; background: rgba(61,220,151,0.1);
+    border: 1px solid var(--green); color: var(--green); border-radius: 3px;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-align: center;
+  }
+  .correct-banner .next-button { margin-top: 12px; border-color: var(--green); color: var(--green); }
+  .correct-banner .next-button:hover { background: rgba(61,220,151,0.1); }
+  .incorrect-panel {
+    margin-top: 16px; padding: 14px 16px; background: rgba(255,92,92,0.06);
+    border: 1px solid rgba(255,92,92,0.4); border-radius: 3px; display: none;
+  }
+  .incorrect-header { color: var(--red); font-weight: 700; font-size: 13px; margin-bottom: 8px; letter-spacing: 0.04em; }
+  .incorrect-body { font-size: 13px; line-height: 1.55; color: #c7cdd3; }
+  .incorrect-body p { margin: 8px 0 10px; }
+  .next-button {
+    margin-top: 14px; width: 100%; background: transparent; border: 1px solid var(--amber);
+    color: var(--amber); padding: 11px 14px; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.06em; border-radius: 3px; cursor: pointer; font-family: inherit;
+  }
+  .next-button:hover { background: rgba(242,167,27,0.08); }
+
+  .end-wrap { display: none; }
+  .result-dial {
+    width: 130px; height: 130px; border-radius: 50%; border: 3px solid var(--green);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    margin-bottom: 22px; background: var(--bg-card);
+  }
+  .result-pct { font-size: 30px; font-weight: 800; line-height: 1.1; color: var(--green); }
+  .result-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  .sync-note {
+    margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border);
+    font-size: 10.5px; color: var(--text-dim); letter-spacing: 0.03em;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .reset-link {
+    background: transparent; border: none; color: var(--text-dim);
+    font-family: inherit; font-size: 10.5px; letter-spacing: 0.04em;
+    text-decoration: underline; cursor: pointer; padding: 2px;
+  }
+  .reset-link:hover { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="frame">
+  <div class="top-bar">
+    <span>FAA TRUST · SECTION 1 QUIZ</span>
+    <span id="topBarRight">Q 1 / 8</span>
+  </div>
+
+  <!-- QUIZ INTRO -->
+  <div class="center" id="quizIntro">
+    <h1>Section 1 Quiz</h1>
+    <p class="subtext">8 questions covering why TRUST exists, who must take it, how the no-fail format works, and what your certificate means. This practice quiz uses a 70% benchmark to flag readiness — the real TRUST test itself has no score threshold, since every question must simply be answered correctly to move on.</p>
+    <button class="primary-button" id="startQuizBtn">START QUIZ</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="quiz-wrap" id="quizScreen">
+    <div class="gauge-track"><div class="gauge-fill" id="gaugeFill"></div></div>
+    <div class="gauge-ticks" id="gaugeTicks"></div>
+    <div class="status-row">
+      <span>SCORE <b id="scoreDisplay">0</b> / <span id="totalDisplay">8</span></span>
+      <span id="itemDisplay">ITEM 01</span>
+    </div>
+    <div class="card">
+      <div class="q-label"><span id="qLabel">QUESTION 1</span></div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="optionsWrap"></div>
+      <div class="correct-banner" id="correctBanner" style="display:none;">
+        ✓ CORRECT
+        <button class="next-button" id="nextCorrectBtn">NEXT QUESTION →</button>
+      </div>
+      <div class="incorrect-panel" id="incorrectPanel">
+        <div class="incorrect-header">✕ INCORRECT</div>
+        <div class="incorrect-body">
+          <b>Correct answer:</b> <span id="correctAnswerText"></span>
+          <p id="explainText"></p>
+        </div>
+        <button class="next-button" id="nextQBtn">NEXT QUESTION →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="center end-wrap" id="endScreen">
+    <div class="result-dial" id="resultDial">
+      <span class="result-pct" id="resultPct">0%</span>
+      <span class="result-sub" id="resultSub">0 / 8 correct</span>
+    </div>
+    <h1 id="endHeading">Strong Run</h1>
+    <p class="subtext" id="endSubtext"></p>
+    <a class="ghost-button" href="TRUST-1-Welcome-Interactive.html">REVIEW LESSON</a>
+    <button class="primary-button" id="restartQuizBtn" style="margin-top:12px;">RETAKE QUIZ</button>
+    <a class="ghost-button" href="trust-index.html" style="margin-top:12px;">BACK TO HUB</a>
+    <div class="sync-note">
+      <span id="progressSavedNote"></span>
+      <button class="reset-link" id="resetProgressBtn" type="button">RESET SAVED RESULT</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shared cross-page progress tracker — also used by trust-index.html -->
+<script src="progress.js"></script>
+<script>
+const QUESTIONS = [
+  { q: "Under what law was the requirement for a recreational aeronautical knowledge and safety test created?", options: ["14 CFR Part 107", "49 U.S.C. § 44809 (Exception for Limited Recreational Operations)", "49 U.S.C. § 44703", "There is no legal requirement — it's voluntary"], correct: 1, explain: "The FAA Reauthorization Act of 2018 created 49 U.S.C. § 44809, which includes the requirement for recreational flyers to pass an aeronautical knowledge and safety test — TRUST is the FAA's implementation of that requirement." },
+  { q: "When did TRUST become mandatory for recreational flyers?", options: ["January 2019", "June 2021", "September 2023", "It is not yet mandatory"], correct: 1, explain: "TRUST launched as a mandatory, online requirement in June 2021, once the FAA had approved its first group of Test Administrators." },
+  { q: "Does the TRUST requirement depend on how much your drone weighs?", options: ["Yes — only drones over 0.55 lbs need TRUST", "No — TRUST applies to any recreational drone regardless of weight", "Yes — only drones over 55 lbs need TRUST", "TRUST only applies to drones with cameras"], correct: 1, explain: "TRUST applies to all recreational flyers regardless of drone weight. The 0.55 lb threshold is a separate requirement — that's when FAA registration kicks in, not TRUST." },
+  { q: "Who is TRUST intended for?", options: ["Commercial drone pilots operating under Part 107", "Recreational flyers operating under the Exception for Limited Recreational Operations", "Only drone manufacturers", "Only pilots flying beyond visual line of sight"], correct: 1, explain: "TRUST is specifically for recreational flyers. Commercial operators fly under 14 CFR Part 107 instead, which requires a Remote Pilot Certificate and a different, proctored knowledge test." },
+  { q: "What happens if you answer a TRUST question incorrectly?", options: ["You fail the test immediately and must wait 24 hours to retry", "You're shown the correct answer and can continue — there's no fail state", "You lose points that can't be recovered", "You must restart the entire test from question 1"], correct: 1, explain: "TRUST has no pass/fail score. If you answer incorrectly, you're shown the correct answer and given more chances, so everyone finishes with all questions answered correctly." },
+  { q: "How much does it cost to take TRUST?", options: ["$25, paid to the Test Administrator", "It's free — Test Administrators are required to offer it at no cost", "It depends on which administrator you choose", "$175, the same as the Part 107 test"], correct: 1, explain: "FAA-approved Test Administrators are required to offer TRUST at no cost, either directly or indirectly — it should never cost you anything." },
+  { q: "Does a TRUST completion certificate expire?", options: ["Yes, every 24 months", "Yes, every 12 months", "No — it has no expiration date", "Only if you change drones"], correct: 2, explain: "The TRUST certificate has no expiration date. It's a one-time requirement, unlike the Part 107 certificate, which requires recurrent training every 24 months." },
+  { q: "What must you do with your TRUST certificate once you've earned it?", options: ["Mail a copy to the FAA", "Nothing further is required", "Carry proof of completion (physical or digital) whenever you fly and show it if asked by the FAA or law enforcement", "Renew it annually online"], correct: 2, explain: "You must carry proof of TRUST completion — a physical printout or digital copy — every time you fly, and be ready to present it to FAA personnel or law enforcement on request." }
+];
+
+let qIndex = 0;
+let score = 0;
+let selected = null;
+
+const PROGRESS_ITEM_ID = 'TRUST-1-Welcome-quiz';
+
+let quizIntro, quizScreen, endScreen, topBarRight, gaugeTicks;
+
+function init() {
+  quizIntro = document.getElementById('quizIntro');
+  quizScreen = document.getElementById('quizScreen');
+  endScreen = document.getElementById('endScreen');
+  topBarRight = document.getElementById('topBarRight');
+  gaugeTicks = document.getElementById('gaugeTicks');
+
+  for (let i = 0; i < QUESTIONS.length; i++) {
+    const d = document.createElement('div');
+    d.className = 'tick';
+    gaugeTicks.appendChild(d);
+  }
+  document.getElementById('totalDisplay').textContent = QUESTIONS.length;
+
+  document.getElementById('startQuizBtn').addEventListener('click', beginQuiz);
+  document.getElementById('restartQuizBtn').addEventListener('click', beginQuiz);
+  document.getElementById('nextQBtn').addEventListener('click', advanceQuestion);
+  document.getElementById('nextCorrectBtn').addEventListener('click', advanceQuestion);
+
+  document.getElementById('resetProgressBtn').addEventListener('click', () => {
+    if (confirm("Reset your saved result for this section's quiz?")) {
+      Part107Progress.reset(PROGRESS_ITEM_ID);
+      document.getElementById('progressSavedNote').textContent = 'Saved result cleared.';
+    }
+  });
+}
+
+function hideAllScreens() {
+  quizIntro.style.display = 'none';
+  quizScreen.style.display = 'none';
+  endScreen.style.display = 'none';
+}
+
+function beginQuiz() {
+  qIndex = 0; score = 0; selected = null;
+  hideAllScreens();
+  quizScreen.style.display = 'block';
+  topBarRight.textContent = `Q 1 / ${QUESTIONS.length}`;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  selected = null;
+  const current = QUESTIONS[qIndex];
+  document.getElementById('qLabel').textContent = `QUESTION ${qIndex + 1}`;
+  document.getElementById('qText').textContent = current.q;
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('itemDisplay').textContent = `ITEM ${String(qIndex + 1).padStart(2, '0')}`;
+  topBarRight.textContent = `Q ${qIndex + 1} / ${QUESTIONS.length}`;
+
+  const pct = (qIndex / QUESTIONS.length) * 100;
+  document.getElementById('gaugeFill').style.width = pct + '%';
+  const ticks = gaugeTicks.children;
+  for (let i = 0; i < ticks.length; i++) ticks[i].className = 'tick' + (i < qIndex ? ' filled' : '');
+
+  const optionsWrap = document.getElementById('optionsWrap');
+  optionsWrap.innerHTML = '';
+  current.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-button';
+    btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => choose(i));
+    optionsWrap.appendChild(btn);
+  });
+
+  document.getElementById('correctBanner').style.display = 'none';
+  document.getElementById('incorrectPanel').style.display = 'none';
+}
+
+function choose(i) {
+  if (selected !== null) return;
+  selected = i;
+  const current = QUESTIONS[qIndex];
+  const buttons = document.querySelectorAll('#optionsWrap .option-button');
+  buttons.forEach(b => b.disabled = true);
+
+  const isCorrect = i === current.correct;
+
+  if (isCorrect) {
+    score++;
+    document.getElementById('scoreDisplay').textContent = score;
+    buttons[i].classList.add('correct-choice');
+    document.getElementById('correctBanner').style.display = 'block';
+  } else {
+    buttons[i].classList.add('wrong-choice');
+    buttons[current.correct].classList.add('correct-choice');
+    document.getElementById('correctAnswerText').textContent = current.options[current.correct];
+    document.getElementById('explainText').textContent = current.explain;
+    document.getElementById('incorrectPanel').style.display = 'block';
+  }
+}
+
+function advanceQuestion() {
+  if (qIndex + 1 >= QUESTIONS.length) {
+    showEnd();
+  } else {
+    qIndex++;
+    renderQuestion();
+  }
+}
+
+function showEnd() {
+  hideAllScreens();
+  endScreen.style.display = 'flex';
+  topBarRight.textContent = 'DEBRIEF';
+
+  const pct = Math.round((score / QUESTIONS.length) * 100);
+  const passed = pct >= 70;
+
+  document.getElementById('resultPct').textContent = pct + '%';
+  document.getElementById('resultSub').textContent = `${score} / ${QUESTIONS.length} correct`;
+  document.getElementById('resultDial').style.borderColor = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('resultPct').style.color = passed ? '#3ddc97' : '#ff5c5c';
+  document.getElementById('endHeading').textContent = passed ? 'Strong Run' : 'Keep Studying';
+  document.getElementById('endSubtext').textContent = passed
+    ? "You cleared this section's 70% benchmark. Move on to Section 2 whenever you're ready."
+    : "This run fell below the 70% benchmark used to flag readiness for this section. Review the lesson above, then retake the quiz.";
+
+  Part107Progress.recordResult(PROGRESS_ITEM_ID, {
+    score: score,
+    total: QUESTIONS.length,
+    passThreshold: 0.7
+  });
+  document.getElementById('progressSavedNote').textContent =
+    `Saved to Hub — ${passed ? 'PASSED' : 'NOT PASSED'} (${score}/${QUESTIONS.length}).`;
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
