@@ -50,6 +50,11 @@
     background: #12161a;
   }
   .top-bar b { color: var(--amber); }
+  .hub-link {
+    color: var(--text-dim); text-decoration: none; font-size: 11px;
+    letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: 4px;
+  }
+  .hub-link:hover { color: var(--amber-soft); }
 
   .tab-strip {
     display: flex; flex-wrap: wrap; gap: 6px;
@@ -136,6 +141,7 @@
 <div class="scanlines"></div>
 <div class="frame">
   <div class="top-bar">
+    <a class="hub-link" href="index.html">← HUB</a>
     <span>FAA TRUST · SECTION 3 OPERATING RULES</span>
     <span id="topBarRight">TOPIC 1 / 4</span>
   </div>
@@ -169,7 +175,7 @@
     <h1>Section 3 Complete</h1>
     <p class="subtext">You've covered the core operating rules, restricted and no-fly zones, how to check for TFRs before flying, and the consequences of violations. Head back to the hub, or jump straight into the quiz for this section.</p>
     <a class="primary-button" href="TRUST-3-Operating-Rules-quiz.html" style="text-decoration:none;">TAKE THE QUIZ →</a>
-    <a class="ghost-button" href="trust-index.html" style="text-decoration:none; margin-top:12px;">BACK TO HUB</a>
+    <a class="ghost-button" href="index.html" style="text-decoration:none; margin-top:12px;">BACK TO HUB</a>
   </div>
 </div>
 

@@ -50,6 +50,11 @@
     background: #12161a;
   }
   .top-bar b { color: var(--amber); }
+  .hub-link {
+    color: var(--text-dim); text-decoration: none; font-size: 11px;
+    letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: 4px;
+  }
+  .hub-link:hover { color: var(--amber-soft); }
 
   .center {
     display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -149,6 +154,7 @@
 <div class="scanlines"></div>
 <div class="frame">
   <div class="top-bar">
+    <a class="hub-link" href="index.html">← HUB</a>
     <span>FAA TRUST · SECTION 3 QUIZ</span>
     <span id="topBarRight">Q 1 / 8</span>
   </div>
@@ -197,7 +203,7 @@
     <p class="subtext" id="endSubtext"></p>
     <a class="ghost-button" href="TRUST-3-Operating-Rules-Interactive.html">REVIEW LESSON</a>
     <button class="primary-button" id="restartQuizBtn" style="margin-top:12px;">RETAKE QUIZ</button>
-    <a class="ghost-button" href="trust-index.html" style="margin-top:12px;">BACK TO HUB</a>
+    <a class="ghost-button" href="index.html" style="margin-top:12px;">BACK TO HUB</a>
     <div class="sync-note">
       <span id="progressSavedNote"></span>
       <button class="reset-link" id="resetProgressBtn" type="button">RESET SAVED RESULT</button>
@@ -205,7 +211,7 @@
   </div>
 </div>
 
-<!-- Shared cross-page progress tracker — also used by trust-index.html -->
+<!-- Shared cross-page progress tracker — also used by index.html -->
 <script src="progress.js"></script>
 <script>
 const QUESTIONS = [
@@ -219,6 +225,28 @@ const QUESTIONS = [
   { q: "What is a possible consequence of flying a drone in a National Park without authorization?", options: ["A federal misdemeanor, with penalties up to $5,000 and 6 months in jail", "A warning letter only, with no further consequence", "Automatic revocation of your TRUST certificate", "A $50 parking-style ticket"], correct: 0, explain: "Unauthorized drone flights in National Parks are a federal misdemeanor, carrying penalties of up to $5,000 and 6 months in jail." }
 ];
 
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildShuffledQuestions() {
+  return shuffleArray(QUESTIONS).map(q => {
+    const order = shuffleArray(q.options.map((_, i) => i));
+    return {
+      q: q.q,
+      options: order.map(i => q.options[i]),
+      correct: order.indexOf(q.correct),
+      explain: q.explain
+    };
+  });
+}
+
+let activeQuestions = [];
 let qIndex = 0;
 let score = 0;
 let selected = null;
@@ -261,23 +289,24 @@ function hideAllScreens() {
 }
 
 function beginQuiz() {
+  activeQuestions = buildShuffledQuestions();
   qIndex = 0; score = 0; selected = null;
   hideAllScreens();
   quizScreen.style.display = 'block';
-  topBarRight.textContent = `Q 1 / ${QUESTIONS.length}`;
+  topBarRight.textContent = `Q 1 / ${activeQuestions.length}`;
   renderQuestion();
 }
 
 function renderQuestion() {
   selected = null;
-  const current = QUESTIONS[qIndex];
+  const current = activeQuestions[qIndex];
   document.getElementById('qLabel').textContent = `QUESTION ${qIndex + 1}`;
   document.getElementById('qText').textContent = current.q;
   document.getElementById('scoreDisplay').textContent = score;
   document.getElementById('itemDisplay').textContent = `ITEM ${String(qIndex + 1).padStart(2, '0')}`;
-  topBarRight.textContent = `Q ${qIndex + 1} / ${QUESTIONS.length}`;
+  topBarRight.textContent = `Q ${qIndex + 1} / ${activeQuestions.length}`;
 
-  const pct = (qIndex / QUESTIONS.length) * 100;
+  const pct = (qIndex / activeQuestions.length) * 100;
   document.getElementById('gaugeFill').style.width = pct + '%';
   const ticks = gaugeTicks.children;
   for (let i = 0; i < ticks.length; i++) ticks[i].className = 'tick' + (i < qIndex ? ' filled' : '');
@@ -299,7 +328,7 @@ function renderQuestion() {
 function choose(i) {
   if (selected !== null) return;
   selected = i;
-  const current = QUESTIONS[qIndex];
+  const current = activeQuestions[qIndex];
   const buttons = document.querySelectorAll('#optionsWrap .option-button');
   buttons.forEach(b => b.disabled = true);
 
@@ -320,7 +349,7 @@ function choose(i) {
 }
 
 function advanceQuestion() {
-  if (qIndex + 1 >= QUESTIONS.length) {
+  if (qIndex + 1 >= activeQuestions.length) {
     showEnd();
   } else {
     qIndex++;
@@ -333,11 +362,11 @@ function showEnd() {
   endScreen.style.display = 'flex';
   topBarRight.textContent = 'DEBRIEF';
 
-  const pct = Math.round((score / QUESTIONS.length) * 100);
+  const pct = Math.round((score / activeQuestions.length) * 100);
   const passed = pct >= 70;
 
   document.getElementById('resultPct').textContent = pct + '%';
-  document.getElementById('resultSub').textContent = `${score} / ${QUESTIONS.length} correct`;
+  document.getElementById('resultSub').textContent = `${score} / ${activeQuestions.length} correct`;
   document.getElementById('resultDial').style.borderColor = passed ? '#3ddc97' : '#ff5c5c';
   document.getElementById('resultPct').style.color = passed ? '#3ddc97' : '#ff5c5c';
   document.getElementById('endHeading').textContent = passed ? 'Strong Run' : 'Keep Studying';
@@ -347,11 +376,11 @@ function showEnd() {
 
   Part107Progress.recordResult(PROGRESS_ITEM_ID, {
     score: score,
-    total: QUESTIONS.length,
+    total: activeQuestions.length,
     passThreshold: 0.7
   });
   document.getElementById('progressSavedNote').textContent =
-    `Saved to Hub — ${passed ? 'PASSED' : 'NOT PASSED'} (${score}/${QUESTIONS.length}).`;
+    `Saved to Hub — ${passed ? 'PASSED' : 'NOT PASSED'} (${score}/${activeQuestions.length}).`;
 }
 
 if (document.readyState === 'loading') {

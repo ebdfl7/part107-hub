@@ -50,6 +50,11 @@
     background: #12161a;
   }
   .top-bar b { color: var(--amber); }
+  .hub-link {
+    color: var(--text-dim); text-decoration: none; font-size: 11px;
+    letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: 4px;
+  }
+  .hub-link:hover { color: var(--amber-soft); }
 
   .center {
     display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -149,6 +154,7 @@
 <div class="scanlines"></div>
 <div class="frame">
   <div class="top-bar">
+    <a class="hub-link" href="index.html">← HUB</a>
     <span>FAA TRUST · SECTION 1 QUIZ</span>
     <span id="topBarRight">Q 1 / 8</span>
   </div>
@@ -197,7 +203,7 @@
     <p class="subtext" id="endSubtext"></p>
     <a class="ghost-button" href="TRUST-1-Welcome-Interactive.html">REVIEW LESSON</a>
     <button class="primary-button" id="restartQuizBtn" style="margin-top:12px;">RETAKE QUIZ</button>
-    <a class="ghost-button" href="trust-index.html" style="margin-top:12px;">BACK TO HUB</a>
+    <a class="ghost-button" href="index.html" style="margin-top:12px;">BACK TO HUB</a>
     <div class="sync-note">
       <span id="progressSavedNote"></span>
       <button class="reset-link" id="resetProgressBtn" type="button">RESET SAVED RESULT</button>
@@ -205,20 +211,42 @@
   </div>
 </div>
 
-<!-- Shared cross-page progress tracker — also used by trust-index.html -->
+<!-- Shared cross-page progress tracker — also used by index.html -->
 <script src="progress.js"></script>
 <script>
 const QUESTIONS = [
-  { q: "Under what law was the requirement for a recreational aeronautical knowledge and safety test created?", options: ["14 CFR Part 107", "49 U.S.C. § 44809 (Exception for Limited Recreational Operations)", "49 U.S.C. § 44703", "There is no legal requirement — it's voluntary"], correct: 1, explain: "The FAA Reauthorization Act of 2018 created 49 U.S.C. § 44809, which includes the requirement for recreational flyers to pass an aeronautical knowledge and safety test — TRUST is the FAA's implementation of that requirement." },
+  { q: "Under what law was the requirement for a recreational aeronautical knowledge and safety test created?", options: ["49 U.S.C. § 44809 (Exception for Limited Recreational Operations)", "14 CFR Part 107", "49 U.S.C. § 44703", "There is no legal requirement — it's voluntary"], correct: 0, explain: "The FAA Reauthorization Act of 2018 created 49 U.S.C. § 44809, which includes the requirement for recreational flyers to pass an aeronautical knowledge and safety test — TRUST is the FAA's implementation of that requirement." },
   { q: "When did TRUST become mandatory for recreational flyers?", options: ["January 2019", "June 2021", "September 2023", "It is not yet mandatory"], correct: 1, explain: "TRUST launched as a mandatory, online requirement in June 2021, once the FAA had approved its first group of Test Administrators." },
-  { q: "Does the TRUST requirement depend on how much your drone weighs?", options: ["Yes — only drones over 0.55 lbs need TRUST", "No — TRUST applies to any recreational drone regardless of weight", "Yes — only drones over 55 lbs need TRUST", "TRUST only applies to drones with cameras"], correct: 1, explain: "TRUST applies to all recreational flyers regardless of drone weight. The 0.55 lb threshold is a separate requirement — that's when FAA registration kicks in, not TRUST." },
-  { q: "Who is TRUST intended for?", options: ["Commercial drone pilots operating under Part 107", "Recreational flyers operating under the Exception for Limited Recreational Operations", "Only drone manufacturers", "Only pilots flying beyond visual line of sight"], correct: 1, explain: "TRUST is specifically for recreational flyers. Commercial operators fly under 14 CFR Part 107 instead, which requires a Remote Pilot Certificate and a different, proctored knowledge test." },
-  { q: "What happens if you answer a TRUST question incorrectly?", options: ["You fail the test immediately and must wait 24 hours to retry", "You're shown the correct answer and can continue — there's no fail state", "You lose points that can't be recovered", "You must restart the entire test from question 1"], correct: 1, explain: "TRUST has no pass/fail score. If you answer incorrectly, you're shown the correct answer and given more chances, so everyone finishes with all questions answered correctly." },
+  { q: "Does the TRUST requirement depend on how much your drone weighs?", options: ["Yes — only drones over 0.55 lbs need TRUST", "Yes — only drones over 55 lbs need TRUST", "No — TRUST applies to any recreational drone regardless of weight", "TRUST only applies to drones with cameras"], correct: 2, explain: "TRUST applies to all recreational flyers regardless of drone weight. The 0.55 lb threshold is a separate requirement — that's when FAA registration kicks in, not TRUST." },
+  { q: "Who is TRUST intended for?", options: ["Commercial drone pilots operating under Part 107", "Only drone manufacturers", "Only pilots flying beyond visual line of sight", "Recreational flyers operating under the Exception for Limited Recreational Operations"], correct: 3, explain: "TRUST is specifically for recreational flyers. Commercial operators fly under 14 CFR Part 107 instead, which requires a Remote Pilot Certificate and a different, proctored knowledge test." },
+  { q: "What happens if you answer a TRUST question incorrectly?", options: ["You're shown the correct answer and can continue — there's no fail state", "You fail the test immediately and must wait 24 hours to retry", "You lose points that can't be recovered", "You must restart the entire test from question 1"], correct: 0, explain: "TRUST has no pass/fail score. If you answer incorrectly, you're shown the correct answer and given more chances, so everyone finishes with all questions answered correctly." },
   { q: "How much does it cost to take TRUST?", options: ["$25, paid to the Test Administrator", "It's free — Test Administrators are required to offer it at no cost", "It depends on which administrator you choose", "$175, the same as the Part 107 test"], correct: 1, explain: "FAA-approved Test Administrators are required to offer TRUST at no cost, either directly or indirectly — it should never cost you anything." },
   { q: "Does a TRUST completion certificate expire?", options: ["Yes, every 24 months", "Yes, every 12 months", "No — it has no expiration date", "Only if you change drones"], correct: 2, explain: "The TRUST certificate has no expiration date. It's a one-time requirement, unlike the Part 107 certificate, which requires recurrent training every 24 months." },
-  { q: "What must you do with your TRUST certificate once you've earned it?", options: ["Mail a copy to the FAA", "Nothing further is required", "Carry proof of completion (physical or digital) whenever you fly and show it if asked by the FAA or law enforcement", "Renew it annually online"], correct: 2, explain: "You must carry proof of TRUST completion — a physical printout or digital copy — every time you fly, and be ready to present it to FAA personnel or law enforcement on request." }
+  { q: "What must you do with your TRUST certificate once you've earned it?", options: ["Mail a copy to the FAA", "Nothing further is required", "Renew it annually online", "Carry proof of completion (physical or digital) whenever you fly and show it if asked by the FAA or law enforcement"], correct: 3, explain: "You must carry proof of TRUST completion — a physical printout or digital copy — every time you fly, and be ready to present it to FAA personnel or law enforcement on request." }
 ];
 
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildShuffledQuestions() {
+  return shuffleArray(QUESTIONS).map(q => {
+    const order = shuffleArray(q.options.map((_, i) => i));
+    return {
+      q: q.q,
+      options: order.map(i => q.options[i]),
+      correct: order.indexOf(q.correct),
+      explain: q.explain
+    };
+  });
+}
+
+let activeQuestions = [];
 let qIndex = 0;
 let score = 0;
 let selected = null;
@@ -261,23 +289,24 @@ function hideAllScreens() {
 }
 
 function beginQuiz() {
+  activeQuestions = buildShuffledQuestions();
   qIndex = 0; score = 0; selected = null;
   hideAllScreens();
   quizScreen.style.display = 'block';
-  topBarRight.textContent = `Q 1 / ${QUESTIONS.length}`;
+  topBarRight.textContent = `Q 1 / ${activeQuestions.length}`;
   renderQuestion();
 }
 
 function renderQuestion() {
   selected = null;
-  const current = QUESTIONS[qIndex];
+  const current = activeQuestions[qIndex];
   document.getElementById('qLabel').textContent = `QUESTION ${qIndex + 1}`;
   document.getElementById('qText').textContent = current.q;
   document.getElementById('scoreDisplay').textContent = score;
   document.getElementById('itemDisplay').textContent = `ITEM ${String(qIndex + 1).padStart(2, '0')}`;
-  topBarRight.textContent = `Q ${qIndex + 1} / ${QUESTIONS.length}`;
+  topBarRight.textContent = `Q ${qIndex + 1} / ${activeQuestions.length}`;
 
-  const pct = (qIndex / QUESTIONS.length) * 100;
+  const pct = (qIndex / activeQuestions.length) * 100;
   document.getElementById('gaugeFill').style.width = pct + '%';
   const ticks = gaugeTicks.children;
   for (let i = 0; i < ticks.length; i++) ticks[i].className = 'tick' + (i < qIndex ? ' filled' : '');
@@ -299,7 +328,7 @@ function renderQuestion() {
 function choose(i) {
   if (selected !== null) return;
   selected = i;
-  const current = QUESTIONS[qIndex];
+  const current = activeQuestions[qIndex];
   const buttons = document.querySelectorAll('#optionsWrap .option-button');
   buttons.forEach(b => b.disabled = true);
 
@@ -320,7 +349,7 @@ function choose(i) {
 }
 
 function advanceQuestion() {
-  if (qIndex + 1 >= QUESTIONS.length) {
+  if (qIndex + 1 >= activeQuestions.length) {
     showEnd();
   } else {
     qIndex++;
@@ -333,11 +362,11 @@ function showEnd() {
   endScreen.style.display = 'flex';
   topBarRight.textContent = 'DEBRIEF';
 
-  const pct = Math.round((score / QUESTIONS.length) * 100);
+  const pct = Math.round((score / activeQuestions.length) * 100);
   const passed = pct >= 70;
 
   document.getElementById('resultPct').textContent = pct + '%';
-  document.getElementById('resultSub').textContent = `${score} / ${QUESTIONS.length} correct`;
+  document.getElementById('resultSub').textContent = `${score} / ${activeQuestions.length} correct`;
   document.getElementById('resultDial').style.borderColor = passed ? '#3ddc97' : '#ff5c5c';
   document.getElementById('resultPct').style.color = passed ? '#3ddc97' : '#ff5c5c';
   document.getElementById('endHeading').textContent = passed ? 'Strong Run' : 'Keep Studying';
@@ -347,11 +376,11 @@ function showEnd() {
 
   Part107Progress.recordResult(PROGRESS_ITEM_ID, {
     score: score,
-    total: QUESTIONS.length,
+    total: activeQuestions.length,
     passThreshold: 0.7
   });
   document.getElementById('progressSavedNote').textContent =
-    `Saved to Hub — ${passed ? 'PASSED' : 'NOT PASSED'} (${score}/${QUESTIONS.length}).`;
+    `Saved to Hub — ${passed ? 'PASSED' : 'NOT PASSED'} (${score}/${activeQuestions.length}).`;
 }
 
 if (document.readyState === 'loading') {

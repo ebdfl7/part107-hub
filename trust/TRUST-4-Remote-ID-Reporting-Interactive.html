@@ -50,6 +50,11 @@
     background: #12161a;
   }
   .top-bar b { color: var(--amber); }
+  .hub-link {
+    color: var(--text-dim); text-decoration: none; font-size: 11px;
+    letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: 4px;
+  }
+  .hub-link:hover { color: var(--amber-soft); }
 
   .tab-strip {
     display: flex; flex-wrap: wrap; gap: 6px;
@@ -136,6 +141,7 @@
 <div class="scanlines"></div>
 <div class="frame">
   <div class="top-bar">
+    <a class="hub-link" href="index.html">← HUB</a>
     <span>FAA TRUST · SECTION 4 REMOTE ID &amp; REPORTING</span>
     <span id="topBarRight">TOPIC 1 / 4</span>
   </div>
@@ -169,7 +175,7 @@
     <h1>Section 4 Complete</h1>
     <p class="subtext">You've covered Remote ID, what reporting actually applies to you, how TRUST itself works, and a full pre-flight checklist. You're ready for the quiz — and for the real TRUST test.</p>
     <a class="primary-button" href="TRUST-4-Remote-ID-Reporting-quiz.html" style="text-decoration:none;">TAKE THE QUIZ →</a>
-    <a class="ghost-button" href="trust-index.html" style="text-decoration:none; margin-top:12px;">BACK TO HUB</a>
+    <a class="ghost-button" href="index.html" style="text-decoration:none; margin-top:12px;">BACK TO HUB</a>
   </div>
 </div>
 
