@@ -526,42 +526,36 @@
     }
   } catch (e) { /* localStorage unavailable (private mode, etc.) — fall back to default */ }
 
-  // aviationweather.gov's API does not send Access-Control-Allow-Origin, so a
-  // direct browser fetch() is blocked by CORS no matter how it's scheduled.
-  // We try a direct fetch first (in case that ever changes), then fall back
-  // through a short list of public CORS proxies — if one is down or rate-
-  // limited, the next one is tried automatically.
-  function proxyUrls(url) {
-    const enc = encodeURIComponent(url);
-    return [
-      `https://api.allorigins.win/raw?url=${enc}`,
-      `https://corsproxy.io/?url=${enc}`,
-      `https://api.codetabs.com/v1/proxy?quest=${enc}`,
-    ];
-  }
+  /*
+   * WEATHER DATA
+   * ------------
+   * This page is static/GitHub Pages, so browser requests to
+   * aviationweather.gov can be blocked by CORS.
+   *
+   * WEATHER_API_BASE should point to a serverless/API endpoint that
+   * returns the FAA raw weather text:
+   *   /metar?ids=KHKY
+   *   /taf?ids=KHKY
+   *
+   * Do not put an API key or other secret in this HTML.
+   */
+  const WEATHER_API_BASE = 'https://YOUR-WEATHER-PROXY.example.com';
 
-  async function corsGet(url) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) {
-        const text = (await res.text()).trim();
-        if (text) return text;
-      }
-    } catch (e) { /* blocked by CORS or offline — fall through to proxies */ }
+  async function weatherGet(type, station) {
+    const url = `${WEATHER_API_BASE}/${type}?ids=${encodeURIComponent(station)}`;
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'text/plain' },
+      cache: 'no-store'
+    });
 
-    let lastErr = null;
-    for (const proxied of proxyUrls(url)) {
-      try {
-        const res = await fetch(proxied);
-        if (!res.ok) { lastErr = new Error('proxy returned ' + res.status); continue; }
-        const text = (await res.text()).trim();
-        if (text) return text;
-        lastErr = new Error('proxy returned empty body');
-      } catch (e) {
-        lastErr = e;
-      }
+    if (!res.ok) {
+      throw new Error(`weather proxy returned HTTP ${res.status}`);
     }
-    throw lastErr || new Error('all fetch attempts failed');
+
+    const text = (await res.text()).trim();
+    if (!text) throw new Error('weather proxy returned an empty response');
+    return text;
   }
 
   // ---- Plain-English METAR/TAF decoder ------------------------------
@@ -782,9 +776,9 @@
 
   // Each of these resolves on its own — they don't wait on each other.
   async function loadMetar(station) {
-    const metarUrl = `https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&hours=0`;
+    const metarUrl = null;
     try {
-      const text = await corsGet(metarUrl);
+      const text = await weatherGet('metar', station);
       if (text) {
         metarRaw.textContent = text;
         metarRaw.classList.remove('dim');
@@ -809,9 +803,9 @@
   }
 
   async function loadTaf(station) {
-    const tafUrl = `https://aviationweather.gov/api/data/taf?ids=${station}&format=raw`;
+    const tafUrl = null;
     try {
-      const text = await corsGet(tafUrl);
+      const text = await weatherGet('taf', station);
       if (text) {
         tafRaw.textContent = text;
         tafRaw.classList.remove('dim');
