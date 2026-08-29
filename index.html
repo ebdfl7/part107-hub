@@ -211,7 +211,7 @@
 
   <div class="hero">
     <img src="logo-badge.png" alt="Part 107" style="width:150px; height:auto; margin-bottom:14px;" />
-    <h1>Part 107 Course</h1>
+    <h1>Part 107</h1>
     <p class="subtext">Study smarter. Fly prepared. A self-paced FAA Part 107 course designed with guided lessons, live weather tools, practice exams, and essential FAA references.</p>
   </div>
 
@@ -243,6 +243,7 @@
       </div>
       <button class="wx-go" id="translateBtn" style="margin-top:4px;">TRANSLATE ▸</button>
       <button class="wx-go" id="debugBtn" style="margin-top:4px;">SHOW DETAILS ▸</button>
+      <button class="wx-go" id="netTestBtn" style="margin-top:4px;">TEST NETWORK ▸</button>
       <div class="wx-decoded wx-hidden" id="wxDebugPanel" style="font-size:11px; white-space:pre-wrap; word-break:break-word;"></div>
       <div class="wx-meta" id="wxMeta"></div>
     </div>
@@ -511,6 +512,7 @@
   const wxMeta = document.getElementById('wxMeta');
   const wxDebugPanel = document.getElementById('wxDebugPanel');
   const debugBtn = document.getElementById('debugBtn');
+  const netTestBtn = document.getElementById('netTestBtn');
   const skyvectorBtn = document.getElementById('skyvectorBtn');
   const metarTafBtn = document.getElementById('metarTafBtn');
 
@@ -534,26 +536,58 @@
   /*
    * WEATHER DATA
    * ------------
-   * aviationweather.gov's API does not send Access-Control-Allow-Origin
-   * headers, so a direct browser fetch to it is always blocked by CORS —
-   * there is no request header or fetch option that gets around that; the
-   * server has to opt in, and it doesn't.
+   * METAR: fetched directly from api.weather.gov (the National Weather
+   * Service's modern developer API — a different, CORS-friendly system
+   * from aviationweather.gov). No proxy involved. See fetchMetarDirect()
+   * below.
    *
-   * Public CORS-passthrough proxies are used as a best-effort workaround
-   * (see CORS_PROXIES below), but NONE of these free services are reliable
-   * long-term — they get rate-limited, change their URL scheme, or shut
-   * down without notice. If this keeps failing, or you want something you
-   * can actually depend on, deploy the tiny Cloudflare Worker at the bottom
-   * of this file (2 minutes, free, no credit card) and set
-   * WEATHER_PROXY_OVERRIDE below to its URL. That bypasses all the public
-   * proxies entirely.
+   * TAF: aviationweather.gov (Aviation Weather Center) is the only public
+   * source for TAFs, and it does not send Access-Control-Allow-Origin
+   * headers — a direct browser fetch to it is always blocked by CORS, and
+   * there's no request trick that changes that; the server has to opt in,
+   * and it doesn't. TAF requests go through the proxy chain below (or
+   * WEATHER_PROXY_OVERRIDE, if you've deployed the Cloudflare Worker at the
+   * bottom of this file). METAR also falls back to this same path if
+   * api.weather.gov has no data for a station.
    *
-   * Every attempt below logs to the browser console (F12 → Console) with
-   * the exact URL, HTTP status, and response snippet — open it if this is
-   * still failing, since that tells you exactly which proxy is broken
-   * and why, instead of guessing.
+   * Public CORS-passthrough proxies are a best-effort workaround — NONE of
+   * these free services are reliable long-term (they get rate-limited,
+   * change their URL scheme, or shut down without notice). If TAF keeps
+   * failing, deploy the Cloudflare Worker (2 minutes, free, no credit
+   * card) and set WEATHER_PROXY_OVERRIDE below to its URL.
+   *
+   * Every attempt below logs to both the browser console AND the on-page
+   * debug panel (tap SHOW DETAILS) — check that if something's failing,
+   * since it tells you exactly which step failed and why, instead of
+   * guessing.
    */
   const WEATHER_DIRECT_BASE = 'https://aviationweather.gov/api/data';
+
+  /*
+   * BETTER PATH FOR METAR — no proxy needed at all.
+   * api.weather.gov (National Weather Service's modern developer API — a
+   * different system from aviationweather.gov / Aviation Weather Center)
+   * supports real CORS for plain GET requests and exposes the same raw
+   * METAR text via its station-observations endpoint. This is tried first;
+   * the proxy chain below is only a fallback if a station has no NWS
+   * observation data or the request fails for some other reason.
+   *
+   * TAF has no equivalent on api.weather.gov — TAFs are an aviation-only
+   * product that (as far as NOAA publishes it) only comes from AWC, so TAF
+   * still goes through the proxy chain / WEATHER_PROXY_OVERRIDE below.
+   */
+  async function fetchMetarDirect(station) {
+    const url = `https://api.weather.gov/stations/${encodeURIComponent(station)}/observations/latest`;
+    const res = await fetchWithTimeout(url, {
+      headers: { 'Accept': 'application/geo+json' },
+      cache: 'no-store'
+    }, 8000);
+    if (!res.ok) throw new Error(`api.weather.gov HTTP ${res.status}`);
+    const json = await res.json();
+    const raw = json && json.properties && json.properties.rawMessage;
+    if (!raw) throw new Error('api.weather.gov returned no rawMessage (station may not report METARs)');
+    return raw.trim();
+  }
 
   // On-screen debug log — mirrors console.* so this is readable on iOS,
   // where there's no easy DevTools access without a Mac.
@@ -883,7 +917,14 @@
   async function loadMetar(station) {
     const metarUrl = null;
     try {
-      const text = await weatherGet('metar', station);
+      let text;
+      try {
+        text = await fetchMetarDirect(station);
+        debugLog(`metar via api.weather.gov (no proxy) OK: ${text.slice(0, 120)}`);
+      } catch (directErr) {
+        debugLog(`metar via api.weather.gov failed: ${directErr.message} — falling back to aviationweather.gov proxy chain`);
+        text = await weatherGet('metar', station);
+      }
       if (text) {
         metarRaw.textContent = text;
         metarRaw.classList.remove('dim');
@@ -1007,6 +1048,28 @@
     debugShown = !debugShown;
     wxDebugPanel.classList.toggle('wx-hidden', !debugShown);
     debugBtn.textContent = debugShown ? 'HIDE DETAILS ▾' : 'SHOW DETAILS ▸';
+  });
+
+  netTestBtn.addEventListener('click', async () => {
+    debugShown = true;
+    wxDebugPanel.classList.remove('wx-hidden');
+    debugBtn.textContent = 'HIDE DETAILS ▾';
+    debugLog(`--- NETWORK SELF-TEST ---`);
+    debugLog(`page origin: ${location.protocol}//${location.host || '(none — likely a local file)'}`);
+    // A well-known, unrelated, CORS-friendly endpoint with nothing to do
+    // with our proxy list. If THIS also fails, the problem is this page's
+    // ability to fetch anything at all (file:// origin, no connectivity,
+    // a content blocker, etc.) — not the weather proxies specifically.
+    try {
+      const res = await fetchWithTimeout('https://api.github.com/zen', { cache: 'no-store' }, 8000);
+      const text = await res.text();
+      debugLog(`api.github.com -> HTTP ${res.status}: ${text.slice(0, 80)}`);
+      debugLog(`RESULT: this page CAN fetch remote HTTPS resources. The weather proxies specifically are the problem (down, rate-limited, or blocked) — not this page's network access.`);
+    } catch (e) {
+      const msg = e && e.name === 'AbortError' ? 'timed out (8s)' : (e && e.message ? e.message : String(e));
+      debugLog(`api.github.com -> FAILED: ${msg}`);
+      debugLog(`RESULT: this page cannot fetch ANY remote HTTPS resource, not just the weather proxies. If the address bar shows file:// this is almost certainly why — Safari restricts fetch() from local files. Try hosting this file (even a free static host) instead of opening it directly.`);
+    }
   });
 
   // load on page open
