@@ -211,7 +211,7 @@
 
   <div class="hero">
     <img src="logo-badge.png" alt="Part 107" style="width:150px; height:auto; margin-bottom:14px;" />
-    <h1>Part 107 Certification Preparation</h1>
+    <h1>Part 107</h1>
     <p class="subtext">Study smarter. Fly prepared. A self-paced FAA Part 107 course designed with guided lessons, live weather tools, practice exams, and essential FAA references.</p>
   </div>
 
@@ -534,18 +534,55 @@
    * there is no request header or fetch option that gets around that; the
    * server has to opt in, and it doesn't.
    *
-   * Instead we route the request through a public CORS-passthrough proxy
-   * that fetches the FAA raw text server-side and hands it back to the
-   * browser WITH an Access-Control-Allow-Origin header attached, so no CORS
-   * error occurs. Several proxies are tried in order in case one is down or
-   * rate-limited. No API key or account is required for any of them.
+   * Public CORS-passthrough proxies are used as a best-effort workaround
+   * (see CORS_PROXIES below), but NONE of these free services are reliable
+   * long-term — they get rate-limited, change their URL scheme, or shut
+   * down without notice. If this keeps failing, or you want something you
+   * can actually depend on, deploy the tiny Cloudflare Worker at the bottom
+   * of this file (2 minutes, free, no credit card) and set
+   * WEATHER_PROXY_OVERRIDE below to its URL. That bypasses all the public
+   * proxies entirely.
+   *
+   * Every attempt below logs to the browser console (F12 → Console) with
+   * the exact URL, HTTP status, and response snippet — open it if this is
+   * still failing, since that tells you exactly which proxy is broken
+   * and why, instead of guessing.
    */
   const WEATHER_DIRECT_BASE = 'https://aviationweather.gov/api/data';
 
+  // Set this to your own deployed worker URL (see bottom of file) to skip
+  // the public proxy list entirely, e.g. 'https://your-worker.YOU.workers.dev'
+  const WEATHER_PROXY_OVERRIDE = '';
+
   const CORS_PROXIES = [
-    (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-    (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    (u) => `https://proxy.killcors.com/?url=${encodeURIComponent(u)}`,
+    {
+      name: 'codetabs',
+      build: (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+      parse: async (res) => (await res.text()).trim()
+    },
+    {
+      name: 'corslol',
+      build: (u) => `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
+      parse: async (res) => (await res.text()).trim()
+    },
+    {
+      name: 'allorigins-raw',
+      build: (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      parse: async (res) => (await res.text()).trim()
+    },
+    {
+      name: 'allorigins-get',
+      build: (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+      parse: async (res) => {
+        const json = await res.json();
+        return (json && typeof json.contents === 'string') ? json.contents.trim() : '';
+      }
+    },
+    {
+      name: 'killcors',
+      build: (u) => `https://proxy.killcors.com/?url=${encodeURIComponent(u)}`,
+      parse: async (res) => (await res.text()).trim()
+    }
   ];
 
   async function fetchWithTimeout(url, options, timeoutMs) {
@@ -561,9 +598,16 @@
   async function weatherGet(type, station) {
     const directUrl = `${WEATHER_DIRECT_BASE}/${type}?ids=${encodeURIComponent(station)}&format=raw`;
 
+    if (WEATHER_PROXY_OVERRIDE) {
+      const url = `${WEATHER_PROXY_OVERRIDE}/${type}?ids=${encodeURIComponent(station)}`;
+      const res = await fetchWithTimeout(url, { headers: { 'Accept': 'text/plain' }, cache: 'no-store' }, 8000);
+      if (!res.ok) throw new Error(`self-hosted proxy returned HTTP ${res.status}`);
+      return (await res.text()).trim();
+    }
+
     let lastErr = new Error('no proxy attempted');
-    for (const buildProxyUrl of CORS_PROXIES) {
-      const proxyUrl = buildProxyUrl(directUrl);
+    for (const proxy of CORS_PROXIES) {
+      const proxyUrl = proxy.build(directUrl);
       try {
         const res = await fetchWithTimeout(proxyUrl, {
           method: 'GET',
@@ -571,20 +615,27 @@
           cache: 'no-store'
         }, 8000);
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+          const snippet = (await res.text().catch(() => '')).slice(0, 200);
+          console.warn(`[weatherGet:${type}:${station}] ${proxy.name} -> HTTP ${res.status}`, snippet);
+          throw new Error(`${proxy.name} HTTP ${res.status}`);
+        }
 
-        const text = (await res.text()).trim();
+        const text = await proxy.parse(res);
+        console.info(`[weatherGet:${type}:${station}] ${proxy.name} OK, ${text.length} chars`);
         // aviationweather.gov returns an empty body when a station has no
         // current report, rather than an error — that's a valid "nothing
         // found" result, not a reason to try the next proxy.
         return text;
       } catch (e) {
+        console.warn(`[weatherGet:${type}:${station}] ${proxy.name} failed:`, e && e.message ? e.message : e);
         lastErr = e;
         continue; // this proxy failed or timed out — try the next one
       }
     }
     throw lastErr;
   }
+
 
   // ---- Plain-English METAR/TAF decoder ------------------------------
   const CARDINALS = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
@@ -897,7 +948,7 @@
         } else {
           wxStatus.textContent = 'fetch failed — try the link below';
           wxStatus.className = 'wx-status err';
-          wxMeta.textContent = `Source: aviationweather.gov · Station: ${station} · auto-refreshes every 5 min`;
+          wxMeta.textContent = `All CORS proxies failed or timed out — open the browser console (F12) for per-proxy details. Source: aviationweather.gov · Station: ${station}`;
         }
       }
     });
@@ -925,6 +976,52 @@
   // load on page open
   fetchWx({ manual: true });
 </script>
+
+<!--
+  OPTIONAL — durable fix instead of the public CORS proxies above
+  ----------------------------------------------------------------
+  Public CORS proxies (codetabs, allorigins, cors.lol, killcors) are
+  best-effort and can go down, rate-limit you, or change their URL scheme
+  with no warning. If you want something you actually control:
+
+  1. Go to https://dash.cloudflare.com → Workers & Pages → Create → Worker.
+  2. Replace the default code with this, then Deploy:
+
+     export default {
+       async fetch(request) {
+         const { pathname, searchParams } = new URL(request.url);
+         const type = pathname.replace(/^\//, ''); // "metar" or "taf"
+         const ids = searchParams.get('ids');
+         if (!['metar', 'taf'].includes(type) || !ids) {
+           return new Response('bad request', { status: 400 });
+         }
+         const upstream = `https://aviationweather.gov/api/data/${type}?ids=${encodeURIComponent(ids)}&format=raw`;
+         const res = await fetch(upstream, {
+           headers: { 'User-Agent': 'FieldLab7-MissionHub/1.0 (contact: you@example.com)' }
+         });
+         const text = await res.text();
+         return new Response(text, {
+           status: res.status,
+           headers: {
+             'Content-Type': 'text/plain',
+             'Access-Control-Allow-Origin': '*',
+             'Cache-Control': 'no-store'
+           }
+         });
+       }
+     };
+
+  3. Copy the worker's URL (looks like https://NAME.YOU.workers.dev).
+  4. In the <script> above, set:
+       const WEATHER_PROXY_OVERRIDE = 'https://NAME.YOU.workers.dev';
+     This skips the whole public-proxy list and hits your worker directly.
+
+  Free tier is 100,000 requests/day — far more than this page will ever
+  use — and setting a real User-Agent (as above) is exactly what
+  aviationweather.gov's own docs ask automated clients to do, which avoids
+  the bot-filtering that can cause requests through anonymous public
+  proxies to get silently blocked.
+-->
 
 </body>
 </html>
