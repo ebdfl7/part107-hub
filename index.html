@@ -529,33 +529,61 @@
   /*
    * WEATHER DATA
    * ------------
-   * This page is static/GitHub Pages, so browser requests to
-   * aviationweather.gov can be blocked by CORS.
+   * aviationweather.gov's API does not send Access-Control-Allow-Origin
+   * headers, so a direct browser fetch to it is always blocked by CORS —
+   * there is no request header or fetch option that gets around that; the
+   * server has to opt in, and it doesn't.
    *
-   * WEATHER_API_BASE should point to a serverless/API endpoint that
-   * returns the FAA raw weather text:
-   *   /metar?ids=KHKY
-   *   /taf?ids=KHKY
-   *
-   * Do not put an API key or other secret in this HTML.
+   * Instead we route the request through a public CORS-passthrough proxy
+   * that fetches the FAA raw text server-side and hands it back to the
+   * browser WITH an Access-Control-Allow-Origin header attached, so no CORS
+   * error occurs. Several proxies are tried in order in case one is down or
+   * rate-limited. No API key or account is required for any of them.
    */
-  const WEATHER_API_BASE = 'https://YOUR-WEATHER-PROXY.example.com';
+  const WEATHER_DIRECT_BASE = 'https://aviationweather.gov/api/data';
+
+  const CORS_PROXIES = [
+    (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+    (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    (u) => `https://proxy.killcors.com/?url=${encodeURIComponent(u)}`,
+  ];
+
+  async function fetchWithTimeout(url, options, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
 
   async function weatherGet(type, station) {
-    const url = `${WEATHER_API_BASE}/${type}?ids=${encodeURIComponent(station)}`;
-    const res = await fetch(url, {
-      method: 'GET',
-      headers: { 'Accept': 'text/plain' },
-      cache: 'no-store'
-    });
+    const directUrl = `${WEATHER_DIRECT_BASE}/${type}?ids=${encodeURIComponent(station)}&format=raw`;
 
-    if (!res.ok) {
-      throw new Error(`weather proxy returned HTTP ${res.status}`);
+    let lastErr = new Error('no proxy attempted');
+    for (const buildProxyUrl of CORS_PROXIES) {
+      const proxyUrl = buildProxyUrl(directUrl);
+      try {
+        const res = await fetchWithTimeout(proxyUrl, {
+          method: 'GET',
+          headers: { 'Accept': 'text/plain' },
+          cache: 'no-store'
+        }, 8000);
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const text = (await res.text()).trim();
+        // aviationweather.gov returns an empty body when a station has no
+        // current report, rather than an error — that's a valid "nothing
+        // found" result, not a reason to try the next proxy.
+        return text;
+      } catch (e) {
+        lastErr = e;
+        continue; // this proxy failed or timed out — try the next one
+      }
     }
-
-    const text = (await res.text()).trim();
-    if (!text) throw new Error('weather proxy returned an empty response');
-    return text;
+    throw lastErr;
   }
 
   // ---- Plain-English METAR/TAF decoder ------------------------------
