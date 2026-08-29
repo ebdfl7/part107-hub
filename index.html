@@ -211,7 +211,7 @@
 
   <div class="hero">
     <img src="logo-badge.png" alt="Part 107" style="width:150px; height:auto; margin-bottom:14px;" />
-    <h1>Part 107 Preparation</h1>
+    <h1>Part 107</h1>
     <p class="subtext">Study smarter. Fly prepared. A self-paced FAA Part 107 course designed with guided lessons, live weather tools, practice exams, and essential FAA references.</p>
   </div>
 
@@ -242,6 +242,8 @@
         <div class="wx-decoded dim wx-hidden" id="tafDecoded">—</div>
       </div>
       <button class="wx-go" id="translateBtn" style="margin-top:4px;">TRANSLATE ▸</button>
+      <button class="wx-go" id="debugBtn" style="margin-top:4px;">SHOW DETAILS ▸</button>
+      <div class="wx-decoded wx-hidden" id="wxDebugPanel" style="font-size:11px; white-space:pre-wrap; word-break:break-word;"></div>
       <div class="wx-meta" id="wxMeta"></div>
     </div>
 
@@ -507,10 +509,13 @@
   const metarDecoded = document.getElementById('metarDecoded');
   const tafDecoded = document.getElementById('tafDecoded');
   const wxMeta = document.getElementById('wxMeta');
+  const wxDebugPanel = document.getElementById('wxDebugPanel');
+  const debugBtn = document.getElementById('debugBtn');
   const skyvectorBtn = document.getElementById('skyvectorBtn');
   const metarTafBtn = document.getElementById('metarTafBtn');
 
   let currentStation = 'KHKY';
+  let debugShown = false;
   let autoRefreshTimer = null;
   const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -549,6 +554,16 @@
    * and why, instead of guessing.
    */
   const WEATHER_DIRECT_BASE = 'https://aviationweather.gov/api/data';
+
+  // On-screen debug log — mirrors console.* so this is readable on iOS,
+  // where there's no easy DevTools access without a Mac.
+  let debugLines = [];
+  function debugLog(line) {
+    const stamp = new Date().toLocaleTimeString();
+    debugLines.push(`${stamp}  ${line}`);
+    if (debugLines.length > 60) debugLines = debugLines.slice(-60);
+    if (wxDebugPanel) wxDebugPanel.textContent = debugLines.join('\n');
+  }
 
   // Set this to your own deployed worker URL (see bottom of file) to skip
   // the public proxy list entirely, e.g. 'https://your-worker.YOU.workers.dev'
@@ -597,12 +612,19 @@
 
   async function weatherGet(type, station) {
     const directUrl = `${WEATHER_DIRECT_BASE}/${type}?ids=${encodeURIComponent(station)}&format=raw`;
+    debugLog(`--- ${type.toUpperCase()} ${station} ---`);
 
     if (WEATHER_PROXY_OVERRIDE) {
       const url = `${WEATHER_PROXY_OVERRIDE}/${type}?ids=${encodeURIComponent(station)}`;
+      debugLog(`override -> ${url}`);
       const res = await fetchWithTimeout(url, { headers: { 'Accept': 'text/plain' }, cache: 'no-store' }, 8000);
-      if (!res.ok) throw new Error(`self-hosted proxy returned HTTP ${res.status}`);
-      return (await res.text()).trim();
+      if (!res.ok) {
+        debugLog(`override -> HTTP ${res.status}`);
+        throw new Error(`self-hosted proxy returned HTTP ${res.status}`);
+      }
+      const text = (await res.text()).trim();
+      debugLog(`override OK, ${text.length} chars`);
+      return text;
     }
 
     let lastErr = new Error('no proxy attempted');
@@ -618,17 +640,21 @@
         if (!res.ok) {
           const snippet = (await res.text().catch(() => '')).slice(0, 200);
           console.warn(`[weatherGet:${type}:${station}] ${proxy.name} -> HTTP ${res.status}`, snippet);
+          debugLog(`${proxy.name} -> HTTP ${res.status}${snippet ? '  body: ' + snippet : ''}`);
           throw new Error(`${proxy.name} HTTP ${res.status}`);
         }
 
         const text = await proxy.parse(res);
         console.info(`[weatherGet:${type}:${station}] ${proxy.name} OK, ${text.length} chars`);
+        debugLog(`${proxy.name} OK, ${text.length} chars${text ? ': ' + text.slice(0, 120) : ' (empty — no current report)'}`);
         // aviationweather.gov returns an empty body when a station has no
         // current report, rather than an error — that's a valid "nothing
         // found" result, not a reason to try the next proxy.
         return text;
       } catch (e) {
-        console.warn(`[weatherGet:${type}:${station}] ${proxy.name} failed:`, e && e.message ? e.message : e);
+        const msg = e && e.name === 'AbortError' ? 'timed out (8s)' : (e && e.message ? e.message : String(e));
+        console.warn(`[weatherGet:${type}:${station}] ${proxy.name} failed:`, msg);
+        debugLog(`${proxy.name} failed: ${msg}`);
         lastErr = e;
         continue; // this proxy failed or timed out — try the next one
       }
@@ -948,8 +974,12 @@
         } else {
           wxStatus.textContent = 'fetch failed — try the link below';
           wxStatus.className = 'wx-status err';
-          wxMeta.textContent = `All CORS proxies failed or timed out — open the browser console (F12) for per-proxy details. Source: aviationweather.gov · Station: ${station}`;
+          wxMeta.textContent = `All CORS proxies failed or timed out — tap SHOW DETAILS above for exactly why. Source: aviationweather.gov · Station: ${station}`;
         }
+        // Auto-expand the debug panel on failure — no need to hunt for a button.
+        debugShown = true;
+        wxDebugPanel.classList.remove('wx-hidden');
+        debugBtn.textContent = 'HIDE DETAILS ▾';
       }
     });
 
@@ -971,6 +1001,12 @@
     metarDecoded.classList.toggle('wx-hidden', !translationsShown);
     tafDecoded.classList.toggle('wx-hidden', !translationsShown);
     translateBtn.textContent = translationsShown ? 'HIDE TRANSLATION ▾' : 'TRANSLATE ▸';
+  });
+
+  debugBtn.addEventListener('click', () => {
+    debugShown = !debugShown;
+    wxDebugPanel.classList.toggle('wx-hidden', !debugShown);
+    debugBtn.textContent = debugShown ? 'HIDE DETAILS ▾' : 'SHOW DETAILS ▸';
   });
 
   // load on page open
